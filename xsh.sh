@@ -11,8 +11,9 @@ function xsh () {
         
     function __xsh_load () {
         if [[ -f ${XSH_HOME}/functions/${1}.sh ]]; then
-            #source <(sed "s|function |&x-${1%/*}-|" "${XSH_HOME}/functions/${1}.sh")
-            source /dev/stdin <<<"$(sed "s|function |&x-${1%/*}-|" "${XSH_HOME}/functions/${1}.sh")"
+            source /dev/stdin \
+                   <<<"$(sed "s|function |&x-${1%/*}-|" \
+                             "${XSH_HOME}/functions/${1}.sh")"
         else
             return 255
         fi
@@ -31,7 +32,7 @@ function xsh () {
         if type x-${command/\//-} >/dev/null 2>&1; then
             x-${command/\//-} "$@"
         else
-            __xsh_load "$command" && __xsh_call "$command" "$@"
+            __xsh_load "$command" && x-${command/\//-} "$@"
         fi
     }
 
