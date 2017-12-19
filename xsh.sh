@@ -1,4 +1,4 @@
-function XSH () {
+function xsh () {
     local command name
     local ret=0
 
@@ -9,54 +9,52 @@ function XSH () {
         return 255
     fi
         
+    function __xsh_load () {
+        if [[ -f ${XSH_HOME}/functions/${1}.sh ]]; then
+            #source <(sed "s|function |&x-${1%/*}-|" "${XSH_HOME}/functions/${1}.sh")
+            source /dev/stdin <<<"$(sed "s|function |&x-${1%/*}-|" "${XSH_HOME}/functions/${1}.sh")"
+        else
+            return 255
+        fi
+    }
+
+    function __xsh_call () {
+        local command
+        
+        if [[ -n $1 ]]; then
+            command=$1
+            shift
+        else
+            return 255
+        fi
+
+        if type x-${command/\//-} >/dev/null 2>&1; then
+            x-${command/\//-} "$@"
+        else
+            __xsh_load "$command" && __xsh_call "$command" "$@"
+        fi
+    }
+
     case $command in
         load)
             for name in "$@"; do
-                XSH_LOAD "$name"
+                __xsh_load "$name"
                 ret=$((ret + $?))
             done
             ;;
         import)
             for name in "$@"; do
-                XSH_CALL "$name"
+                __xsh_call "$name"
                 ret=$((ret + $?))
             done
             ;;
         *)
-            XSH_CALL "$command" "$@"
+            __xsh_call "$command" "$@"
             ret=$?
             ;;
     esac
 
+    unset __xsh_load __xsh_call
     return $ret
 }
-
-
-function XSH_LOAD () {
-    if [[ -f ${XSH_HOME}/functions/${1}.sh ]]; then
-        source "${XSH_HOME}/functions/${1}.sh"
-    else
-        return 255
-    fi
-}
-
-
-function XSH_CALL () {
-    local command
-    
-    if [[ -n $1 ]]; then
-        command=$1
-        shift
-    else
-        return 255
-    fi
-
-    if type -p x-${command/\//-}; then
-        x-${command/\//-} "$@"
-    else
-        XSH_LOAD "$command" && XSH_CALL "$command" "$@"
-    fi
-}
-
-
-alias xsh='XSH'
+export -f xsh
