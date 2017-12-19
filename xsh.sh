@@ -8,7 +8,7 @@ function xsh () {
     else
         return 255
     fi
-        
+
     function __xsh_load () {
         if [[ -f ${XSH_HOME}/functions/${1}.sh ]]; then
             source /dev/stdin \
@@ -21,7 +21,7 @@ function xsh () {
 
     function __xsh_call () {
         local command
-        
+
         if [[ -n $1 ]]; then
             command=$1
             shift
@@ -31,6 +31,8 @@ function xsh () {
 
         if type x-${command/\//-} >/dev/null 2>&1; then
             x-${command/\//-} "$@"
+        elif [[ -f ${XSH_HOME}/scripts/${command}.sh ]]; then
+            bash ${XSH_HOME}/scripts/${command}.sh "$@"
         else
             __xsh_load "$command" && x-${command/\//-} "$@"
         fi
