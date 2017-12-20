@@ -12,7 +12,7 @@ function xsh () {
     function __xsh_load () {
         if [[ -f ${XSH_HOME}/functions/${1}.sh ]]; then
             source /dev/stdin \
-                   <<<"$(sed "s|function |&x-${1%/*}-|" \
+                   <<<"$(sed "s|^function ${1##*/} ()|function x-${1/\//-} ()|" \
                              "${XSH_HOME}/functions/${1}.sh")"
         else
             return 255
