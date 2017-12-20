@@ -2,6 +2,18 @@ function xsh () {
     local command name
     local ret=0
 
+    # check environment variable
+    if [[ -z $XSH_HOME ]]; then
+        printf "ERROR: XSH_HOME is not set or exported.\n" >&2
+        return 255
+    fi
+
+    # check XSH_HOME existence
+    if [[ ! -d $XSH_HOME ]]; then
+        printf "ERROR: XSH_HOME '%s' does not exist or readable.\n" >&2
+        return 255
+    fi
+
     if [[ -n $1 ]]; then
         command=$(echo "$1" | tr 'A-Z' 'a-z')
         shift
