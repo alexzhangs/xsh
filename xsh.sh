@@ -14,6 +14,10 @@ function xsh () {
             source /dev/stdin \
                    <<<"$(sed "s|^function ${1##*/} ()|function x-${1/\//-} ()|" \
                              "${XSH_HOME}/functions/${1}.sh")"
+        elif [[ -f ${XSH_HOME}/scripts/${1}.sh ]]; then
+            # link "scripts/<domain>/<foo>.sh"
+            # as "/usr/local/bin/x-<domain>-<foo>"
+            ln -sf "${XSH_HOME}/scripts/${1}.sh" "/usr/local/bin/x-${1/\//-}"
         else
             return 255
         fi
@@ -31,8 +35,6 @@ function xsh () {
 
         if type x-${command/\//-} >/dev/null 2>&1; then
             x-${command/\//-} "$@"
-        elif [[ -f ${XSH_HOME}/scripts/${command}.sh ]]; then
-            bash ${XSH_HOME}/scripts/${command}.sh "$@"
         else
             __xsh_load "$command" && x-${command/\//-} "$@"
         fi
