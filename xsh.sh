@@ -3,14 +3,8 @@ function xsh () {
     local ret=0
 
     # check environment variable
-    if [[ -z $XSH_HOME ]]; then
-        printf "ERROR: XSH_HOME is not set or exported.\n" >&2
-        return 255
-    fi
-
-    # check XSH_HOME existence
-    if [[ ! -d $XSH_HOME ]]; then
-        printf "ERROR: XSH_HOME '%s' does not exist or readable.\n" >&2
+    if [[ -z ${XSH_HOME} ]]; then
+        printf "ERROR: XSH_HOME is not set properly: '%s'.\n" "${XSH_HONE}" >&2
         return 255
     fi
 
