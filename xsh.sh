@@ -17,14 +17,15 @@ function xsh () {
     fi
 
     # @private
-    # Source a function by relative file path and
+    # Source functions by relative file path and
     # file name(without extension).
-    # Link a script by relative file path and
+    # Link scripts by relative file path and
     # file name(without extension).
     function __xsh_load () {
-        local path=$1  # legal: /, foo, foo/, foo/bar
+        local path=$1  # legal input: '/', 'foo', 'foo/', 'foo/bar', 'foo/bar/'
         local f_path s_path ln
 
+        # join the path, remove tailing '/'
         f_path="${XSH_HOME%/}/functions/${path#/}"
         s_path="${XSH_HOME%/}/scripts/${path#/}"
         
@@ -44,6 +45,7 @@ function xsh () {
     }
 
     # @private
+    # Source a file simply
     function __xsh_load_function () {
         if [[ -n $1 ]]; then
             source "$1"
@@ -53,7 +55,7 @@ function xsh () {
     }
 
     # @private
-    # link "scripts/<domain>/<foo>.sh"
+    # Link a file "scripts/<domain>/<foo>.sh"
     # as "/usr/local/bin/x-<domain>-<foo>"
     function __xsh_load_script () {
         local symlink
