@@ -16,26 +16,55 @@ function xsh () {
         return 255
     fi
 
-    #@private
+    # @private
     # Source a function by relative file path and
     # file name(without extension).
     # Link a script by relative file path and
     # file name(without extension).
     function __xsh_load () {
+        local path=$1  # legal: /, foo, foo/, foo/bar
+        local f_path s_path ln
+
+        f_path="${XSH_HOME%/}/functions/${path#/}"
+        s_path="${XSH_HOME%/}/scripts/${path#/}"
+        
         # handle functions
-        if [[ -f ${XSH_HOME}/functions/${1}.sh ]]; then
-            # source "function <foo>" within "functions/<domain>/<foo>.sh"
-            # as "function x-<domain>-<foo>"
-            source /dev/stdin \
-                   <<<"$(sed "s|^function ${1##*/} ()|function x-${1/\//-} ()|" \
-                             "${XSH_HOME}/functions/${1}.sh")"
+        while read ln; do
+            __xsh_load_function "$ln"
+        done <<< "$(
+             find "${f_path%/}" -type f -name "*.sh" 2>/dev/null;
+             find "${f_path%/}.sh" -type f 2>/dev/null)"
+
         # handle scripts
-        elif [[ -f ${XSH_HOME}/scripts/${1}.sh ]]; then
-            # link "scripts/<domain>/<foo>.sh"
-            # as "/usr/local/bin/x-<domain>-<foo>"
-            ln -sf "${XSH_HOME}/scripts/${1}.sh" "/usr/local/bin/x-${1/\//-}"
+        while read ln; do
+            __xsh_load_script "$ln"
+        done <<< "$(
+             find "${s_path%/}" -type f -name "*.sh" 2>/dev/null;
+             find "${s_path%/}.sh" -type f 2>/dev/null)"
+    }
+
+    # @private
+    function __xsh_load_function () {
+        if [[ -n $1 ]]; then
+            source "$1"
         else
-            return 255
+            :
+        fi
+    }
+
+    # @private
+    # link "scripts/<domain>/<foo>.sh"
+    # as "/usr/local/bin/x-<domain>-<foo>"
+    function __xsh_load_script () {
+        local symlink
+
+        if [[ -n $1 ]]; then
+            symlink=${1#${XSH_HOME%/}/scripts/}
+            symlink=${symlink%.sh}
+            symlink=x-${symlink/\//-}
+            ln -sf "$1" "/usr/local/bin/$symlink"
+        else
+            :
         fi
     }
 
@@ -47,16 +76,16 @@ function xsh () {
 
         # check input
         if [[ -n $1 ]]; then
-            command=$1
+            command=x-${1/\//-}
             shift
         else
             return 255
         fi
 
-        if type x-${command/\//-} >/dev/null 2>&1; then
-            x-${command/\//-} "$@"
+        if type $command >/dev/null 2>&1; then
+            $command "$@"
         else
-            __xsh_load "$command" && x-${command/\//-} "$@"
+            __xsh_load "$1" && $command "$@"
         fi
     }
 
@@ -81,7 +110,10 @@ function xsh () {
     esac
 
     # clean
-    unset __xsh_load __xsh_call
+    unset __xsh_load \
+          __xsh_load_function \
+          __xsh_load_script \
+          __xsh_call
 
     return $ret
 }
