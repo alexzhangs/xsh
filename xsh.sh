@@ -8,13 +8,28 @@ function xsh () {
         return 255
     fi
 
-    # check input
-    if [[ -n $1 ]]; then
-        command=$(echo "$1" | tr 'A-Z' 'a-z')
-        shift
-    else
-        return 255
-    fi
+    # @private
+    function __xsh_usage () {
+        printf "Usage:\n"
+        printf "  xsh <PACKAGE/ITEM> [ITEM_OPTIONS]\n"
+        printf "  xsh list\n"
+        printf "  xsh load <PACKAGE[/ITEM]> ...\n"
+        printf "  xsh import <PACKAGE[/ITEM]> ...\n"
+        printf "  xsh help|-h|--help\n\n"
+
+        printf "Options:\n"
+        printf "  PACKAGE/ITEM    Items to load, import or to call.\n"
+        printf "                  A single '/' presents all packages.\n"
+        printf "                  Package only without item presents all items under this package.\n"
+        printf "                  There are 2 types of items: functions and scripts.\n"
+        printf "  ITEM_OPTIONS    Options will be passed to item.\n"
+        printf "  list            List available packages and items.\n"
+        printf "  load            Load functions and scripts so can be called\n"
+        printf "                  as syntax: 'x-<package>-<item>'\n"
+        printf "  import          Call functions and scripts in a batch.\n"
+        printf "                  No options can be passed.\n"
+        printf "  help|-h|--help  This help.\n"
+    }
 
     # @private
     # Source functions by relative file path and
@@ -28,7 +43,7 @@ function xsh () {
         # join the path, remove tailing '/'
         f_path="${XSH_HOME%/}/functions/${path#/}"
         s_path="${XSH_HOME%/}/scripts/${path#/}"
-        
+
         # handle functions
         while read ln; do
             __xsh_load_function "$ln"
@@ -91,6 +106,15 @@ function xsh () {
         fi
     }
 
+    # check input
+    if [[ -n $1 ]]; then
+        command=$(echo "$1" | tr 'A-Z' 'a-z')
+        shift
+    else
+        __xsh_usage >&2
+        return 255
+    fi
+
     # main
     case $command in
         load)
@@ -104,6 +128,14 @@ function xsh () {
                 __xsh_call "$name"
                 ret=$((ret + $?))
             done
+            ;;
+        list)
+            printf "ERROR: not ready yet\n" >&2
+            ret=255
+            ;;
+        help|-h|--help)
+            __xsh_usage
+            ret=$?
             ;;
         *)
             __xsh_call "$command" "$@"
