@@ -1,5 +1,5 @@
 function xsh () {
-    local command name
+    local name
     local ret=0
 
     # check environment variable
@@ -93,38 +93,53 @@ function xsh () {
 
         # check input
         if [[ -n $1 ]]; then
-            shift
             command=x-${1//\//-}  # replace each '/' with '-'
         else
             return 255
         fi
 
         if type $command >/dev/null 2>&1; then
-            $command "$@"
+            $command "${@:2}"
         else
-            __xsh_load "$1" && $command "$@"
+            __xsh_load "$1" && $command "${@:2}"
+        fi
+    }
+
+    # @private
+    function __xsh_clean () {
+        # clean env if here is the final exit point of xsh
+        # FUNCNAME[0]: __xsh_clean
+        # FUNCNAME[1]: xsh
+        if [[ $(printf '%s\n' "${FUNCNAME[@]}" \
+                    | grep -c "^${FUNCNAME[1]}$") -eq 1 ]]; then
+            unset __xsh_usage \
+                  __xsh_load \
+                  __xsh_load_function \
+                  __xsh_load_script \
+                  __xsh_call \
+                  __xsh_clean
+        else
+            :
         fi
     }
 
     # check input
-    if [[ -n $1 ]]; then
-        command=$(echo "$1" | tr 'A-Z' 'a-z')
-        shift
-    else
+    if [[ -z $1 ]]; then
         __xsh_usage >&2
+        __xsh_clean
         return 255
     fi
 
     # main
-    case $command in
+    case $1 in
         load)
-            for name in "$@"; do
+            for name in "${@:2}"; do
                 __xsh_load "$name"
                 ret=$((ret + $?))
             done
             ;;
         import)
-            for name in "$@"; do
+            for name in "${@:2}"; do
                 __xsh_call "$name"
                 ret=$((ret + $?))
             done
@@ -138,16 +153,13 @@ function xsh () {
             ret=$?
             ;;
         *)
-            __xsh_call "$command" "$@"
+            __xsh_call "$1" "${@:2}"
             ret=$?
             ;;
     esac
 
     # clean
-    unset __xsh_load \
-          __xsh_load_function \
-          __xsh_load_script \
-          __xsh_call
+    __xsh_clean
 
     return $ret
 }
