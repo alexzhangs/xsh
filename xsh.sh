@@ -78,7 +78,7 @@ function xsh () {
         if [[ -n $1 ]]; then
             symlink=${1#${XSH_HOME%/}/scripts/}
             symlink=${symlink%.sh}
-            symlink=x-${symlink/\//-}
+            symlink=x-${symlink//\//-}  # replace each '/' with '-'
             ln -sf "$1" "/usr/local/bin/$symlink"
         else
             :
@@ -93,8 +93,8 @@ function xsh () {
 
         # check input
         if [[ -n $1 ]]; then
-            command=x-${1/\//-}
             shift
+            command=x-${1//\//-}  # replace each '/' with '-'
         else
             return 255
         fi
