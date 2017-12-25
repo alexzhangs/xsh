@@ -1,6 +1,5 @@
 function xsh () {
-    local name
-    local xsh_home
+    local xsh_home name category
     local ret=0
 
     # check environment variable
@@ -153,8 +152,15 @@ function xsh () {
             done
             ;;
         list)
-            printf "ERROR: not ready yet\n" >&2
-            ret=255
+            printf "Installed PACKAGE/ITEM\n"
+            for category in functions scripts; do
+                printf "  %s:\n" "$category"
+                find "${xsh_home}/$category" -type f -name "*.sh" \
+                    | sed -e "s|^${xsh_home}/$category/||" \
+                          -e 's|.sh$||' \
+                    | sort \
+                    | xargs -I {} printf '    %s\n' '{}'
+            done
             ;;
         help|-h|--help)
             __xsh_usage
