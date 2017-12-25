@@ -106,6 +106,7 @@ function xsh () {
     }
 
     # @private
+    # This function should only be called directly by function xsh().
     function __xsh_clean () {
         # clean env if here is the final exit point of xsh
         # FUNCNAME[0]: __xsh_clean
