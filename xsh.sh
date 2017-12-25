@@ -1,10 +1,13 @@
 function xsh () {
     local name
+    local xsh_home
     local ret=0
 
     # check environment variable
-    if [[ -z ${XSH_HOME} ]]; then
-        printf "ERROR: XSH_HOME is not set properly: '%s'.\n" "${XSH_HONE}" >&2
+    if [[ -n ${XSH_HOME%/} ]]; then
+        xsh_home=${XSH_HOME%/}
+    else
+        printf "ERROR: XSH_HOME is not set properly: '%s'.\n" "${XSH_HOME}" >&2
         return 255
     fi
 
@@ -19,7 +22,7 @@ function xsh () {
 
         printf "Options:\n"
         printf "  PACKAGE/ITEM    Items to load, import or to call.\n"
-        printf "                  A single '/' presents all packages.\n"
+        printf "                  A asterist '*' presents all packages.\n"
         printf "                  Package only without item presents all items under this package.\n"
         printf "                  There are 2 types of items: functions and scripts.\n"
         printf "  ITEM_OPTIONS    Options will be passed to item.\n"
@@ -37,26 +40,30 @@ function xsh () {
     # Link scripts by relative file path and
     # file name(without extension).
     function __xsh_load () {
-        local path=$1  # legal input: '/', 'foo', 'foo/', 'foo/bar', 'foo/bar/'
-        local f_path s_path ln
+        local path=$1  # legal input: '*', 'foo', 'foo/', 'foo/bar', 'foo/bar/'
+        local f_dir s_dir ln
 
         # join the path, remove tailing '/'
-        f_path="${XSH_HOME%/}/functions/${path#/}"
-        s_path="${XSH_HOME%/}/scripts/${path#/}"
+        f_dir="${xsh_home}/functions"
+        s_dir="${xsh_home}/scripts"
 
         # handle functions
         while read ln; do
             __xsh_load_function "$ln"
         done <<< "$(
-             find "${f_path%/}" -type f -name "*.sh" 2>/dev/null;
-             find "${f_path%/}.sh" -type f 2>/dev/null)"
+             find "${f_dir}" \
+                  -path "${f_dir}/${path}*" \
+                  -type f \
+                  -name "*.sh" 2>/dev/null)"
 
         # handle scripts
         while read ln; do
             __xsh_load_script "$ln"
         done <<< "$(
-             find "${s_path%/}" -type f -name "*.sh" 2>/dev/null;
-             find "${s_path%/}.sh" -type f 2>/dev/null)"
+             find "${s_dir}" \
+                  -path "${s_dir}/${path}*" \
+                  -type f \
+                  -name "*.sh" 2>/dev/null)"
     }
 
     # @private
@@ -76,7 +83,7 @@ function xsh () {
         local symlink
 
         if [[ -n $1 ]]; then
-            symlink=${1#${XSH_HOME%/}/scripts/}
+            symlink=${1#${xsh_home}/scripts/}
             symlink=${symlink%.sh}
             symlink=x-${symlink//\//-}  # replace each '/' with '-'
             ln -sf "$1" "/usr/local/bin/$symlink"
