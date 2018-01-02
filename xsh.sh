@@ -1,5 +1,5 @@
 function xsh () {
-    local xsh_home name category
+    local xsh_home name
     local ret=0
 
     # check environment variable
@@ -34,6 +34,20 @@ function xsh () {
     }
 
     # @private
+    function __xsh_list () {
+        local type
+        
+        printf "Installed PACKAGE/ITEM\n"
+        for type in functions scripts; do
+            printf "  %s:\n" "${type}"
+            find "${xsh_home}/${type}" -type f -name "*.sh" \
+                | sed -e "s|^${xsh_home}/${type}/||" \
+                      -e 's|.sh$||' \
+                | sort \
+                | xargs -I {} printf '    %s\n' '{}'
+        done
+    }
+    
     # Source functions by relative file path and
     # file name(without extension).
     # Link scripts by relative file path and
@@ -120,6 +134,7 @@ function xsh () {
         if [[ $(printf '%s\n' "${FUNCNAME[@]}" \
                     | grep -c "^${FUNCNAME[1]}$") -eq 1 ]]; then
             unset __xsh_usage \
+                  __xsh_list \
                   __xsh_load \
                   __xsh_load_function \
                   __xsh_load_script \
@@ -139,6 +154,10 @@ function xsh () {
 
     # main
     case $1 in
+        list)
+            __xsh_list
+            ret=$?
+            ;;
         load)
             for name in "${@:2}"; do
                 __xsh_load "$name"
@@ -149,17 +168,6 @@ function xsh () {
             for name in "${@:2}"; do
                 __xsh_call "$name"
                 ret=$((ret + $?))
-            done
-            ;;
-        list)
-            printf "Installed PACKAGE/ITEM\n"
-            for category in functions scripts; do
-                printf "  %s:\n" "$category"
-                find "${xsh_home}/$category" -type f -name "*.sh" \
-                    | sed -e "s|^${xsh_home}/$category/||" \
-                          -e 's|.sh$||' \
-                    | sort \
-                    | xargs -I {} printf '    %s\n' '{}'
             done
             ;;
         help|-h|--help)
