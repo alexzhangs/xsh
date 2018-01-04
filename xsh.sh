@@ -4,6 +4,7 @@ function xsh () {
 
     # check environment variable
     if [[ -n ${XSH_HOME%/} ]]; then
+        # remove tailing '/'
         xsh_home=${XSH_HOME%/}
     else
         printf "ERROR: XSH_HOME is not set properly: '%s'.\n" "${XSH_HOME}" >&2
@@ -13,70 +14,155 @@ function xsh () {
     # @private
     function __xsh_usage () {
         printf "Usage:\n"
-        printf "  xsh <PACKAGE/ITEM> [ITEM_OPTIONS]\n"
+        printf "  xsh [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]\n"
+        printf "  xsh import [LIB][/PACKAGE]/UTIL ...\n"
+        printf "  xsh load [LIB][/PACKAGE][/UTIL] ...\n"
         printf "  xsh list\n"
-        printf "  xsh load <PACKAGE[/ITEM]> ...\n"
-        printf "  xsh import <PACKAGE[/ITEM]> ...\n"
+        printf "  xsh install -r GIT_REPO_URL [-b BRANCH] [-a ALIAS] LIB\n"
+        printf "  xsh uninstal LIB\n"
         printf "  xsh help|-h|--help\n\n"
 
         printf "Options:\n"
-        printf "  PACKAGE/ITEM    Items to load, import or to call.\n"
-        printf "                  A asterist '*' presents all packages.\n"
-        printf "                  Package only without item presents all items under this package.\n"
-        printf "                  There are 2 types of items: functions and scripts.\n"
-        printf "  ITEM_OPTIONS    Options will be passed to item.\n"
-        printf "  list            List available packages and items.\n"
-        printf "  load            Load functions and scripts so can be called\n"
-        printf "                  as syntax: 'x-<package>-<item>'\n"
-        printf "  import          Call functions and scripts in a batch.\n"
-        printf "                  No options can be passed.\n"
-        printf "  help|-h|--help  This help.\n"
+        printf "  [LIB][/PACKAGE]/UTIL      Utility to call.\n"
+        printf "    UTIL_OPTIONS            Will be passed to utility.\n"
+        printf "                            Default LIB is 'core', point to library xsh-lib-core.\n"
+        printf "  import                    Call utilities in a batch. No options can be passed.\n"
+        printf "    [LIB][/PACKAGE]/UTIL    Utility to call.\n"
+        printf "  load                      Load utilities so can be called as syntax: 'LIB-PACKAGE-UTIL'\n"
+        printf "    [LIB][/PACKAGE][/UTIL]  Utilities to load or import.\n"
+        printf "                            Default LIB is 'core', point to library xsh-lib-core.\n"
+        printf "                            A single quoted asterist '*' presents all utils in all libraries.\n"
+        printf "  list                      List installed libraries, packages and utilities.\n"
+        printf "  install                   Install library from Git repo.\n"
+        printf "    -r GIT_REPO_URL         Git repo URL.\n"
+        printf "    [-b BRANCH]             Branch to use, default is repo's default branch.\n"
+        printf "    [-a ALIAS]              Alias of library name.\n"
+        printf "    LIB                     Library name, must be unique in all installed libraries.\n"
+        printf "                            Default used to prefix utility name: LIB-PACKAGE-UTIL\n"
+        printf "  uninstall                 Uninstall library.\n"
+        printf "    LIB                     Library name.\n"
+        printf "  help|-h|--help            This help.\n"
     }
 
     # @private
     function __xsh_list () {
-        local type
-        
-        printf "Installed PACKAGE/ITEM\n"
-        for type in functions scripts; do
-            printf "  %s:\n" "${type}"
-            find "${xsh_home}/${type}" -type f -name "*.sh" \
-                | sed -e "s|^${xsh_home}/${type}/||" \
-                      -e 's|.sh$||' \
-                | sort \
-                | xargs -I {} printf '    %s\n' '{}'
-        done
+        find "${xsh_home}/lib" -type f -name "*.sh" \
+            | sed -e "s|^${xsh_home}/lib/||" \
+                  -e 's|.sh$||' \
+            | sort \
+            | awk -F/ '{
+                  lib=$1;
+                  type=$2;
+                  if (lib != last_lib) {
+                     printf "Library: [%s]\n", lib;
+                     last_type=""
+                  };
+                  last_lib=lib;
+                  if (type != last_type) {
+                     printf "  %s:\n", type;
+                  };
+                  last_type=type;
+                  printf "    %s/%s\n", $3, $4;
+                  }'
     }
-    
+
+    # @private
+    function __xsh_install () {
+        local repo branch name
+        local OPTARG OPTIND
+
+        while getopts r:b: opt; do
+            case $opt in
+                r)
+                    repo=$OPTARG
+                    ;;
+                b)
+                    branch=$OPTARG
+                    ;;
+                *)
+                    usage >&2
+                    return 255
+                    ;;
+            esac
+        done
+        shift $((OPTIND - 1))
+        name=${1:?}
+
+        branch=${branch:-master}  # set default
+
+        if [[ -e ${xsh_home}/lib/${name} ]]; then
+            printf "ERROR: library '%s' already exists.\n" "${name}"
+            return 255
+        else
+            git clone -b "${branch:?}" "${repo:?}" "${xsh_home}/lib/${name}"
+        fi
+    }
+
+    # @private
+    function __xsh_uninstall () {
+        local name=${1:?}
+
+        if [[ -e ${xsh_home}/lib/${name} ]]; then
+            /bin/rm -rf "${xsh_home}/lib/${name}"
+        else
+            printf "ERROR: library '%s' doesn't exist.\n" "${name}"
+            return 255
+        fi
+    }
+
+    # @private
     # Source functions by relative file path and
-    # file name(without extension).
+    #   file name(without extension).
     # Link scripts by relative file path and
-    # file name(without extension).
+    #   file name(without extension).
     function __xsh_load () {
-        local path=$1  # legal input: '*', 'foo', 'foo/', 'foo/bar', 'foo/bar/'
-        local f_dir s_dir ln
+        # legal input:
+        #   '*'
+        #   /, core
+        #   core/pkg, /pkg
+        #   core/pkg/util, /pkg/util
+        #   core/util, /util
+        local path=${1:?}
+        local lib lib_home rest ln type
 
-        # join the path, remove tailing '/'
-        f_dir="${xsh_home}/functions"
-        s_dir="${xsh_home}/scripts"
+        lib=${path%%/*}  # remove anything after first / (include the /)
+        lib=${lib:-core}  # set default
 
-        # handle functions
+        lib_home="${xsh_home}/lib"
+
+        rest=${path#"${lib}"}  # remove lib part, double quote is needed for '*'
+        rest=${rest#/}  # remove leading /
+        rest=${rest%/}  # remove tailing /
+        rest=${rest:-'*'}  # set default
+
         while read ln; do
-            __xsh_load_function "$ln"
-        done <<< "$(
-             find "${f_dir}" \
-                  -path "${f_dir}/${path}*" \
-                  -type f \
-                  -name "*.sh" 2>/dev/null)"
+            type=${ln#${lib_home}/${lib}/}  # strip path from begin
+            type=${type%%/*}  # strip path from end
 
-        # handle scripts
-        while read ln; do
-            __xsh_load_script "$ln"
+            case ${type} in
+                functions)
+                    __xsh_load_function "$ln"
+                    ;;
+                scripts)
+                    __xsh_load_script "$ln"
+                    ;;
+                *)
+                    return 255
+                    ;;
+            esac
         done <<< "$(
-             find "${s_dir}" \
-                  -path "${s_dir}/${path}*" \
-                  -type f \
-                  -name "*.sh" 2>/dev/null)"
+             find "${lib_home}" \
+                  -path "${lib_home}/${lib}/functions/${rest}.sh" \
+                  -o \
+                  -path "${lib_home}/${lib}/functions/${rest}/*" \
+                  -name "*.sh" \
+                  -o \
+                  -path "${lib_home}/${lib}/scripts/${rest}.sh" \
+                  -o \
+                  -path "${lib_home}/${lib}/scripts/${rest}/*" \
+                  -name "*.sh" \
+                  2>/dev/null
+                  )"
     }
 
     # @private
@@ -91,13 +177,13 @@ function xsh () {
 
     # @private
     # Link a file "scripts/<domain>/<foo>.sh"
-    # as "/usr/local/bin/x-<domain>-<foo>"
+    #   as "/usr/local/bin/x-<domain>-<foo>"
     function __xsh_load_script () {
         local symlink
 
         if [[ -n $1 ]]; then
-            symlink=${1#${xsh_home}/scripts/}
-            symlink=${symlink%.sh}
+            symlink=${1#${xsh_home}/lib/*/scripts/}  # strip path from begin
+            symlink=${symlink%.sh}  #  remove file extension
             symlink=x-${symlink//\//-}  # replace each '/' with '-'
             ln -sf "$1" "/usr/local/bin/$symlink"
         else
@@ -107,8 +193,11 @@ function xsh () {
 
     # @private
     # Call a function or a script by relative file path
-    # and file name(without extension).
+    #   and file name(without extension).
     function __xsh_call () {
+        # legal input:
+        #   core/pkg/util, /pkg/util
+        #   core/util, /util
         local command
 
         # check input
@@ -135,6 +224,8 @@ function xsh () {
                     | grep -c "^${FUNCNAME[1]}$") -eq 1 ]]; then
             unset __xsh_usage \
                   __xsh_list \
+                  __xsh_install \
+                  __xsh_uninstall \
                   __xsh_load \
                   __xsh_load_function \
                   __xsh_load_script \
@@ -156,6 +247,14 @@ function xsh () {
     case $1 in
         list)
             __xsh_list
+            ret=$?
+            ;;
+        install)
+            __xsh_install "${@:2}"
+            ret=$?
+            ;;
+        uninstall)
+            __xsh_uninstall "${@:2}"
             ret=$?
             ;;
         load)
