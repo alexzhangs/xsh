@@ -68,16 +68,19 @@ function xsh () {
 
     # @private
     function __xsh_install () {
-        local repo branch name
+        local repo branch branch_opt alias name
         local OPTARG OPTIND
 
-        while getopts r:b: opt; do
+        while getopts r:b:a: opt; do
             case $opt in
                 r)
                     repo=$OPTARG
                     ;;
                 b)
                     branch=$OPTARG
+                    ;;
+                a)
+                    alias=$OPTARG
                     ;;
                 *)
                     usage >&2
@@ -88,13 +91,17 @@ function xsh () {
         shift $((OPTIND - 1))
         name=${1:?}
 
-        branch=${branch:-master}  # set default
+        [[ -n ${branch} ]] && branch_opt="-b ${branch}"
 
         if [[ -e ${xsh_home}/lib/${name} ]]; then
             printf "ERROR: library '%s' already exists.\n" "${name}"
             return 255
         else
-            git clone -b "${branch:?}" "${repo:?}" "${xsh_home}/lib/${name}"
+            git clone ${branch_opt} "${repo:?}" "${xsh_home}/lib/${name}"
+            find "${xsh_home}/lib/${name}/scripts" \
+                 -type f \
+                 -name "*.sh" \
+                 -exec chmod +x {} \;
         fi
     }
 
@@ -168,8 +175,14 @@ function xsh () {
     # @private
     # Source a file simply
     function __xsh_load_function () {
+        local old new
+        
         if [[ -n $1 ]]; then
-            source "$1"
+            new=${1#${xsh_home}/lib/*/functions/}  # strip path from begin
+            new=${new%.sh}  #  remove file extension
+            old=$(basename "${new}")
+            new=x-${new//\//-}  # replace each '/' with '-'
+            source /dev/stdin <<<"$(sed "s/functions ${old} ()/${new}/g" "$1")"
         else
             :
         fi
