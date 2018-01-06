@@ -118,10 +118,8 @@ function xsh () {
     }
 
     # @private
-    # Source functions by relative file path and
-    #   file name(without extension).
-    # Link scripts by relative file path and
-    #   file name(without extension).
+    # Source a function by LPU.
+    # Link a script by LPU.
     function __xsh_load () {
         # legal input:
         #   '*'
@@ -129,29 +127,23 @@ function xsh () {
         #   core/pkg, /pkg
         #   core/pkg/util, /pkg/util
         #   core/util, /util
-        local path=${1:?}
-        local lib lib_home rest ln type
-
-        lib=${path%%/*}  # remove anything after first / (include the /)
-        lib=${lib:-core}  # set default
+        local lpu=${1:?}
+        local lib_home lib pkg_util ln type
 
         lib_home="${xsh_home}/lib"
 
-        rest=${path#"${lib}"}  # remove lib part, double quote is needed for '*'
-        rest=${rest#/}  # remove leading /
-        rest=${rest%/}  # remove tailing /
-        rest=${rest:-'*'}  # set default
+        lib=$(__xsh_get_lib_by_lpu "${lpu}")
+        pu=$(__xsh_get_pu_by_lpu "${lpu}")
 
         while read ln; do
-            type=${ln#${lib_home}/${lib}/}  # strip path from begin
-            type=${type%%/*}  # strip path from end
+            type=$(__xsh_get_type_by_path "${ln}")
 
             case ${type} in
                 functions)
-                    __xsh_load_function "$ln"
+                    __xsh_load_function "${ln}"
                     ;;
                 scripts)
-                    __xsh_load_script "$ln"
+                    __xsh_load_script "${ln}"
                     ;;
                 *)
                     return 255
@@ -159,72 +151,134 @@ function xsh () {
             esac
         done <<< "$(
              find "${lib_home}" \
-                  -path "${lib_home}/${lib}/functions/${rest}.sh" \
+                  -path "${lib_home}/${lib}/functions/${pu}.sh" \
                   -o \
-                  -path "${lib_home}/${lib}/functions/${rest}/*" \
+                  -path "${lib_home}/${lib}/functions/${pu}/*" \
                   -name "*.sh" \
                   -o \
-                  -path "${lib_home}/${lib}/scripts/${rest}.sh" \
+                  -path "${lib_home}/${lib}/scripts/${pu}.sh" \
                   -o \
-                  -path "${lib_home}/${lib}/scripts/${rest}/*" \
+                  -path "${lib_home}/${lib}/scripts/${pu}/*" \
                   -name "*.sh" \
                   2>/dev/null
                   )"
     }
 
     # @private
-    # Source a file simply
+    # Source a file ".../<lib>/functions/<package>/<util>.sh"
+    #   as function "<lib>-<package>-<util>"
     function __xsh_load_function () {
-        local old new
-        
-        if [[ -n $1 ]]; then
-            new=${1#${xsh_home}/lib/*/functions/}  # strip path from begin
-            new=${new%.sh}  #  remove file extension
-            old=$(basename "${new}")
-            new=x-${new//\//-}  # replace each '/' with '-'
-            source /dev/stdin <<<"$(sed "s/functions ${old} ()/${new}/g" "$1")"
-        else
-            :
-        fi
+        local util=$(__xsh_get_util_by_path "${1:?}")
+        local clpu=$(__xsh_get_clpu_by_path "${1:?}")
+        source /dev/stdin <<<"$(sed "s/function ${util} ()/function ${clpu} ()/g" "$1")"
     }
 
     # @private
-    # Link a file "scripts/<domain>/<foo>.sh"
-    #   as "/usr/local/bin/x-<domain>-<foo>"
+    # Link a file ".../<lib>/scripts/<package>/<util>.sh"
+    #   as "/usr/local/bin/<lib>-<package>-<util>"
     function __xsh_load_script () {
-        local symlink
-
-        if [[ -n $1 ]]; then
-            symlink=${1#${xsh_home}/lib/*/scripts/}  # strip path from begin
-            symlink=${symlink%.sh}  #  remove file extension
-            symlink=x-${symlink//\//-}  # replace each '/' with '-'
-            ln -sf "$1" "/usr/local/bin/$symlink"
-        else
-            :
-        fi
+        local clpu=$(__xsh_get_clpu_by_path "${1:?}")
+        ln -sf "$1" "/usr/local/bin/${clpu}"
     }
 
     # @private
-    # Call a function or a script by relative file path
-    #   and file name(without extension).
+    # Call a function or a script by LPU.
     function __xsh_call () {
         # legal input:
         #   core/pkg/util, /pkg/util
         #   core/util, /util
-        local command
+        local lpu=${1:?}
+        local clpu
 
-        # check input
-        if [[ -n $1 ]]; then
-            command=x-${1//\//-}  # replace each '/' with '-'
-        else
-            return 255
-        fi
+        clpu=$(__xsh_get_clpu_by_lpu "${lpu}")
 
-        if type $command >/dev/null 2>&1; then
-            $command "${@:2}"
+        if type ${clpu} >/dev/null 2>&1; then
+            ${clpu} "${@:2}"
         else
-            __xsh_load "$1" && $command "${@:2}"
+            __xsh_load "${lpu}" && ${clpu} "${@:2}"
         fi
+    }
+
+    # @private
+    function __xsh_complete_lpu () {
+        local lpu=${1:?}
+        lpu=${lpu/#\//core\/}  # set default lib if lpu is started with /
+        lpu=${lpu/%\//\/*}  # set default pu if lpu is ended with /
+        if [[ -n ${lpu##*\/*} ]]; then
+            lpu="${lpu}/*"
+        else
+            :
+        fi
+        echo "${lpu}"
+    }
+
+    # @private
+    function __xsh_get_type_by_path () {
+        local path=${1:?}
+        local type=${path#${xsh_home}/lib/*/}  # strip path from begin
+        echo "${type%%/*}"  # strip path from end
+    }
+
+    # @private
+    function __xsh_get_lib_by_path () {
+        local path=${1:?}
+        local lib=${path#${xsh_home}/lib/}  # strip path from begin
+        echo "${lib%%/*}"  # remove anything after first / (include the /)
+    }
+
+    # @private
+    function __xsh_get_lib_by_lpu () {
+        local lpu=${1:?}
+        lpu=$(__xsh_complete_lpu "${lpu}")
+        echo "${lpu%%/*}"  # remove anything after first / (include the /)
+    }
+
+    # @private
+    function __xsh_get_alias_by_lib () {
+        :
+    }
+
+    # @private
+    function __xsh_get_util_by_path () {
+        local path=${1:?}
+        local util=${path##*/}  # get util
+        echo "${util%.sh}"  # remove file extension
+    }
+
+    # @private
+    function __xsh_get_pu_by_path () {
+        local path=${1:?}
+        local pu=${path#${xsh_home}/lib/*/*/}  # strip path from begin
+        echo "${pu%.sh}"  # remove file extension
+    }
+
+    # @private
+    function __xsh_get_pu_by_lpu () {
+        local lpu=${1:?}
+        lpu=$(__xsh_complete_lpu "${lpu}")
+        echo "${lpu#*/}"  # remove lib part
+    }
+
+    # @private
+    function __xsh_get_lpu_by_path () {
+        local path=${1:?}
+        local lib=$(__xsh_get_lib_by_path "${path}")
+        local pu=$(__xsh_get_pu_by_path "${path}")
+        echo "${lib}/${pu}"
+    }
+
+    # @private
+    function __xsh_get_clpu_by_path () {
+        local path=${1:?}
+        local lpu=$(__xsh_get_lpu_by_path "${path}")
+        echo "${lpu//\//-}"  # replace each / with -
+    }
+
+    # @private
+    function __xsh_get_clpu_by_lpu () {
+        local lpu=${1:?}
+        lpu=$(__xsh_complete_lpu "${lpu}")
+        echo "${lpu//\//-}"  # replace each / with -
     }
 
     # @private
@@ -243,6 +297,17 @@ function xsh () {
                   __xsh_load_function \
                   __xsh_load_script \
                   __xsh_call \
+                  __xsh_complete_lpu \
+                  __xsh_get_alias_by_lib \
+                  __xsh_get_clpu_by_lpu \
+                  __xsh_get_clpu_by_path \
+                  __xsh_get_lib_by_lpu \
+                  __xsh_get_lib_by_path \
+                  __xsh_get_lpu_by_path \
+                  __xsh_get_pu_by_lpu \
+                  __xsh_get_pu_by_path \
+                  __xsh_get_type_by_path \
+                  __xsh_get_util_by_path \
                   __xsh_clean
         else
             :
