@@ -19,7 +19,7 @@ function xsh () {
         printf "  xsh import [LIB][/PACKAGE][/UTIL] ...\n"
         printf "  xsh list\n"
         printf "  xsh load -r GIT_REPO_URL [-b BRANCH] LIB\n"
-        printf "  xsh uninstal LIB\n"
+        printf "  xsh unload LIB\n"
         printf "  xsh help|-h|--help\n\n"
 
         printf "Options:\n"
