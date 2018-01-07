@@ -1,5 +1,5 @@
 function xsh () {
-    local xsh_home name
+    local xsh_home lpu
     local ret=0
 
     # check environment variable
@@ -18,27 +18,25 @@ function xsh () {
         printf "  xsh import [LIB][/PACKAGE]/UTIL ...\n"
         printf "  xsh load [LIB][/PACKAGE][/UTIL] ...\n"
         printf "  xsh list\n"
-        printf "  xsh install -r GIT_REPO_URL [-b BRANCH] [-a ALIAS] LIB\n"
+        printf "  xsh install -r GIT_REPO_URL [-b BRANCH] LIB\n"
         printf "  xsh uninstal LIB\n"
         printf "  xsh help|-h|--help\n\n"
 
         printf "Options:\n"
         printf "  [LIB][/PACKAGE]/UTIL      Utility to call.\n"
         printf "    UTIL_OPTIONS            Will be passed to utility.\n"
-        printf "                            Default LIB is 'core', point to library xsh-lib-core.\n"
+        printf "                            Default LIB is 'x', point to library xsh-lib-xsh.\n"
         printf "  import                    Call utilities in a batch. No options can be passed.\n"
         printf "    [LIB][/PACKAGE]/UTIL    Utility to call.\n"
         printf "  load                      Load utilities so can be called as syntax: 'LIB-PACKAGE-UTIL'\n"
         printf "    [LIB][/PACKAGE][/UTIL]  Utilities to load or import.\n"
-        printf "                            Default LIB is 'core', point to library xsh-lib-core.\n"
+        printf "                            Default LIB is 'x', point to library xsh-lib-xsh.\n"
         printf "                            A single quoted asterist '*' presents all utils in all libraries.\n"
         printf "  list                      List installed libraries, packages and utilities.\n"
         printf "  install                   Install library from Git repo.\n"
         printf "    -r GIT_REPO_URL         Git repo URL.\n"
         printf "    [-b BRANCH]             Branch to use, default is repo's default branch.\n"
-        printf "    [-a ALIAS]              Alias of library name.\n"
         printf "    LIB                     Library name, must be unique in all installed libraries.\n"
-        printf "                            Default used to prefix utility name: LIB-PACKAGE-UTIL\n"
         printf "  uninstall                 Uninstall library.\n"
         printf "    LIB                     Library name.\n"
         printf "  help|-h|--help            This help.\n"
@@ -68,19 +66,16 @@ function xsh () {
 
     # @private
     function __xsh_install () {
-        local repo branch branch_opt alias name
+        local repo branch branch_opt name
         local OPTARG OPTIND
 
-        while getopts r:b:a: opt; do
+        while getopts r:b: opt; do
             case $opt in
                 r)
                     repo=$OPTARG
                     ;;
                 b)
                     branch=$OPTARG
-                    ;;
-                a)
-                    alias=$OPTARG
                     ;;
                 *)
                     usage >&2
@@ -123,10 +118,10 @@ function xsh () {
     function __xsh_load () {
         # legal input:
         #   '*'
-        #   /, core
-        #   core/pkg, /pkg
-        #   core/pkg/util, /pkg/util
-        #   core/util, /util
+        #   /, x
+        #   x/pkg, /pkg
+        #   x/pkg/util, /pkg/util
+        #   x/util, /util
         local lpu=${1:?}
         local lib_home lib pkg_util ln type
 
@@ -185,8 +180,8 @@ function xsh () {
     # Call a function or a script by LPU.
     function __xsh_call () {
         # legal input:
-        #   core/pkg/util, /pkg/util
-        #   core/util, /util
+        #   x/pkg/util, /pkg/util
+        #   x/util, /util
         local lpu=${1:?}
         local clpu
 
@@ -198,11 +193,11 @@ function xsh () {
             __xsh_load "${lpu}" && ${clpu} "${@:2}"
         fi
     }
-
+    
     # @private
     function __xsh_complete_lpu () {
         local lpu=${1:?}
-        lpu=${lpu/#\//core\/}  # set default lib if lpu is started with /
+        lpu=${lpu/#\//x\/}  # set default lib x if lpu is started with /
         lpu=${lpu/%\//\/*}  # set default pu if lpu is ended with /
         if [[ -n ${lpu##*\/*} ]]; then
             lpu="${lpu}/*"
@@ -231,11 +226,6 @@ function xsh () {
         local lpu=${1:?}
         lpu=$(__xsh_complete_lpu "${lpu}")
         echo "${lpu%%/*}"  # remove anything after first / (include the /)
-    }
-
-    # @private
-    function __xsh_get_alias_by_lib () {
-        :
     }
 
     # @private
@@ -298,16 +288,15 @@ function xsh () {
                   __xsh_load_script \
                   __xsh_call \
                   __xsh_complete_lpu \
-                  __xsh_get_alias_by_lib \
-                  __xsh_get_clpu_by_lpu \
-                  __xsh_get_clpu_by_path \
-                  __xsh_get_lib_by_lpu \
-                  __xsh_get_lib_by_path \
-                  __xsh_get_lpu_by_path \
-                  __xsh_get_pu_by_lpu \
-                  __xsh_get_pu_by_path \
                   __xsh_get_type_by_path \
+                  __xsh_get_lib_by_path \
+                  __xsh_get_lib_by_lpu \
                   __xsh_get_util_by_path \
+                  __xsh_get_pu_by_path \
+                  __xsh_get_pu_by_lpu \
+                  __xsh_get_lpu_by_path \
+                  __xsh_get_clpu_by_path \
+                  __xsh_get_clpu_by_lpu \
                   __xsh_clean
         else
             :
@@ -336,14 +325,14 @@ function xsh () {
             ret=$?
             ;;
         load)
-            for name in "${@:2}"; do
-                __xsh_load "$name"
+            for lpu in "${@:2}"; do
+                __xsh_load "${lpu}"
                 ret=$((ret + $?))
             done
             ;;
         import)
-            for name in "${@:2}"; do
-                __xsh_call "$name"
+            for lpu in "${@:2}"; do
+                __xsh_call "${lpu}"
                 ret=$((ret + $?))
             done
             ;;
