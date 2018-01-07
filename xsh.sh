@@ -15,7 +15,7 @@ function xsh () {
     function __xsh_usage () {
         printf "Usage:\n"
         printf "  xsh [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]\n"
-        printf "  xsh import [LIB][/PACKAGE]/UTIL ...\n"
+        printf "  xsh call [LIB][/PACKAGE]/UTIL ...\n"
         printf "  xsh load [LIB][/PACKAGE][/UTIL] ...\n"
         printf "  xsh list\n"
         printf "  xsh install -r GIT_REPO_URL [-b BRANCH] LIB\n"
@@ -26,10 +26,10 @@ function xsh () {
         printf "  [LIB][/PACKAGE]/UTIL      Utility to call.\n"
         printf "    UTIL_OPTIONS            Will be passed to utility.\n"
         printf "                            Default LIB is 'x', point to library xsh-lib-xsh.\n"
-        printf "  import                    Call utilities in a batch. No options can be passed.\n"
+        printf "  call                    Call utilities in a batch. No options can be passed.\n"
         printf "    [LIB][/PACKAGE]/UTIL    Utility to call.\n"
         printf "  load                      Load utilities so can be called as syntax: 'LIB-PACKAGE-UTIL'\n"
-        printf "    [LIB][/PACKAGE][/UTIL]  Utilities to load or import.\n"
+        printf "    [LIB][/PACKAGE][/UTIL]  Utilities to load or call.\n"
         printf "                            Default LIB is 'x', point to library xsh-lib-xsh.\n"
         printf "                            A single quoted asterist '*' presents all utils in all libraries.\n"
         printf "  list                      List installed libraries, packages and utilities.\n"
@@ -330,7 +330,7 @@ function xsh () {
                 ret=$((ret + $?))
             done
             ;;
-        import)
+        call)
             for lpue in "${@:2}"; do
                 __xsh_call "${lpue}"
                 ret=$((ret + $?))
