@@ -66,7 +66,7 @@ function xsh () {
 
     # @private
     function __xsh_load () {
-        local repo branch branch_opt name
+        local repo branch branch_opt lib
         local OPTARG OPTIND
 
         while getopts r:b: opt; do
@@ -84,16 +84,16 @@ function xsh () {
             esac
         done
         shift $((OPTIND - 1))
-        name=${1:?}
+        lib=${1:?}
 
         [[ -n ${branch} ]] && branch_opt="-b ${branch}"
 
-        if [[ -e ${xsh_home}/lib/${name} ]]; then
+        if [[ -e ${xsh_home}/lib/${lib} ]]; then
             printf "ERROR: library '%s' already exists.\n" "${name}"
             return 255
         else
-            git clone ${branch_opt} "${repo:?}" "${xsh_home}/lib/${name}"
-            find "${xsh_home}/lib/${name}/scripts" \
+            git clone ${branch_opt} "${repo:?}" "${xsh_home}/lib/${lib}"
+            find "${xsh_home}/lib/${lib}/scripts" \
                  -type f \
                  -name "*.sh" \
                  -exec chmod +x {} \;
@@ -123,12 +123,12 @@ function xsh () {
         #   x/pkg/util, /pkg/util
         #   x/util, /util
         local lpue=${1:?}
-        local lib_home lib pkg_util ln type
+        local lib_home lib pue ln type
 
         lib_home="${xsh_home}/lib"
 
         lib=$(__xsh_get_lib_by_lpue "${lpue}")
-        pu=$(__xsh_get_pue_by_lpue "${lpue}")
+        pue=$(__xsh_get_pue_by_lpue "${lpue}")
 
         while read ln; do
             type=$(__xsh_get_type_by_path "${ln}")
@@ -146,14 +146,14 @@ function xsh () {
             esac
         done <<< "$(
              find "${lib_home}" \
-                  -path "${lib_home}/${lib}/functions/${pu}.sh" \
+                  -path "${lib_home}/${lib}/functions/${pue}.sh" \
                   -o \
-                  -path "${lib_home}/${lib}/functions/${pu}/*" \
+                  -path "${lib_home}/${lib}/functions/${pue}/*" \
                   -name "*.sh" \
                   -o \
-                  -path "${lib_home}/${lib}/scripts/${pu}.sh" \
+                  -path "${lib_home}/${lib}/scripts/${pue}.sh" \
                   -o \
-                  -path "${lib_home}/${lib}/scripts/${pu}/*" \
+                  -path "${lib_home}/${lib}/scripts/${pue}/*" \
                   -name "*.sh" \
                   2>/dev/null
                   )"
@@ -238,8 +238,8 @@ function xsh () {
     # @private
     function __xsh_get_pue_by_path () {
         local path=${1:?}
-        local pu=${path#${xsh_home}/lib/*/*/}  # strip path from begin
-        echo "${pu%.sh}"  # remove file extension
+        local pue=${path#${xsh_home}/lib/*/*/}  # strip path from begin
+        echo "${pue%.sh}"  # remove file extension
     }
 
     # @private
@@ -253,8 +253,8 @@ function xsh () {
     function __xsh_get_lpue_by_path () {
         local path=${1:?}
         local lib=$(__xsh_get_lib_by_path "${path}")
-        local pu=$(__xsh_get_pu_by_path "${path}")
-        echo "${lib}/${pu}"
+        local pue=$(__xsh_get_pue_by_path "${path}")
+        echo "${lib}/${pue}"
     }
 
     # @private
