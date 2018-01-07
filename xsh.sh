@@ -16,7 +16,7 @@ function xsh () {
         printf "Usage:\n"
         printf "  xsh [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]\n"
         printf "  xsh call [LIB][/PACKAGE]/UTIL ...\n"
-        printf "  xsh load [LIB][/PACKAGE][/UTIL] ...\n"
+        printf "  xsh import [LIB][/PACKAGE][/UTIL] ...\n"
         printf "  xsh list\n"
         printf "  xsh install -r GIT_REPO_URL [-b BRANCH] LIB\n"
         printf "  xsh uninstal LIB\n"
@@ -28,8 +28,8 @@ function xsh () {
         printf "                            Default LIB is 'x', point to library xsh-lib-xsh.\n"
         printf "  call                    Call utilities in a batch. No options can be passed.\n"
         printf "    [LIB][/PACKAGE]/UTIL    Utility to call.\n"
-        printf "  load                      Load utilities so can be called as syntax: 'LIB-PACKAGE-UTIL'\n"
-        printf "    [LIB][/PACKAGE][/UTIL]  Utilities to load or call.\n"
+        printf "  import                      Import utilities so can be called as syntax: 'LIB-PACKAGE-UTIL'\n"
+        printf "    [LIB][/PACKAGE][/UTIL]  Utilities to import or call.\n"
         printf "                            Default LIB is 'x', point to library xsh-lib-xsh.\n"
         printf "                            A single quoted asterist '*' presents all utils in all libraries.\n"
         printf "  list                      List installed libraries, packages and utilities.\n"
@@ -115,7 +115,7 @@ function xsh () {
     # @private
     # Source a function by LPUE.
     # Link a script by LPUE.
-    function __xsh_load () {
+    function __xsh_import () {
         # legal input:
         #   '*'
         #   /, x
@@ -135,10 +135,10 @@ function xsh () {
 
             case ${type} in
                 functions)
-                    __xsh_load_function "${ln}"
+                    __xsh_import_function "${ln}"
                     ;;
                 scripts)
-                    __xsh_load_script "${ln}"
+                    __xsh_import_script "${ln}"
                     ;;
                 *)
                     return 255
@@ -162,7 +162,7 @@ function xsh () {
     # @private
     # Source a file ".../<lib>/functions/<package>/<util>.sh"
     #   as function "<lib>-<package>-<util>"
-    function __xsh_load_function () {
+    function __xsh_import_function () {
         local util=$(__xsh_get_util_by_path "${1:?}")
         local lpuc=$(__xsh_get_lpuc_by_path "${1:?}")
         source /dev/stdin <<<"$(sed "s/function ${util} ()/function ${lpuc} ()/g" "$1")"
@@ -171,7 +171,7 @@ function xsh () {
     # @private
     # Link a file ".../<lib>/scripts/<package>/<util>.sh"
     #   as "/usr/local/bin/<lib>-<package>-<util>"
-    function __xsh_load_script () {
+    function __xsh_import_script () {
         local lpuc=$(__xsh_get_lpuc_by_path "${1:?}")
         ln -sf "$1" "/usr/local/bin/${lpuc}"
     }
@@ -190,7 +190,7 @@ function xsh () {
         if type ${lpuc} >/dev/null 2>&1; then
             ${lpuc} "${@:2}"
         else
-            __xsh_load "${lpue}" && ${lpuc} "${@:2}"
+            __xsh_import "${lpue}" && ${lpuc} "${@:2}"
         fi
     }
 
@@ -283,9 +283,9 @@ function xsh () {
                   __xsh_list \
                   __xsh_install \
                   __xsh_uninstall \
-                  __xsh_load \
-                  __xsh_load_function \
-                  __xsh_load_script \
+                  __xsh_import \
+                  __xsh_import_function \
+                  __xsh_import_script \
                   __xsh_call \
                   __xsh_complete_lpue \
                   __xsh_get_type_by_path \
@@ -324,9 +324,9 @@ function xsh () {
             __xsh_uninstall "${@:2}"
             ret=$?
             ;;
-        load)
+        import)
             for lpue in "${@:2}"; do
-                __xsh_load "${lpue}"
+                __xsh_import "${lpue}"
                 ret=$((ret + $?))
             done
             ;;
