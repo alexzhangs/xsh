@@ -18,7 +18,7 @@ function xsh () {
         printf "  xsh call [LIB][/PACKAGE]/UTIL ...\n"
         printf "  xsh import [LIB][/PACKAGE][/UTIL] ...\n"
         printf "  xsh list\n"
-        printf "  xsh install -r GIT_REPO_URL [-b BRANCH] LIB\n"
+        printf "  xsh load -r GIT_REPO_URL [-b BRANCH] LIB\n"
         printf "  xsh uninstal LIB\n"
         printf "  xsh help|-h|--help\n\n"
 
@@ -32,12 +32,12 @@ function xsh () {
         printf "    [LIB][/PACKAGE][/UTIL]  Utilities to import or call.\n"
         printf "                            Default LIB is 'x', point to library xsh-lib-xsh.\n"
         printf "                            A single quoted asterist '*' presents all utils in all libraries.\n"
-        printf "  list                      List installed libraries, packages and utilities.\n"
-        printf "  install                   Install library from Git repo.\n"
+        printf "  list                      List loaded libraries, packages and utilities.\n"
+        printf "  load                   Load library from Git repo.\n"
         printf "    -r GIT_REPO_URL         Git repo URL.\n"
         printf "    [-b BRANCH]             Branch to use, default is repo's default branch.\n"
-        printf "    LIB                     Library name, must be unique in all installed libraries.\n"
-        printf "  uninstall                 Uninstall library.\n"
+        printf "    LIB                     Library name, must be unique in all loaded libraries.\n"
+        printf "  unload                 Unload library.\n"
         printf "    LIB                     Library name.\n"
         printf "  help|-h|--help            This help.\n"
     }
@@ -65,7 +65,7 @@ function xsh () {
     }
 
     # @private
-    function __xsh_install () {
+    function __xsh_load () {
         local repo branch branch_opt name
         local OPTARG OPTIND
 
@@ -101,7 +101,7 @@ function xsh () {
     }
 
     # @private
-    function __xsh_uninstall () {
+    function __xsh_unload () {
         local name=${1:?}
 
         if [[ -e ${xsh_home}/lib/${name} ]]; then
@@ -281,8 +281,8 @@ function xsh () {
                     | grep -c "^${FUNCNAME[1]}$") -eq 1 ]]; then
             unset __xsh_usage \
                   __xsh_list \
-                  __xsh_install \
-                  __xsh_uninstall \
+                  __xsh_load \
+                  __xsh_unload \
                   __xsh_import \
                   __xsh_import_function \
                   __xsh_import_script \
@@ -316,12 +316,12 @@ function xsh () {
             __xsh_list
             ret=$?
             ;;
-        install)
-            __xsh_install "${@:2}"
+        load)
+            __xsh_load "${@:2}"
             ret=$?
             ;;
-        uninstall)
-            __xsh_uninstall "${@:2}"
+        unload)
+            __xsh_unload "${@:2}"
             ret=$?
             ;;
         import)
