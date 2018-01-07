@@ -1,5 +1,5 @@
 function xsh () {
-    local xsh_home lpu
+    local xsh_home lpue
     local ret=0
 
     # check environment variable
@@ -113,8 +113,8 @@ function xsh () {
     }
 
     # @private
-    # Source a function by LPU.
-    # Link a script by LPU.
+    # Source a function by LPUE.
+    # Link a script by LPUE.
     function __xsh_load () {
         # legal input:
         #   '*'
@@ -122,13 +122,13 @@ function xsh () {
         #   x/pkg, /pkg
         #   x/pkg/util, /pkg/util
         #   x/util, /util
-        local lpu=${1:?}
+        local lpue=${1:?}
         local lib_home lib pkg_util ln type
 
         lib_home="${xsh_home}/lib"
 
-        lib=$(__xsh_get_lib_by_lpu "${lpu}")
-        pu=$(__xsh_get_pu_by_lpu "${lpu}")
+        lib=$(__xsh_get_lib_by_lpue "${lpue}")
+        pu=$(__xsh_get_pue_by_lpue "${lpue}")
 
         while read ln; do
             type=$(__xsh_get_type_by_path "${ln}")
@@ -164,47 +164,47 @@ function xsh () {
     #   as function "<lib>-<package>-<util>"
     function __xsh_load_function () {
         local util=$(__xsh_get_util_by_path "${1:?}")
-        local clpu=$(__xsh_get_clpu_by_path "${1:?}")
-        source /dev/stdin <<<"$(sed "s/function ${util} ()/function ${clpu} ()/g" "$1")"
+        local lpuc=$(__xsh_get_lpuc_by_path "${1:?}")
+        source /dev/stdin <<<"$(sed "s/function ${util} ()/function ${lpuc} ()/g" "$1")"
     }
 
     # @private
     # Link a file ".../<lib>/scripts/<package>/<util>.sh"
     #   as "/usr/local/bin/<lib>-<package>-<util>"
     function __xsh_load_script () {
-        local clpu=$(__xsh_get_clpu_by_path "${1:?}")
-        ln -sf "$1" "/usr/local/bin/${clpu}"
+        local lpuc=$(__xsh_get_lpuc_by_path "${1:?}")
+        ln -sf "$1" "/usr/local/bin/${lpuc}"
     }
 
     # @private
-    # Call a function or a script by LPU.
+    # Call a function or a script by LPUE.
     function __xsh_call () {
         # legal input:
         #   x/pkg/util, /pkg/util
         #   x/util, /util
-        local lpu=${1:?}
-        local clpu
+        local lpue=${1:?}
+        local lpuc
 
-        clpu=$(__xsh_get_clpu_by_lpu "${lpu}")
+        lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
 
-        if type ${clpu} >/dev/null 2>&1; then
-            ${clpu} "${@:2}"
+        if type ${lpuc} >/dev/null 2>&1; then
+            ${lpuc} "${@:2}"
         else
-            __xsh_load "${lpu}" && ${clpu} "${@:2}"
+            __xsh_load "${lpue}" && ${lpuc} "${@:2}"
         fi
     }
-    
+
     # @private
-    function __xsh_complete_lpu () {
-        local lpu=${1:?}
-        lpu=${lpu/#\//x\/}  # set default lib x if lpu is started with /
-        lpu=${lpu/%\//\/*}  # set default pu if lpu is ended with /
-        if [[ -n ${lpu##*\/*} ]]; then
-            lpu="${lpu}/*"
+    function __xsh_complete_lpue () {
+        local lpue=${1:?}
+        lpue=${lpue/#\//x\/}  # set default lib x if lpue is started with /
+        lpue=${lpue/%\//\/*}  # set default pue if lpue is ended with /
+        if [[ -n ${lpue##*\/*} ]]; then
+            lpue="${lpue}/*"
         else
             :
         fi
-        echo "${lpu}"
+        echo "${lpue}"
     }
 
     # @private
@@ -222,10 +222,10 @@ function xsh () {
     }
 
     # @private
-    function __xsh_get_lib_by_lpu () {
-        local lpu=${1:?}
-        lpu=$(__xsh_complete_lpu "${lpu}")
-        echo "${lpu%%/*}"  # remove anything after first / (include the /)
+    function __xsh_get_lib_by_lpue () {
+        local lpue=${1:?}
+        lpue=$(__xsh_complete_lpue "${lpue}")
+        echo "${lpue%%/*}"  # remove anything after first / (include the /)
     }
 
     # @private
@@ -243,14 +243,14 @@ function xsh () {
     }
 
     # @private
-    function __xsh_get_pu_by_lpu () {
-        local lpu=${1:?}
-        lpu=$(__xsh_complete_lpu "${lpu}")
-        echo "${lpu#*/}"  # remove lib part
+    function __xsh_get_pue_by_lpue () {
+        local lpue=${1:?}
+        lpue=$(__xsh_complete_lpue "${lpue}")
+        echo "${lpue#*/}"  # remove lib part
     }
 
     # @private
-    function __xsh_get_lpu_by_path () {
+    function __xsh_get_lpue_by_path () {
         local path=${1:?}
         local lib=$(__xsh_get_lib_by_path "${path}")
         local pu=$(__xsh_get_pu_by_path "${path}")
@@ -258,17 +258,17 @@ function xsh () {
     }
 
     # @private
-    function __xsh_get_clpu_by_path () {
+    function __xsh_get_lpuc_by_path () {
         local path=${1:?}
-        local lpu=$(__xsh_get_lpu_by_path "${path}")
-        echo "${lpu//\//-}"  # replace each / with -
+        local lpue=$(__xsh_get_lpue_by_path "${path}")
+        echo "${lpue//\//-}"  # replace each / with -
     }
 
     # @private
-    function __xsh_get_clpu_by_lpu () {
-        local lpu=${1:?}
-        lpu=$(__xsh_complete_lpu "${lpu}")
-        echo "${lpu//\//-}"  # replace each / with -
+    function __xsh_get_lpuc_by_lpue () {
+        local lpue=${1:?}
+        lpue=$(__xsh_complete_lpue "${lpue}")
+        echo "${lpue//\//-}"  # replace each / with -
     }
 
     # @private
@@ -287,16 +287,16 @@ function xsh () {
                   __xsh_load_function \
                   __xsh_load_script \
                   __xsh_call \
-                  __xsh_complete_lpu \
+                  __xsh_complete_lpue \
                   __xsh_get_type_by_path \
                   __xsh_get_lib_by_path \
-                  __xsh_get_lib_by_lpu \
+                  __xsh_get_lib_by_lpue \
                   __xsh_get_util_by_path \
-                  __xsh_get_pu_by_path \
-                  __xsh_get_pu_by_lpu \
-                  __xsh_get_lpu_by_path \
-                  __xsh_get_clpu_by_path \
-                  __xsh_get_clpu_by_lpu \
+                  __xsh_get_pue_by_path \
+                  __xsh_get_pue_by_lpue \
+                  __xsh_get_lpue_by_path \
+                  __xsh_get_lpuc_by_path \
+                  __xsh_get_lpuc_by_lpue \
                   __xsh_clean
         else
             :
@@ -325,14 +325,14 @@ function xsh () {
             ret=$?
             ;;
         load)
-            for lpu in "${@:2}"; do
-                __xsh_load "${lpu}"
+            for lpue in "${@:2}"; do
+                __xsh_load "${lpue}"
                 ret=$((ret + $?))
             done
             ;;
         import)
-            for lpu in "${@:2}"; do
-                __xsh_call "${lpu}"
+            for lpue in "${@:2}"; do
+                __xsh_call "${lpue}"
                 ret=$((ret + $?))
             done
             ;;
