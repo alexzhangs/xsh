@@ -70,12 +70,12 @@ function xsh () {
         local OPTARG OPTIND
 
         while getopts r:b: opt; do
-            case $opt in
+            case ${opt} in
                 r)
-                    repo=$OPTARG
+                    repo=${OPTARG}
                     ;;
                 b)
-                    branch=$OPTARG
+                    branch=${OPTARG}
                     ;;
                 *)
                     usage >&2
@@ -89,7 +89,7 @@ function xsh () {
         [[ -n ${branch} ]] && branch_opt="-b ${branch}"
 
         if [[ -e ${xsh_home}/lib/${lib} ]]; then
-            printf "ERROR: library '%s' already exists.\n" "${name}"
+            printf "ERROR: library '%s' already exists.\n" "${lib}"
             return 255
         else
             git clone ${branch_opt} "${repo:?}" "${xsh_home}/lib/${lib}"
@@ -102,12 +102,12 @@ function xsh () {
 
     # @private
     function __xsh_unload () {
-        local name=${1:?}
+        local lib=${1:?}
 
-        if [[ -e ${xsh_home}/lib/${name} ]]; then
-            /bin/rm -rf "${xsh_home}/lib/${name}"
+        if [[ -e ${xsh_home}/lib/${lib} ]]; then
+            /bin/rm -rf "${xsh_home}/lib/${lib}"
         else
-            printf "ERROR: library '%s' doesn't exist.\n" "${name}"
+            printf "ERROR: library '%s' doesn't exist.\n" "${lib}"
             return 255
         fi
     }
@@ -349,6 +349,6 @@ function xsh () {
     # clean
     __xsh_clean
 
-    return $ret
+    return ${ret}
 }
 export -f xsh
