@@ -236,7 +236,7 @@ function xsh () {
     }
 
     # @private
-    function __xsh_get_pu_by_path () {
+    function __xsh_get_pue_by_path () {
         local path=${1:?}
         local pu=${path#${xsh_home}/lib/*/*/}  # strip path from begin
         echo "${pu%.sh}"  # remove file extension
