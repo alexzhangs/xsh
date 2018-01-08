@@ -165,6 +165,7 @@ function xsh () {
     # @private
     function __xsh_imports () {
         local lpue
+        local ret=0
 
         for lpue in "$@"; do
             __xsh_import "${lpue}"
@@ -222,7 +223,7 @@ function xsh () {
 
         util=$(__xsh_get_util_by_path "${path}")
         lpuc=$(__xsh_get_lpuc_by_path "${path}")
-        source /dev/stdin <<<"$(sed "s/function ${util} ()/function ${lpuc} ()/g" "${path}")"
+        source /dev/stdin <<< "$(sed "s/function ${util} ()/function ${lpuc} ()/g" "${path}")"
     }
 
     # @private
@@ -244,6 +245,7 @@ function xsh () {
     # @private
     function __xsh_calls () {
         local lpue
+        local ret=0
 
         for lpue in "$@"; do
             __xsh_call "${lpue}"
