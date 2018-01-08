@@ -33,14 +33,12 @@ function xsh () {
     # call __xsh_clean() while xsh() returns
     old_trap_return=$(trap -p RETURN)
     old_trap_return=${old_trap_return:-trap - RETURN}
-    trap 'local __xsh_ret=$?
-         eval "${old_trap_return}"
+    trap 'eval "${old_trap_return}";
          if [[ ${FUNCNAME[0]} == xsh ]]; then
              if type -t __xsh_clean >/dev/null 2>&1; then
-                 __xsh_clean
-             fi
-         fi
-         return ${__xsh_ret}' RETURN
+                 __xsh_clean;
+             fi;
+         fi;' RETURN
 
     # check environment variable
     if [[ -n ${XSH_HOME%/} ]]; then
@@ -477,6 +475,7 @@ function xsh () {
                   __xsh_get_lpue_by_path \
                   __xsh_get_lpuc_by_path \
                   __xsh_get_lpuc_by_lpue \
+                  __xsh_get_path_by_lpue \
                   __xsh_clean
         else
             :
