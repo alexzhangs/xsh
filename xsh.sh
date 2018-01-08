@@ -1,6 +1,18 @@
 function xsh () {
-    local xsh_home lpue
+    local xsh_home lpue old_trap_return
     local ret=0
+
+    # call __xsh_clean() while xsh() returns
+    old_trap_return=$(trap -p RETURN)
+    old_trap_return=${old_trap_return:-trap - RETURN}
+    trap 'local __xsh_ret=$?
+         eval "${old_trap_return}"
+         if [[ ${FUNCNAME[0]} == xsh ]]; then
+             if type -t __xsh_clean >/dev/null 2>&1; then
+                 __xsh_clean
+             fi
+         fi
+         return ${__xsh_ret}' RETURN
 
     # check environment variable
     if [[ -n ${XSH_HOME%/} ]]; then
@@ -84,15 +96,25 @@ function xsh () {
             esac
         done
         shift $((OPTIND - 1))
-        lib=${1:?}
+        lib=$1
+
+        if [[ -z ${lib} ]]; then
+            printf "ERROR: library name is null or not set.\n" >&2
+            return 255
+        fi
+
+        if [[ -z ${repo} ]]; then
+            printf "ERROR: repository URL is null or not set.\n" >&2
+            return 255
+        fi
 
         [[ -n ${branch} ]] && branch_opt="-b ${branch}"
 
         if [[ -e ${xsh_home}/lib/${lib} ]]; then
-            printf "ERROR: library '%s' already exists.\n" "${lib}"
+            printf "ERROR: library '%s' already exists.\n" "${lib}" >&2
             return 255
         else
-            git clone ${branch_opt} "${repo:?}" "${xsh_home}/lib/${lib}"
+            git clone ${branch_opt} "${repo}" "${xsh_home}/lib/${lib}"
             find "${xsh_home}/lib/${lib}/scripts" \
                  -type f \
                  -name "*.sh" \
@@ -102,12 +124,17 @@ function xsh () {
 
     # @private
     function __xsh_unload () {
-        local lib=${1:?}
+        local lib=$1
+
+        if [[ -z ${lib} ]]; then
+            printf "ERROR: library name is null or not set.\n" >&2
+            return 255
+        fi
 
         if [[ -e ${xsh_home}/lib/${lib} ]]; then
             /bin/rm -rf "${xsh_home}/lib/${lib}"
         else
-            printf "ERROR: library '%s' doesn't exist.\n" "${lib}"
+            printf "ERROR: library '%s' doesn't exist.\n" "${lib}" >&2
             return 255
         fi
     }
@@ -122,8 +149,13 @@ function xsh () {
         #   x/pkg, /pkg
         #   x/pkg/util, /pkg/util
         #   x/util, /util
-        local lpue=${1:?}
+        local lpue=$1
         local lib_home lib pue ln type
+
+        if [[ -z ${lpue} ]]; then
+            printf "ERROR: LPUE is null or not set.\n" >&2
+            return 255
+        fi
 
         lib_home="${xsh_home}/lib"
 
@@ -163,17 +195,33 @@ function xsh () {
     # Source a file ".../<lib>/functions/<package>/<util>.sh"
     #   as function "<lib>-<package>-<util>"
     function __xsh_import_function () {
-        local util=$(__xsh_get_util_by_path "${1:?}")
-        local lpuc=$(__xsh_get_lpuc_by_path "${1:?}")
-        source /dev/stdin <<<"$(sed "s/function ${util} ()/function ${lpuc} ()/g" "$1")"
+        local path=$1
+        local util lpuc
+
+        if [[ -z ${path} ]]; then
+            printf "ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        util=$(__xsh_get_util_by_path "${path}")
+        lpuc=$(__xsh_get_lpuc_by_path "${path}")
+        source /dev/stdin <<<"$(sed "s/function ${util} ()/function ${lpuc} ()/g" "${path}")"
     }
 
     # @private
     # Link a file ".../<lib>/scripts/<package>/<util>.sh"
     #   as "/usr/local/bin/<lib>-<package>-<util>"
     function __xsh_import_script () {
-        local lpuc=$(__xsh_get_lpuc_by_path "${1:?}")
-        ln -sf "$1" "/usr/local/bin/${lpuc}"
+        local path=$1
+        local lpuc
+
+        if [[ -z ${path} ]]; then
+            printf "ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        lpuc=$(__xsh_get_lpuc_by_path "${path}")
+        ln -sf "${path}" "/usr/local/bin/${lpuc}"
     }
 
     # @private
@@ -182,12 +230,17 @@ function xsh () {
         # legal input:
         #   x/pkg/util, /pkg/util
         #   x/util, /util
-        local lpue=${1:?}
+        local lpue=$1
         local lpuc
+
+        if [[ -z ${lpue} ]]; then
+            printf "ERROR: LPUE is null or not set.\n" >&2
+            return 255
+        fi
 
         lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
 
-        if type ${lpuc} >/dev/null 2>&1; then
+        if type -t ${lpuc} >/dev/null 2>&1; then
             ${lpuc} "${@:2}"
         else
             __xsh_import "${lpue}" && ${lpuc} "${@:2}"
@@ -196,7 +249,13 @@ function xsh () {
 
     # @private
     function __xsh_complete_lpue () {
-        local lpue=${1:?}
+        local lpue=$1
+
+        if [[ -z ${lpue} ]]; then
+            printf "ERROR: LPUE is null or not set.\n" >&2
+            return 255
+        fi
+
         lpue=${lpue/#\//x\/}  # set default lib x if lpue is started with /
         lpue=${lpue/%\//\/*}  # set default pue if lpue is ended with /
         if [[ -n ${lpue##*\/*} ]]; then
@@ -209,42 +268,82 @@ function xsh () {
 
     # @private
     function __xsh_get_type_by_path () {
-        local path=${1:?}
-        local type=${path#${xsh_home}/lib/*/}  # strip path from begin
+        local path=$1
+        local type
+
+        if [[ -z ${path} ]]; then
+            printf "ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        type=${path#${xsh_home}/lib/*/}  # strip path from begin
         echo "${type%%/*}"  # strip path from end
     }
 
     # @private
     function __xsh_get_lib_by_path () {
-        local path=${1:?}
-        local lib=${path#${xsh_home}/lib/}  # strip path from begin
+        local path=$1
+        local lib
+
+        if [[ -z ${path} ]]; then
+            printf "ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        lib=${path#${xsh_home}/lib/}  # strip path from begin
         echo "${lib%%/*}"  # remove anything after first / (include the /)
     }
 
     # @private
     function __xsh_get_lib_by_lpue () {
-        local lpue=${1:?}
+        local lpue=$1
+
+        if [[ -z ${lpue} ]]; then
+            printf "ERROR: LPUE is null or not set.\n" >&2
+            return 255
+        fi
+
         lpue=$(__xsh_complete_lpue "${lpue}")
         echo "${lpue%%/*}"  # remove anything after first / (include the /)
     }
 
     # @private
     function __xsh_get_util_by_path () {
-        local path=${1:?}
-        local util=${path##*/}  # get util
+        local path=$1
+        local util
+
+        if [[ -z ${path} ]]; then
+            printf "ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        util=${path##*/}  # get util
         echo "${util%.sh}"  # remove file extension
     }
 
     # @private
     function __xsh_get_pue_by_path () {
         local path=${1:?}
-        local pue=${path#${xsh_home}/lib/*/*/}  # strip path from begin
+        local pue
+
+        if [[ -z ${path} ]]; then
+            printf "ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        pue=${path#${xsh_home}/lib/*/*/}  # strip path from begin
         echo "${pue%.sh}"  # remove file extension
     }
 
     # @private
     function __xsh_get_pue_by_lpue () {
-        local lpue=${1:?}
+        local lpue=$1
+
+        if [[ -z ${lpue} ]]; then
+            printf "ERROR: LPUE is null or not set.\n" >&2
+            return 255
+        fi
+
         lpue=$(__xsh_complete_lpue "${lpue}")
         echo "${lpue#*/}"  # remove lib part
     }
@@ -252,21 +351,41 @@ function xsh () {
     # @private
     function __xsh_get_lpue_by_path () {
         local path=${1:?}
-        local lib=$(__xsh_get_lib_by_path "${path}")
-        local pue=$(__xsh_get_pue_by_path "${path}")
+        local lib pue
+
+        if [[ -z ${path} ]]; then
+            printf "ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        lib=$(__xsh_get_lib_by_path "${path}")
+        pue=$(__xsh_get_pue_by_path "${path}")
         echo "${lib}/${pue}"
     }
 
     # @private
     function __xsh_get_lpuc_by_path () {
-        local path=${1:?}
-        local lpue=$(__xsh_get_lpue_by_path "${path}")
+        local path=$1
+        local lpue
+
+        if [[ -z ${path} ]]; then
+            printf "ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        lpue=$(__xsh_get_lpue_by_path "${path}")
         echo "${lpue//\//-}"  # replace each / with -
     }
 
     # @private
     function __xsh_get_lpuc_by_lpue () {
-        local lpue=${1:?}
+        local lpue=$1
+
+        if [[ -z ${lpue} ]]; then
+            printf "ERROR: LPUE is null or not set.\n" >&2
+            return 255
+        fi
+
         lpue=$(__xsh_complete_lpue "${lpue}")
         echo "${lpue//\//-}"  # replace each / with -
     }
@@ -306,7 +425,6 @@ function xsh () {
     # check input
     if [[ -z $1 ]]; then
         __xsh_usage >&2
-        __xsh_clean
         return 255
     fi
 
@@ -345,9 +463,6 @@ function xsh () {
             ret=$?
             ;;
     esac
-
-    # clean
-    __xsh_clean
 
     return ${ret}
 }
