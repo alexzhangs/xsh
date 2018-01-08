@@ -1,4 +1,33 @@
 function xsh () {
+#? Usage:
+#?   xsh [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]
+#?   xsh call [LIB][/PACKAGE]/UTIL ...
+#?   xsh import [LIB][/PACKAGE][/UTIL] ...
+#?   xsh list
+#?   xsh load -r GIT_REPO_URL [-b BRANCH] LIB
+#?   xsh unload LIB
+#?   xsh help [LIB][/PACKAGE][/UTIL]
+#?
+#? Options:
+#?   [LIB][/PACKAGE]/UTIL      Utility to call.
+#?     UTIL_OPTIONS            Will be passed to utility.
+#?                             Default LIB is 'x', point to library xsh-lib-xsh.
+#?   call                      Call utilities in a batch. No options can be passed.
+#?     [LIB][/PACKAGE]/UTIL    Utility to call.
+#?   import                    Import utilities so can be called as syntax: 'LIB-PACKAGE-UTIL'
+#?     [LIB][/PACKAGE][/UTIL]  Utilities to import or call.
+#?                             Default LIB is 'x', point to library xsh-lib-xsh.
+#?                             A single quoted asterist '*' presents all utils in all libraries.
+#?   list                      List loaded libraries, packages and utilities.
+#?   load                      Load library from Git repo.
+#?     -r GIT_REPO_URL         Git repo URL.
+#?     [-b BRANCH]             Branch to use, default is repo's default branch.
+#?     LIB                     Library name, must be unique in all loaded libraries.
+#?   unload                    Unload library.
+#?     LIB                     Library name.
+#?   help                      Show this help if no option followed.
+#?     [LIB][/PACKAGE][/UTIL]  Show help for utilities.
+
     local xsh_home lpue old_trap_return
     local ret=0
 
@@ -24,34 +53,32 @@ function xsh () {
     fi
 
     # @private
-    function __xsh_usage () {
-        printf "Usage:\n"
-        printf "  xsh [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]\n"
-        printf "  xsh call [LIB][/PACKAGE]/UTIL ...\n"
-        printf "  xsh import [LIB][/PACKAGE][/UTIL] ...\n"
-        printf "  xsh list\n"
-        printf "  xsh load -r GIT_REPO_URL [-b BRANCH] LIB\n"
-        printf "  xsh unload LIB\n"
-        printf "  xsh help|-h|--help\n\n"
+    function __xsh_helps () {
+        local lpue=$1
+        local path ln
 
-        printf "Options:\n"
-        printf "  [LIB][/PACKAGE]/UTIL      Utility to call.\n"
-        printf "    UTIL_OPTIONS            Will be passed to utility.\n"
-        printf "                            Default LIB is 'x', point to library xsh-lib-xsh.\n"
-        printf "  call                      Call utilities in a batch. No options can be passed.\n"
-        printf "    [LIB][/PACKAGE]/UTIL    Utility to call.\n"
-        printf "  import                    Import utilities so can be called as syntax: 'LIB-PACKAGE-UTIL'\n"
-        printf "    [LIB][/PACKAGE][/UTIL]  Utilities to import or call.\n"
-        printf "                            Default LIB is 'x', point to library xsh-lib-xsh.\n"
-        printf "                            A single quoted asterist '*' presents all utils in all libraries.\n"
-        printf "  list                      List loaded libraries, packages and utilities.\n"
-        printf "  load                      Load library from Git repo.\n"
-        printf "    -r GIT_REPO_URL         Git repo URL.\n"
-        printf "    [-b BRANCH]             Branch to use, default is repo's default branch.\n"
-        printf "    LIB                     Library name, must be unique in all loaded libraries.\n"
-        printf "  unload                    Unload library.\n"
-        printf "    LIB                     Library name.\n"
-        printf "  help|-h|--help            This help.\n"
+        if [[ -z ${lpue} ]]; then
+            path="${XSH_HOME}/xsh.sh"
+        else
+            path=$(__xsh_get_path_by_lpue "${lpue}")
+        fi
+
+        while read ln; do
+            __xsh_help "${ln}"
+        done <<< "$(echo "${path}")"
+    }
+
+    # @private
+    function __xsh_help () {
+        local path=$1
+
+        if [[ -z ${path} ]]; then
+            printf "ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        # read doc-help
+        sed -n '/^#\? /p' "${path}" | sed 's/^#\? //' >&2
     }
 
     # @private
@@ -90,7 +117,6 @@ function xsh () {
                     branch=${OPTARG}
                     ;;
                 *)
-                    usage >&2
                     return 255
                     ;;
             esac
@@ -150,17 +176,12 @@ function xsh () {
         #   x/pkg/util, /pkg/util
         #   x/util, /util
         local lpue=$1
-        local lib_home lib pue ln type
+        local ln type
 
         if [[ -z ${lpue} ]]; then
             printf "ERROR: LPUE is null or not set.\n" >&2
             return 255
         fi
-
-        lib_home="${xsh_home}/lib"
-
-        lib=$(__xsh_get_lib_by_lpue "${lpue}")
-        pue=$(__xsh_get_pue_by_lpue "${lpue}")
 
         while read ln; do
             type=$(__xsh_get_type_by_path "${ln}")
@@ -176,19 +197,7 @@ function xsh () {
                     return 255
                     ;;
             esac
-        done <<< "$(
-             find "${lib_home}" \
-                  -path "${lib_home}/${lib}/functions/${pue}.sh" \
-                  -o \
-                  -path "${lib_home}/${lib}/functions/${pue}/*" \
-                  -name "*.sh" \
-                  -o \
-                  -path "${lib_home}/${lib}/scripts/${pue}.sh" \
-                  -o \
-                  -path "${lib_home}/${lib}/scripts/${pue}/*" \
-                  -name "*.sh" \
-                  2>/dev/null
-                  )"
+        done <<< "$(__xsh_get_path_by_lpue "${lpue}")"
     }
 
     # @private
@@ -391,6 +400,34 @@ function xsh () {
     }
 
     # @private
+    function __xsh_get_path_by_lpue () {
+        local lpue=$1
+        local lib_home lib pue
+
+        if [[ -z ${lpue} ]]; then
+            printf "ERROR: LPUE is null or not set.\n" >&2
+            return 255
+        fi
+
+        lib_home="${xsh_home}/lib"
+
+        lib=$(__xsh_get_lib_by_lpue "${lpue}")
+        pue=$(__xsh_get_pue_by_lpue "${lpue}")
+
+        find "${lib_home}" \
+             -path "${lib_home}/${lib}/functions/${pue}.sh" \
+             -o \
+             -path "${lib_home}/${lib}/functions/${pue}/*" \
+             -name "*.sh" \
+             -o \
+             -path "${lib_home}/${lib}/scripts/${pue}.sh" \
+             -o \
+             -path "${lib_home}/${lib}/scripts/${pue}/*" \
+             -name "*.sh" \
+             2>/dev/null
+    }
+
+    # @private
     # This function should only be called directly by function xsh().
     function __xsh_clean () {
         # clean env if here is the final exit point of xsh
@@ -398,7 +435,8 @@ function xsh () {
         # FUNCNAME[1]: xsh
         if [[ $(printf '%s\n' "${FUNCNAME[@]}" \
                     | grep -c "^${FUNCNAME[1]}$") -eq 1 ]]; then
-            unset __xsh_usage \
+            unset __xsh_helps \
+                  __xsh_help \
                   __xsh_list \
                   __xsh_load \
                   __xsh_unload \
@@ -424,7 +462,7 @@ function xsh () {
 
     # check input
     if [[ -z $1 ]]; then
-        __xsh_usage >&2
+        __xsh_helps
         return 255
     fi
 
@@ -455,7 +493,7 @@ function xsh () {
             done
             ;;
         help|-h|--help)
-            __xsh_usage
+            __xsh_helps "${@:2}"
             ret=$?
             ;;
         *)
