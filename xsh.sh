@@ -28,8 +28,7 @@ function xsh () {
 #?   help                      Show this help if no option followed.
 #?     [LIB][/PACKAGE][/UTIL]  Show help for utilities.
 
-    local xsh_home lpue old_trap_return
-    local ret=0
+    local xsh_home old_trap_return
 
     # call __xsh_clean() while xsh() returns
     old_trap_return=$(trap -p RETURN)
@@ -166,6 +165,17 @@ function xsh () {
     }
 
     # @private
+    function __xsh_imports () {
+        local lpue
+
+        for lpue in "$@"; do
+            __xsh_import "${lpue}"
+            ret=$((ret + $?))
+        done
+        return $ret
+    }
+
+    # @private
     # Source a function by LPUE.
     # Link a script by LPUE.
     function __xsh_import () {
@@ -231,6 +241,17 @@ function xsh () {
 
         lpuc=$(__xsh_get_lpuc_by_path "${path}")
         ln -sf "${path}" "/usr/local/bin/${lpuc}"
+    }
+
+    # @private
+    function __xsh_calls () {
+        local lpue
+
+        for lpue in "$@"; do
+            __xsh_call "${lpue}"
+            ret=$((ret + $?))
+        done
+        return $ret
     }
 
     # @private
@@ -440,9 +461,11 @@ function xsh () {
                   __xsh_list \
                   __xsh_load \
                   __xsh_unload \
+                  __xsh_imports \
                   __xsh_import \
                   __xsh_import_function \
                   __xsh_import_script \
+                  __xsh_calls \
                   __xsh_call \
                   __xsh_complete_lpue \
                   __xsh_get_type_by_path \
@@ -470,38 +493,25 @@ function xsh () {
     case $1 in
         list)
             __xsh_list
-            ret=$?
             ;;
         load)
             __xsh_load "${@:2}"
-            ret=$?
             ;;
         unload)
             __xsh_unload "${@:2}"
-            ret=$?
             ;;
         import)
-            for lpue in "${@:2}"; do
-                __xsh_import "${lpue}"
-                ret=$((ret + $?))
-            done
+            __xsh_imports "${@:2}"
             ;;
         call)
-            for lpue in "${@:2}"; do
-                __xsh_call "${lpue}"
-                ret=$((ret + $?))
-            done
+            __xsh_calls "${@:2}"
             ;;
-        help|-h|--help)
+        help)
             __xsh_helps "${@:2}"
-            ret=$?
             ;;
         *)
             __xsh_call "$1" "${@:2}"
-            ret=$?
             ;;
     esac
-
-    return ${ret}
 }
 export -f xsh
