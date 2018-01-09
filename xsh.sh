@@ -1,4 +1,3 @@
-function xsh () {
 #? Usage:
 #?   xsh [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]
 #?   xsh call [LIB][/PACKAGE]/UTIL ...
@@ -28,7 +27,7 @@ function xsh () {
 #?   help                      Show this help if no option followed.
 #?     [LIB][/PACKAGE][/UTIL]  Show help for utilities.
 #?
-
+function xsh () {
     local xsh_home old_trap_return
 
     # call __xsh_clean() while xsh() returns
@@ -52,9 +51,23 @@ function xsh () {
 
     # @private
     function __xsh_helps () {
-        local lpue=$1
+        local lpue title_only
         local path ln
-        local type lpue
+        local ln_type ln_lpue
+        local opt OPTARG OPTIND
+
+        while getopts t opt; do
+            case ${opt} in
+                t)
+                    title_only=1
+                    ;;
+                *)
+                    return 255
+                    ;;
+            esac
+        done
+        shift $((OPTIND - 1))
+        lpue=$1
 
         if [[ -z ${lpue} ]]; then
             __xsh_help "${XSH_HOME}/xsh.sh"
@@ -65,11 +78,13 @@ function xsh () {
 
         while read ln; do
             if [[ -n ${ln} ]]; then
-                type=$(__xsh_get_type_by_path "${ln}")
-                lpue=$(__xsh_get_lpue_by_path "${ln}")
-                printf "[${type:0:1}] ${lpue}\n" >&2
+                ln_type=$(__xsh_get_type_by_path "${ln}")
+                ln_lpue=$(__xsh_get_lpue_by_path "${ln}")
+                printf "[${ln_type:0:1}] ${ln_lpue}\n"
 
-                __xsh_help "${ln}"
+                if [[ -z ${title_only} ]]; then
+                    __xsh_help "${ln}"
+                fi
             fi
         done <<< "$(echo "${path}")"
     }
@@ -91,35 +106,18 @@ function xsh () {
         sed -n '/^#\?/p' "${path}" \
             | sed -e 's/^#\? //' \
                   -e 's/^#\?//' \
-                  -e "s|@${util}|xsh ${lpue}|g" >&2
+                  -e "s|@${util}|xsh ${lpue}|g"
     }
 
     # @private
     function __xsh_list () {
-        find "${xsh_home}/lib" -type f -name "*.sh" \
-            | sed -e "s|^${xsh_home}/lib/||" \
-                  -e 's|.sh$||' \
-            | sort \
-            | awk -F/ '{
-                  lib=$1;
-                  type=$2;
-                  if (lib != last_lib) {
-                     printf "Library: [%s]\n", lib;
-                     last_type=""
-                  };
-                  last_lib=lib;
-                  if (type != last_type) {
-                     printf "  %s:\n", type;
-                  };
-                  last_type=type;
-                  printf "    %s/%s\n", $3, $4;
-                  }'
+        __xsh_helps -t '*'
     }
 
     # @private
     function __xsh_load () {
         local repo branch branch_opt lib
-        local OPTARG OPTIND
+        local opt OPTARG OPTIND
 
         while getopts r:b: opt; do
             case ${opt} in
@@ -502,7 +500,7 @@ function xsh () {
 
     # check input
     if [[ -z $1 ]]; then
-        __xsh_helps
+        __xsh_helps >&2
         return 255
     fi
 
