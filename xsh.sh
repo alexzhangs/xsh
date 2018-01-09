@@ -27,6 +27,7 @@ function xsh () {
 #?     LIB                     Library name.
 #?   help                      Show this help if no option followed.
 #?     [LIB][/PACKAGE][/UTIL]  Show help for utilities.
+#?
 
     local xsh_home old_trap_return
 
@@ -53,29 +54,44 @@ function xsh () {
     function __xsh_helps () {
         local lpue=$1
         local path ln
+        local type lpue
 
         if [[ -z ${lpue} ]]; then
-            path="${XSH_HOME}/xsh.sh"
-        else
-            path=$(__xsh_get_path_by_lpue "${lpue}")
+            __xsh_help "${XSH_HOME}/xsh.sh"
+            return
         fi
 
+        path=$(__xsh_get_path_by_lpue "${lpue}")
+
         while read ln; do
-            __xsh_help "${ln}"
+            if [[ -n ${ln} ]]; then
+                type=$(__xsh_get_type_by_path "${ln}")
+                lpue=$(__xsh_get_lpue_by_path "${ln}")
+                printf "[${type:0:1}] ${lpue}\n" >&2
+
+                __xsh_help "${ln}"
+            fi
         done <<< "$(echo "${path}")"
     }
 
     # @private
     function __xsh_help () {
         local path=$1
+        local util lpue
 
         if [[ -z ${path} ]]; then
             printf "ERROR: LPU path is null or not set.\n" >&2
             return 255
         fi
 
+        util=$(__xsh_get_util_by_path "${path}")
+        lpue=$(__xsh_get_lpue_by_path "${path}")
+
         # read doc-help
-        sed -n '/^#\? /p' "${path}" | sed 's/^#\? //' >&2
+        sed -n '/^#\?/p' "${path}" \
+            | sed -e 's/^#\? //' \
+                  -e 's/^#\?//' \
+                  -e "s|@${util}|xsh ${lpue}|g" >&2
     }
 
     # @private
