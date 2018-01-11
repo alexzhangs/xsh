@@ -361,8 +361,10 @@ function xsh () {
             return 255
         fi
 
-        util=${path##*/}  # get util
-        echo "${util%.sh}"  # remove file extension
+        util=${path%.sh}  # remove file extension
+        util=$(echo "${util}" | sed 's|/[0-9]*$||')  # handle util selector
+        util=${util##*/}  # get util
+        echo "${util}"
     }
 
     # @private
