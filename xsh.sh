@@ -78,7 +78,7 @@ function xsh () {
 
         while read ln; do
             if [[ -n ${ln} ]]; then
-                ln_type=$(__xsh_get_type_by_path "${ln}" | xsh /string/pipe/upper)
+                ln_type=$(__xsh_get_type_by_path "${ln}" | tr [:lower:] [:upper:])
                 ln_lpue=$(__xsh_get_lpue_by_path "${ln}")
                 printf "[${ln_type}] ${ln_lpue}\n"
 
