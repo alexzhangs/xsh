@@ -78,9 +78,9 @@ function xsh () {
 
         while read ln; do
             if [[ -n ${ln} ]]; then
-                ln_type=$(__xsh_get_type_by_path "${ln}")
+                ln_type=$(__xsh_get_type_by_path "${ln}" | xsh /string/pipe_upper)
                 ln_lpue=$(__xsh_get_lpue_by_path "${ln}")
-                printf "[${ln_type:0:1}] ${ln_lpue}\n"
+                printf "[${ln_type}] ${ln_lpue}\n"
 
                 if [[ -z ${title_only} ]]; then
                     __xsh_help "${ln}"
