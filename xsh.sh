@@ -1,31 +1,41 @@
 #? Usage:
-#?   xsh [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]
-#?   xsh call [LIB][/PACKAGE]/UTIL ...
-#?   xsh import [LIB][/PACKAGE][/UTIL] ...
-#?   xsh list
-#?   xsh load -r GIT_REPO_URL [-b BRANCH] LIB
-#?   xsh unload LIB
-#?   xsh help [LIB][/PACKAGE][/UTIL]
+#?     xsh [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]
+#?     xsh call [LIB][/PACKAGE]/UTIL ...
+#?     xsh import [LIB][/PACKAGE][/UTIL] ...
+#?     xsh list
+#?     xsh load -r GIT_REPO_URL [-b BRANCH] LIB
+#?     xsh unload LIB
+#?     xsh update LIB
+#?     xsh help [LIB][/PACKAGE][/UTIL]
 #?
 #? Options:
-#?   [LIB][/PACKAGE]/UTIL      Utility to call.
-#?     UTIL_OPTIONS            Will be passed to utility.
-#?                             Default LIB is 'x', point to library xsh-lib-xsh.
-#?   call                      Call utilities in a batch. No options can be passed.
-#?     [LIB][/PACKAGE]/UTIL    Utility to call.
-#?   import                    Import utilities so can be called as syntax: 'LIB-PACKAGE-UTIL'
-#?     [LIB][/PACKAGE][/UTIL]  Utilities to import or call.
-#?                             Default LIB is 'x', point to library xsh-lib-xsh.
-#?                             A single quoted asterist '*' presents all utils in all libraries.
-#?   list                      List loaded libraries, packages and utilities.
-#?   load                      Load library from Git repo.
-#?     -r GIT_REPO_URL         Git repo URL.
-#?     [-b BRANCH]             Branch to use, default is repo's default branch.
-#?     LIB                     Library name, must be unique in all loaded libraries.
-#?   unload                    Unload library.
-#?     LIB                     Library name.
-#?   help                      Show this help if no option followed.
-#?     [LIB][/PACKAGE][/UTIL]  Show help for utilities.
+#?     [LIB][/PACKAGE]/UTIL        Utility to call.
+#?         UTIL_OPTIONS            Will be passed to utility.
+#?                                 Default LIB is 'x', point to library xsh-lib-xsh.
+#?
+#?     call                        Call utilities in a batch. No options can be passed.
+#?         [LIB][/PACKAGE]/UTIL    Utility to call.
+#?
+#?     import                      Import utilities so can be called as syntax: 'LIB-PACKAGE-UTIL'
+#?         [LIB][/PACKAGE][/UTIL]  Utilities to import or call.
+#?                                 Default LIB is 'x', point to library xsh-lib-xsh.
+#?                                 A single quoted asterist '*' presents all utils in all libraries.
+#?
+#?     list                        List loaded libraries, packages and utilities.
+#?
+#?     load                        Load library from Git repo.
+#?         -r GIT_REPO_URL         Git repo URL.
+#?         [-b BRANCH]             Branch to use, default is repo's default branch.
+#?         LIB                     Library name, must be unique in all loaded libraries.
+#?
+#?     unload                      Unload library.
+#?         LIB                     Library name.
+#?
+#?     update                      Update library.
+#?         LIB                     Library name.
+#?
+#?     help                        Show this help if no option followed.
+#?         [LIB][/PACKAGE][/UTIL]  Show help for utilities.
 #?
 function xsh () {
     local xsh_home old_trap_return
@@ -177,6 +187,23 @@ function xsh () {
     }
 
     # @private
+    function __xsh_update () {
+        local lib=$1
+
+        if [[ -z ${lib} ]]; then
+            printf "ERROR: library name is null or not set.\n" >&2
+            return 255
+        fi
+
+        if [[ -e ${xsh_home}/lib/${lib} ]]; then
+            (cd "${xsh_home}/lib/${lib}"; git pull)
+        else
+            printf "ERROR: library '%s' doesn't exist.\n" "${lib}" >&2
+            return 255
+        fi
+    }
+
+    # @private
     function __xsh_imports () {
         local lpue
         local ret=0
@@ -185,7 +212,7 @@ function xsh () {
             __xsh_import "${lpue}"
             ret=$((ret + $?))
         done
-        return $ret
+        return ${ret}
     }
 
     # @private
@@ -265,7 +292,7 @@ function xsh () {
             __xsh_call "${lpue}"
             ret=$((ret + $?))
         done
-        return $ret
+        return ${ret}
     }
 
     # @private
@@ -477,6 +504,7 @@ function xsh () {
                   __xsh_list \
                   __xsh_load \
                   __xsh_unload \
+                  __xsh_update \
                   __xsh_imports \
                   __xsh_import \
                   __xsh_import_function \
@@ -516,6 +544,9 @@ function xsh () {
             ;;
         unload)
             __xsh_unload "${@:2}"
+            ;;
+        update)
+            __xsh_update "${@:2}"
             ;;
         import)
             __xsh_imports "${@:2}"
