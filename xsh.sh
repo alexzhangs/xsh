@@ -113,9 +113,9 @@ function xsh () {
         lpue=$(__xsh_get_lpue_by_path "${path}")
 
         # read doc-help
-        sed -n '/^#\?/p' "${path}" \
-            | sed -e 's/^#\? //' \
-                  -e 's/^#\?//' \
+        sed -n '/^#?/p' "${path}" \
+            | sed -e 's/^#? //' \
+                  -e 's/^#?//' \
                   -e "s|@${util}|xsh ${lpue}|g"
     }
 
