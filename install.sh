@@ -69,7 +69,7 @@ printf "installing: ${XSH_HOME}/xsh.sh\n"
 
 printf "updating: %s\n" ~/.bashrc
 replace_or_append ~/.bashrc '^export XSH_HOME=.*$' "export XSH_HOME=${XSH_HOME}"
-replace_or_append ~/.bashrc '^\. \${XSH_HOME}\/xsh\.sh$' '. ${XSH_HOME}/xsh.sh'
+replace_or_append ~/.bashrc '^\. \$\{XSH_HOME\}\/xsh\.sh$' '. ${XSH_HOME}/xsh.sh'
 
 printf "DONE.\n"
 
