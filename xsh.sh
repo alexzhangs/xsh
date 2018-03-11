@@ -196,7 +196,15 @@ function xsh () {
         fi
 
         if [[ -e ${xsh_home}/lib/${lib} ]]; then
-            (cd "${xsh_home}/lib/${lib}"; git pull)
+            (cd "${xsh_home}/lib/${lib}" \
+                 && git fetch origin \
+                 && git reset --hard FETCH_HEAD \
+                 && git clean -df \
+                 && find "${xsh_home}/lib/${lib}/scripts" \
+                         -type f \
+                         -name "*.sh" \
+                         -exec chmod +x {}
+            )
         else
             printf "ERROR: library '%s' doesn't exist.\n" "${lib}" >&2
             return 255
