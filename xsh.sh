@@ -203,7 +203,7 @@ function xsh () {
                  && find "${xsh_home}/lib/${lib}/scripts" \
                          -type f \
                          -name "*.sh" \
-                         -exec chmod +x {}
+                         -exec chmod +x {} \;
             )
         else
             printf "ERROR: library '%s' doesn't exist.\n" "${lib}" >&2
