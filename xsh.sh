@@ -9,16 +9,19 @@
 #?     xsh help [LIB][/PACKAGE][/UTIL]
 #?
 #? Options:
-#?     [LIB][/PACKAGE]/UTIL        Utility to call.
+#?     [LIB][/PACKAGE]/UTIL        Utility to call. The library where the util belongs
+#?                                 must be loaded first.
 #?         UTIL_OPTIONS            Will be passed to utility.
-#?                                 Default LIB is 'x', point to library xsh-lib-xsh.
+#?                                 Default LIB is 'x', point to library xsh-lib-core.
 #?
 #?     call                        Call utilities in a batch. No options can be passed.
 #?         [LIB][/PACKAGE]/UTIL    Utility to call.
 #?
-#?     import                      Import utilities so can be called as syntax: 'LIB-PACKAGE-UTIL'
-#?         [LIB][/PACKAGE][/UTIL]  Utilities to import or call.
-#?                                 Default LIB is 'x', point to library xsh-lib-xsh.
+#?     import                      Import utilities so can be called directly without
+#?                                 leading command, as syntax: 'LIB-PACKAGE-UTIL'.
+#?                                 The libraries where the utillities belong must be loaded first.
+#?         [LIB][/PACKAGE][/UTIL]  Utilities to import.
+#?                                 Default LIB is 'x', point to library xsh-lib-core.
 #?                                 A single quoted asterist '*' presents all utils in all libraries.
 #?
 #?     list                        List loaded libraries, packages and utilities.
@@ -28,10 +31,10 @@
 #?         [-b BRANCH]             Branch to use, default is repo's default branch.
 #?         LIB                     Library name, must be unique in all loaded libraries.
 #?
-#?     unload                      Unload library.
+#?     unload                      Unload the loaded library.
 #?         LIB                     Library name.
 #?
-#?     update                      Update library.
+#?     update                      Update the loaded library.
 #?         LIB                     Library name.
 #?
 #?     help                        Show this help if no option followed.
