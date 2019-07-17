@@ -57,7 +57,7 @@ function replace_or_append () {
     fi
 }
 
-if [[ -e ~/.xsh ]]; then
+if [[ -e ~/${XSH_HOME} ]]; then
     printf "WARN: xsh home directory %s already exists\n" "${XSH_HOME}" >&2
 else
     printf "creating xsh home directory %s\n" "${XSH_HOME}"
