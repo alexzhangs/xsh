@@ -212,14 +212,14 @@ Now lets get back the 3 methods:
    <LPUC> [options]
    ```
 
-   In order to call an LPUC directly, you must import the LPUE first.
+   In order to call a LPUC directly, you must import the LPUE first.
 
    Use command `xsh import` to import LPUEs, then you can call them directly as the syntax: `<lib>-<package>-<util>`.
 
    A sample:
 
    ```bash
-xsh import x/string/*
+   xsh import x/string/*
 
    x-string-upper 'hello world'
    HELLO WORLD
