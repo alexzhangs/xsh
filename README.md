@@ -126,8 +126,10 @@ After the lib is loaded, you can use `xsh list` command to list all loaded libra
 xsh list
 
 [SCRIPT] x/log/filter
-[FUNCTIONS] x/string/upper
 [FUNCTIONS] x/string/lower
+[FUNCTIONS] x/string/random
+[FUNCTIONS] x/string/upper
+[FUNCTIONS] x/string/uuid
 ...
 ```
 
@@ -198,10 +200,10 @@ Now lets get back the 3 methods:
    A sample:
 
    ```bash
-   xsh call x/string/guid/1 x/string/guid/2
+   xsh call x/string/random x/string/uuid
 
-   803494CFD049BE5A
-   EF189B4CDBD70A91
+   e30e865ed22f3ef9
+   4be36c77-e507-4eee-9075-1aa259c1613e
    ```
 
 3. Call a LPUC without the leading `xsh` command.
@@ -224,9 +226,8 @@ Now lets get back the 3 methods:
    x-string-upper 'hello world'
    HELLO WORLD
 
-   x-string-guid-1
-   C6AE14E9E9332FD7
-
+   x-string-uuid
+   4be36c77-e507-4eee-9075-1aa259c1613e
    ```
 
 
@@ -242,9 +243,11 @@ The directory structure and files of a sample library looks like this:
 ``` 
 xsh-lib-sample/
 ├── functions
-│   └── string
-│       └── lower.sh
-│       └── upper.sh
+│   └── string
+│       └── lower.sh
+│       └── random.sh
+│       └── upper.sh
+│       └── uuid.sh
 └── scripts
     └── log
         └── filter.sh
