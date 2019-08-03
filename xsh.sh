@@ -600,7 +600,8 @@ function xsh () {
         # FUNCNAME[1]: xsh
         if [[ $(printf '%s\n' "${FUNCNAME[@]}" \
                     | grep -c "^${FUNCNAME[1]}$") -eq 1 ]]; then
-            unset __xsh_helps \
+            unset -f \
+                  __xsh_helps \
                   __xsh_help \
                   __xsh_list \
                   __xsh_load \
