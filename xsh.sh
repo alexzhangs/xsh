@@ -58,7 +58,7 @@ function xsh () {
         # remove tailing '/'
         xsh_home=${XSH_HOME%/}
     else
-        printf "ERROR: XSH_HOME is not set properly: '%s'.\n" "${XSH_HOME}" >&2
+        printf "$FUNCNAME: ERROR: XSH_HOME is not set properly: '%s'.\n" "${XSH_HOME}" >&2
         return 255
     fi
 
@@ -108,7 +108,7 @@ function xsh () {
         local util lpue
 
         if [[ -z ${path} ]]; then
-            printf "ERROR: LPU path is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
             return 255
         fi
 
@@ -149,19 +149,19 @@ function xsh () {
         lib=$1
 
         if [[ -z ${lib} ]]; then
-            printf "ERROR: library name is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: library name is null or not set.\n" >&2
             return 255
         fi
 
         if [[ -z ${repo} ]]; then
-            printf "ERROR: repository URL is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: repository URL is null or not set.\n" >&2
             return 255
         fi
 
         [[ -n ${branch} ]] && branch_opt="-b ${branch}"
 
         if [[ -e ${xsh_home}/lib/${lib} ]]; then
-            printf "ERROR: library '%s' already exists.\n" "${lib}" >&2
+            printf "$FUNCNAME: ERROR: library '%s' already exists.\n" "${lib}" >&2
             return 255
         else
             git clone ${branch_opt} "${repo}" "${xsh_home}/lib/${lib}"
@@ -177,14 +177,14 @@ function xsh () {
         local lib=$1
 
         if [[ -z ${lib} ]]; then
-            printf "ERROR: library name is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: library name is null or not set.\n" >&2
             return 255
         fi
 
         if [[ -e ${xsh_home}/lib/${lib} ]]; then
             /bin/rm -rf "${xsh_home}/lib/${lib}"
         else
-            printf "ERROR: library '%s' doesn't exist.\n" "${lib}" >&2
+            printf "$FUNCNAME: ERROR: library '%s' doesn't exist.\n" "${lib}" >&2
             return 255
         fi
     }
@@ -194,7 +194,7 @@ function xsh () {
         local lib=$1
 
         if [[ -z ${lib} ]]; then
-            printf "ERROR: library name is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: library name is null or not set.\n" >&2
             return 255
         fi
 
@@ -209,7 +209,7 @@ function xsh () {
                          -exec chmod +x {} \;
             )
         else
-            printf "ERROR: library '%s' doesn't exist.\n" "${lib}" >&2
+            printf "$FUNCNAME: ERROR: library '%s' doesn't exist.\n" "${lib}" >&2
             return 255
         fi
     }
@@ -240,7 +240,7 @@ function xsh () {
         local ln type
 
         if [[ -z ${lpue} ]]; then
-            printf "ERROR: LPUE is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
             return 255
         fi
 
@@ -269,7 +269,7 @@ function xsh () {
         local util lpuc
 
         if [[ -z ${path} ]]; then
-            printf "ERROR: LPU path is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
             return 255
         fi
 
@@ -286,7 +286,7 @@ function xsh () {
         local lpuc
 
         if [[ -z ${path} ]]; then
-            printf "ERROR: LPU path is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
             return 255
         fi
 
@@ -316,7 +316,7 @@ function xsh () {
         local lpuc
 
         if [[ -z ${lpue} ]]; then
-            printf "ERROR: LPUE is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
             return 255
         fi
 
@@ -334,7 +334,7 @@ function xsh () {
         local lpue=$1
 
         if [[ -z ${lpue} ]]; then
-            printf "ERROR: LPUE is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
             return 255
         fi
 
@@ -354,7 +354,7 @@ function xsh () {
         local type
 
         if [[ -z ${path} ]]; then
-            printf "ERROR: LPU path is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
             return 255
         fi
 
@@ -368,7 +368,7 @@ function xsh () {
         local lib
 
         if [[ -z ${path} ]]; then
-            printf "ERROR: LPU path is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
             return 255
         fi
 
@@ -381,7 +381,7 @@ function xsh () {
         local lpue=$1
 
         if [[ -z ${lpue} ]]; then
-            printf "ERROR: LPUE is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
             return 255
         fi
 
@@ -395,7 +395,7 @@ function xsh () {
         local util
 
         if [[ -z ${path} ]]; then
-            printf "ERROR: LPU path is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
             return 255
         fi
 
@@ -411,7 +411,7 @@ function xsh () {
         local pue
 
         if [[ -z ${path} ]]; then
-            printf "ERROR: LPU path is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
             return 255
         fi
 
@@ -424,7 +424,7 @@ function xsh () {
         local lpue=$1
 
         if [[ -z ${lpue} ]]; then
-            printf "ERROR: LPUE is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
             return 255
         fi
 
@@ -438,7 +438,7 @@ function xsh () {
         local lib pue
 
         if [[ -z ${path} ]]; then
-            printf "ERROR: LPU path is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
             return 255
         fi
 
@@ -453,7 +453,7 @@ function xsh () {
         local lpue
 
         if [[ -z ${path} ]]; then
-            printf "ERROR: LPU path is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
             return 255
         fi
 
@@ -466,7 +466,7 @@ function xsh () {
         local lpue=$1
 
         if [[ -z ${lpue} ]]; then
-            printf "ERROR: LPUE is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
             return 255
         fi
 
@@ -480,7 +480,7 @@ function xsh () {
         local lib_home lib pue
 
         if [[ -z ${lpue} ]]; then
-            printf "ERROR: LPUE is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
             return 255
         fi
 
