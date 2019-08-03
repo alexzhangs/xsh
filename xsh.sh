@@ -2,6 +2,7 @@
 #?     xsh [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]
 #?     xsh call [LIB][/PACKAGE]/UTIL ...
 #?     xsh import [LIB][/PACKAGE][/UTIL] ...
+#?     xsh unimport [LIB][/PACKAGE][/UTIL] ...
 #?     xsh list
 #?     xsh load -r GIT_REPO_URL [-b BRANCH] LIB
 #?     xsh unload LIB
@@ -21,6 +22,12 @@
 #?                                 leading command, as syntax: 'LIB-PACKAGE-UTIL'.
 #?                                 The libraries where the utilities belong must be loaded first.
 #?         [LIB][/PACKAGE][/UTIL]  Utilities to import.
+#?                                 Default LIB is 'x', point to library xsh-lib-core.
+#?                                 A single quoted asterist '*' presents all utils in all libraries.
+#?
+#?     unimport                    Unimport utilities that have been sourced or linked as
+#?                                 syntax: 'LIB-PACKAGE-UTIL'.
+#?         [LIB][/PACKAGE][/UTIL]  Utilities to unimport.
 #?                                 Default LIB is 'x', point to library xsh-lib-core.
 #?                                 A single quoted asterist '*' presents all utils in all libraries.
 #?
@@ -295,6 +302,87 @@ function xsh () {
     }
 
     # @private
+    function __xsh_unimports () {
+        local lpue
+        local ret=0
+
+        for lpue in "$@"; do
+            __xsh_unimport "${lpue}"
+            ret=$((ret + $?))
+        done
+        return ${ret}
+    }
+
+    # @private
+    # Unset a sourced function by LPUE.
+    # Unlink a linked script by LPUE.
+    function __xsh_unimport () {
+        # legal input:
+        #   '*'
+        #   /, x
+        #   x/pkg, /pkg
+        #   x/pkg/util, /pkg/util
+        #   x/util, /util
+        local lpue=$1
+        local ln type
+
+        if [[ -z ${lpue} ]]; then
+            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
+            return 255
+        fi
+
+        while read ln; do
+            type=$(__xsh_get_type_by_path "${ln}")
+
+            case ${type} in
+                functions)
+                    __xsh_unimport_function "${ln}"
+                    ;;
+                scripts)
+                    __xsh_unimport_script "${ln}"
+                    ;;
+                *)
+                    return 255
+                    ;;
+            esac
+        done <<< "$(__xsh_get_path_by_lpue "${lpue}")"
+    }
+
+    # @private
+    # Unset
+    # Source a file ".../<lib>/functions/<package>/<util>.sh"
+    #   and unset function by name "<lib>-<package>-<util>"
+    function __xsh_unimport_function () {
+        local path=$1
+        local util lpuc
+
+        if [[ -z ${path} ]]; then
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        util=$(__xsh_get_util_by_path "${path}")
+        lpuc=$(__xsh_get_lpuc_by_path "${path}")
+        source /dev/stdin <<< "$(sed -n "s/^function ${util} ().*/unset -f ${lpuc}/p" "${path}")"
+    }
+
+    # @private
+    # Unlink a file ".../<lib>/scripts/<package>/<util>.sh"
+    #   at "/usr/local/bin/<lib>-<package>-<util>"
+    function __xsh_unimport_script () {
+        local path=$1
+        local lpuc
+
+        if [[ -z ${path} ]]; then
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        lpuc=$(__xsh_get_lpuc_by_path "${path}")
+        rm -f "/usr/local/bin/${lpuc}"
+    }
+
+    # @private
     function __xsh_calls () {
         local lpue
         local ret=0
@@ -520,6 +608,10 @@ function xsh () {
                   __xsh_import \
                   __xsh_import_function \
                   __xsh_import_script \
+                  __xsh_unimports \
+                  __xsh_unimport \
+                  __xsh_unimport_function \
+                  __xsh_unimport_script \
                   __xsh_calls \
                   __xsh_call \
                   __xsh_complete_lpue \
@@ -561,6 +653,9 @@ function xsh () {
             ;;
         import)
             __xsh_imports "${@:2}"
+            ;;
+        unimport)
+            __xsh_unimports "${@:2}"
             ;;
         call)
             __xsh_calls "${@:2}"
