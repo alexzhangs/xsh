@@ -189,6 +189,7 @@ function xsh () {
         fi
 
         if [[ -e ${xsh_home}/lib/${lib} ]]; then
+            xsh unimport "$lib/*"
             /bin/rm -rf "${xsh_home}/lib/${lib}"
         else
             printf "$FUNCNAME: ERROR: library '%s' doesn't exist.\n" "${lib}" >&2
@@ -206,6 +207,7 @@ function xsh () {
         fi
 
         if [[ -e ${xsh_home}/lib/${lib} ]]; then
+            xsh unimport "$lib/*"
             (cd "${xsh_home}/lib/${lib}" \
                  && git fetch origin \
                  && git reset --hard FETCH_HEAD \
