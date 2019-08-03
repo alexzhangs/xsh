@@ -19,7 +19,7 @@
 #?
 #?     import                      Import utilities so can be called directly without
 #?                                 leading command, as syntax: 'LIB-PACKAGE-UTIL'.
-#?                                 The libraries where the utillities belong must be loaded first.
+#?                                 The libraries where the utilities belong must be loaded first.
 #?         [LIB][/PACKAGE][/UTIL]  Utilities to import.
 #?                                 Default LIB is 'x', point to library xsh-lib-core.
 #?                                 A single quoted asterist '*' presents all utils in all libraries.
