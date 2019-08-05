@@ -1,8 +1,8 @@
 #? Usage:
-#?     xsh [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]
-#?     xsh call [LIB][/PACKAGE]/UTIL ...
-#?     xsh import [LIB][/PACKAGE][/UTIL] ...
-#?     xsh unimport [LIB][/PACKAGE][/UTIL] ...
+#?     xsh [-D] [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]
+#?     xsh [-D] call [LIB][/PACKAGE]/UTIL [...]
+#?     xsh import [LIB][/PACKAGE][/UTIL] [...]
+#?     xsh unimport [LIB][/PACKAGE][/UTIL] [...]
 #?     xsh list
 #?     xsh load -r GIT_REPO_URL [-b BRANCH] LIB
 #?     xsh unload LIB
