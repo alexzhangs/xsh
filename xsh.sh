@@ -1,6 +1,6 @@
 #? Usage:
-#?     xsh [-D] [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]
-#?     xsh [-D] call [LIB][/PACKAGE]/UTIL [...]
+#?     xsh [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]
+#?     xsh call [LIB][/PACKAGE]/UTIL [...]
 #?     xsh import [LIB][/PACKAGE][/UTIL] [...]
 #?     xsh unimport [LIB][/PACKAGE][/UTIL] [...]
 #?     xsh list
@@ -12,7 +12,7 @@
 #? Options:
 #?     [LIB][/PACKAGE]/UTIL        Utility to call. The library where the util belongs
 #?                                 must be loaded first.
-#?         UTIL_OPTIONS            Will be passed to utility.
+#?         [UTIL_OPTIONS]          Will be passed to utility.
 #?                                 Default LIB is 'x', point to library xsh-lib-core.
 #?
 #?     call                        Call utilities in a batch. No options can be passed.
@@ -48,13 +48,20 @@
 #?         [LIB][/PACKAGE][/UTIL]  Show help for utilities.
 #?
 function xsh () {
+    # @private
+    #
+    function __xsh_count_in_funcstack () {
+        printf '%s\n' "${FUNCNAME[@]}" \
+            | grep -c "^${1}$"
+    }
+
     local xsh_home old_trap_return
 
     # call __xsh_clean() while xsh() returns
     old_trap_return=$(trap -p RETURN)
     old_trap_return=${old_trap_return:-trap - RETURN}
     trap 'eval "${old_trap_return}";
-         if [[ ${FUNCNAME[0]} == xsh ]]; then
+         if [[ ${FUNCNAME[0]} == xsh && $(__xsh_count_in_funcstack xsh ) -eq 1 ]]; then
              if type -t __xsh_clean >/dev/null 2>&1; then
                  __xsh_clean;
              fi;
@@ -595,43 +602,40 @@ function xsh () {
     # @private
     # This function should only be called directly by function xsh().
     function __xsh_clean () {
-        # clean env if here is the final exit point of xsh
-        # FUNCNAME[0]: __xsh_clean
-        # FUNCNAME[1]: xsh
-        if [[ $(printf '%s\n' "${FUNCNAME[@]}" \
-                    | grep -c "^${FUNCNAME[1]}$") -eq 1 ]]; then
-            unset -f \
-                  __xsh_helps \
-                  __xsh_help \
-                  __xsh_list \
-                  __xsh_load \
-                  __xsh_unload \
-                  __xsh_update \
-                  __xsh_imports \
-                  __xsh_import \
-                  __xsh_import_function \
-                  __xsh_import_script \
-                  __xsh_unimports \
-                  __xsh_unimport \
-                  __xsh_unimport_function \
-                  __xsh_unimport_script \
-                  __xsh_calls \
-                  __xsh_call \
-                  __xsh_complete_lpue \
-                  __xsh_get_type_by_path \
-                  __xsh_get_lib_by_path \
-                  __xsh_get_lib_by_lpue \
-                  __xsh_get_util_by_path \
-                  __xsh_get_pue_by_path \
-                  __xsh_get_pue_by_lpue \
-                  __xsh_get_lpue_by_path \
-                  __xsh_get_lpuc_by_path \
-                  __xsh_get_lpuc_by_lpue \
-                  __xsh_get_path_by_lpue \
-                  __xsh_clean
-        else
-            :
-        fi
+        unset -f \
+              __xsh_backup_debug_state \
+              __xsh_restore_debug_state \
+              __xsh_enable_debug \
+              __xsh_disable_debug \
+              __xsh_count_in_funcstack \
+              __xsh_helps \
+              __xsh_help \
+              __xsh_list \
+              __xsh_load \
+              __xsh_unload \
+              __xsh_update \
+              __xsh_imports \
+              __xsh_import \
+              __xsh_import_function \
+              __xsh_import_script \
+              __xsh_unimports \
+              __xsh_unimport \
+              __xsh_unimport_function \
+              __xsh_unimport_script \
+              __xsh_calls \
+              __xsh_call \
+              __xsh_complete_lpue \
+              __xsh_get_type_by_path \
+              __xsh_get_lib_by_path \
+              __xsh_get_lib_by_lpue \
+              __xsh_get_util_by_path \
+              __xsh_get_pue_by_path \
+              __xsh_get_pue_by_lpue \
+              __xsh_get_lpue_by_path \
+              __xsh_get_lpuc_by_path \
+              __xsh_get_lpuc_by_lpue \
+              __xsh_get_path_by_lpue \
+              __xsh_clean
     }
 
     # check input
