@@ -297,6 +297,28 @@ xsh smpl/log/filter
 
 
 
+### Debugging
+
+Debug the `xsh` itself:
+
+```bash
+XSH_DEBUG=xsh xsh
+```
+
+Debug the called utility:
+
+```bash
+XSH_DEBUG=1 xsh /string/upper foo
+```
+
+Debug the matching utilities:
+
+```
+XSH_DEBUG='/string' xsh /string/upper foo
+```
+
+
+
 ## TODO
 
 * Versioning

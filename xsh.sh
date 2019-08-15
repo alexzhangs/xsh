@@ -67,13 +67,66 @@
 #?
 #?         [LPUR]           Show help for matched utilities.
 #?
+#? Debugging:
+#?     Enable debug mode by setting environment varaible: XSH_DEBUG
+#?
+#?     Debug mode is enabled by setting `set -vx`.
+#?     Debug mode is only available with syntax: `xsh <LPUE> [UTIL_OPTIONS]`.
+#?
+#?     Values:
+#?         xsh:    Debug xsh itself.
+#?         1:      Debug current called xsh utility.
+#?         <LPUR>: Debug matched xsh utilities.
+#?
+#?     Example:
+#?         XSH_DEBUG=1 xsh /string/upper foo
+#?
 function xsh () {
+    ### DEBUG LOGIC BEGIN ###
+    set +vx  # disable debug
+    ### DEBUG LOGIC ENDS  ###
+
+    local orig_debug_state
+
+    # @private
+    #
+    function __xsh_backup_debug_state () {
+        case "${-//[^vx]/}" in
+            v)
+                orig_debug_state='-v'
+                ;;
+            x)
+                orig_debug_state='-x'
+                ;;
+            vx)
+                orig_debug_state='-vx'
+                ;;
+            *)
+                orig_debug_state='+vx'
+                ;;
+        esac
+    }
+
     # @private
     #
     function __xsh_count_in_funcstack () {
         printf '%s\n' "${FUNCNAME[@]}" \
             | grep -c "^${1}$"
     }
+
+    ### DEBUG LOGIC BEGIN ###
+    __xsh_backup_debug_state  # backup debug state
+
+    case $XSH_DEBUG in
+        xsh)
+            unset XSH_DEBUG  # avoid further debugging
+            [[ $orig_debug_state == '-vx' ]] && : || set -vx  # enable debug
+            ;;
+        1)
+            XSH_DEBUG=$1  # set XSH_DEBUG=<lpue>
+            ;;
+    esac
+    ### DEBUG LOGIC ENDS  ###
 
     local xsh_home old_trap_return
 
@@ -440,11 +493,21 @@ function xsh () {
 
         lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
 
-        if type -t ${lpuc} >/dev/null 2>&1; then
-            ${lpuc} "${@:2}"
-        else
-            __xsh_import "${lpue}" && ${lpuc} "${@:2}"
+        if ! type -t ${lpuc} >/dev/null 2>&1; then
+            __xsh_import "${lpue}"
         fi
+
+        ### DEBUG LOGIC BEGIN ###
+        if test -n "$XSH_DEBUG" && __xsh_get_lpuc_by_lpur "$XSH_DEBUG" | grep "^${lpuc}$" >/dev/null; then
+            # enable debug for the utility
+            [[ $orig_debug_state == '-vx' ]] && : || set -vx  # enable debug
+            ${lpuc} "${@:2}"
+            set +vx  # disable debug
+        else
+            [[ $orig_debug_state == '+vx' ]] && : || set +vx  # disable debug
+            ${lpuc} "${@:2}"
+        fi
+        ### DEBUG LOGIC ENDS  ###
     }
 
     # @private
@@ -673,6 +736,10 @@ function xsh () {
               __xsh_get_path_by_lpur \
               __xsh_get_lpuc_by_lpur \
               __xsh_clean
+
+        ### DEBUG LOGIC BEGIN ###
+        set "$orig_debug_state"  # restore debug state
+        ### DEBUG LOGIC ENDS  ###
     }
 
     # Check input
