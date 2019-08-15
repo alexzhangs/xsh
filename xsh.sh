@@ -2,53 +2,70 @@
 #?     xsh is an extension of Bash. It works as a Bash library framework.
 #?
 #? Usage:
-#?     xsh [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]
-#?     xsh call [LIB][/PACKAGE]/UTIL [...]
-#?     xsh import [LIB][/PACKAGE][/UTIL] [...]
-#?     xsh unimport [LIB][/PACKAGE][/UTIL] [...]
+#?     xsh <LPUE> [UTIL_OPTIONS]
+#?     xsh call <LPUE> [...]
+#?     xsh import <LPUR> [...]
+#?     xsh unimport <LPUR> [...]
 #?     xsh list
 #?     xsh load -r GIT_REPO_URL [-b BRANCH] LIB
 #?     xsh unload LIB
 #?     xsh update LIB
-#?     xsh help [LIB][/PACKAGE][/UTIL]
+#?     xsh help [LPUR]
 #?
 #? Options:
-#?     [LIB][/PACKAGE]/UTIL        Utility to call. The library where the util belongs
-#?                                 must be loaded first.
-#?         [UTIL_OPTIONS]          Will be passed to utility.
-#?                                 Default LIB is 'x', point to library xsh-lib-core.
+#?     <LPUE>               Call an individual utility.
+#?         [UTIL_OPTIONS]   Will be passed to utility.
 #?
-#?     call                        Call utilities in a batch. No options can be passed.
-#?         [LIB][/PACKAGE]/UTIL    Utility to call.
+#?                          The library of the utility must be loaded first.
 #?
-#?     import                      Import utilities so can be called directly without
-#?                                 leading command, as syntax: 'LIB-PACKAGE-UTIL'.
-#?                                 The libraries where the utilities belong must be loaded first.
-#?         [LIB][/PACKAGE][/UTIL]  Utilities to import.
-#?                                 Default LIB is 'x', point to library xsh-lib-core.
-#?                                 A single quoted asterist '*' presents all utils in all libraries.
+#?                          LPUE stands for `Lib/Package/Util Expression`.
+#?                          The LPUE syntax is: `[LIB][/PACKAGE]/UTIL`.
+#?                          Example:
+#?                              <lib>/<pkg>/<util>, /<pkg>/<util>
+#?                              <lib>/<util>, /<util>
 #?
-#?     unimport                    Unimport utilities that have been sourced or linked as
-#?                                 syntax: 'LIB-PACKAGE-UTIL'.
-#?         [LIB][/PACKAGE][/UTIL]  Utilities to unimport.
-#?                                 Default LIB is 'x', point to library xsh-lib-core.
-#?                                 A single quoted asterist '*' presents all utils in all libraries.
+#?     call                 Call utilities in a batch. No options can be passed.
+#?         <LPUE> [...]     Utilities to call.
 #?
-#?     list                        List loaded libraries, packages and utilities.
+#?     import               Import utilities.
+#?         <LPUR>           Utilities to import.
 #?
-#?     load                        Load library from Git repo.
-#?         -r GIT_REPO_URL         Git repo URL.
-#?         [-b BRANCH]             Branch to use, default is repo's default branch.
-#?         LIB                     Library name, must be unique in all loaded libraries.
+#?                          The imported utilities can be called directly without
+#?                          leading `xsh` as syntax: 'LIB-PACKAGE-UTIL'.
 #?
-#?     unload                      Unload the loaded library.
-#?         LIB                     Library name.
+#?                          LPUR stands for `Lib/Package/Util Regex`.
+#?                          The LPUR syntax is: `[LIB][/PACKAGE][/UTIL]`.
+#?                          Example:
+#?                              '*'
+#?                              /, <lib>
+#?                              <lib>/<pkg>, /<pkg>
+#?                              <lib>/<pkg>/<util>, /<pkg>/<util>
+#?                              <lib>/<util>, /<util>
 #?
-#?     update                      Update the loaded library.
-#?         LIB                     Library name.
+#?     unimport             Unimport utilities that have been sourced or linked
+#?                          as syntax: 'LIB-PACKAGE-UTIL'.
 #?
-#?     help                        Show this help if no option followed.
-#?         [LIB][/PACKAGE][/UTIL]  Show help for utilities.
+#?         <LPUR>           The syntax is the same with import.
+#?
+#?     list                 List loaded libraries, packages and utilities.
+#?
+#?     load                 Load library from Git repo.
+#?
+#?         -r GIT_REPO_URL  Git repo URL.
+#?         [-b BRANCH]      Branch to use, default is repo's default branch.
+#?         LIB              Library name, must be unique in all loaded libraries.
+#?
+#?     unload               Unload the loaded library.
+#?
+#?         LIB              Library name.
+#?
+#?     update               Update the loaded library.
+#?
+#?         LIB              Library name.
+#?
+#?     help                 Show this help if no option followed.
+#?
+#?         [LPUR]           Show help for matched utilities.
 #?
 function xsh () {
     # @private
@@ -82,9 +99,9 @@ function xsh () {
 
     # @private
     function __xsh_helps () {
-        local lpue title_only
+        local lpur title_only
         local path ln
-        local ln_type ln_lpue
+        local type lpue
         local opt OPTARG OPTIND
 
         while getopts t opt; do
@@ -98,20 +115,20 @@ function xsh () {
             esac
         done
         shift $((OPTIND - 1))
-        lpue=$1
+        lpur=$1
 
-        if [[ -z ${lpue} ]]; then
+        if [[ -z ${lpur} ]]; then
             __xsh_help "${XSH_HOME}/xsh.sh"
             return
         fi
 
-        path=$(__xsh_get_path_by_lpue "${lpue}")
+        path=$(__xsh_get_path_by_lpur "${lpur}")
 
         while read ln; do
             if [[ -n ${ln} ]]; then
-                ln_type=$(__xsh_get_type_by_path "${ln}" | tr [:lower:] [:upper:])
-                ln_lpue=$(__xsh_get_lpue_by_path "${ln}")
-                printf "[${ln_type}] ${ln_lpue}\n"
+                type=$(__xsh_get_type_by_path "${ln}" | tr [:lower:] [:upper:])
+                lpue=$(__xsh_get_lpue_by_path "${ln}")
+                printf "[${type}] ${lpue}\n"
 
                 if [[ -z ${title_only} ]]; then
                     __xsh_help "${ln}"
@@ -236,31 +253,31 @@ function xsh () {
 
     # @private
     function __xsh_imports () {
-        local lpue
+        local lpur
         local ret=0
 
-        for lpue in "$@"; do
-            __xsh_import "${lpue}"
+        for lpur in "$@"; do
+            __xsh_import "${lpur}"
             ret=$((ret + $?))
         done
         return ${ret}
     }
 
     # @private
-    # Source a function by LPUE.
-    # Link a script by LPUE.
+    # Source a function by LPUR.
+    # Link a script by LPUR.
     function __xsh_import () {
         # legal input:
         #   '*'
-        local lpue=$1
         #   /, <lib>
         #   <lib>/<pkg>, /<pkg>
         #   <lib>/<pkg>/<util>, /<pkg>/<util>
         #   <lib>/<util>, /<util>
+        local lpur=$1
         local ln type
 
-        if [[ -z ${lpue} ]]; then
-            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
+        if [[ -z ${lpur} ]]; then
+            printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
             return 255
         fi
 
@@ -278,7 +295,7 @@ function xsh () {
                     return 255
                     ;;
             esac
-        done <<< "$(__xsh_get_path_by_lpue "${lpue}")"
+        done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
     }
 
     # @private
@@ -316,31 +333,31 @@ function xsh () {
 
     # @private
     function __xsh_unimports () {
-        local lpue
+        local lpur
         local ret=0
 
-        for lpue in "$@"; do
-            __xsh_unimport "${lpue}"
+        for lpur in "$@"; do
+            __xsh_unimport "${lpur}"
             ret=$((ret + $?))
         done
         return ${ret}
     }
 
     # @private
-    # Unset a sourced function by LPUE.
-    # Unlink a linked script by LPUE.
+    # Unset a sourced function by LPUR.
+    # Unlink a linked script by LPUR.
     function __xsh_unimport () {
         # legal input:
         #   '*'
-        local lpue=$1
         #   /, <lib>
         #   <lib>/<pkg>, /<pkg>
         #   <lib>/<pkg>/<util>, /<pkg>/<util>
         #   <lib>/<util>, /<util>
+        local lpur=$1
         local ln type
 
-        if [[ -z ${lpue} ]]; then
-            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
+        if [[ -z ${lpur} ]]; then
+            printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
             return 255
         fi
 
@@ -358,7 +375,7 @@ function xsh () {
                     return 255
                     ;;
             esac
-        done <<< "$(__xsh_get_path_by_lpue "${lpue}")"
+        done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
     }
 
     # @private
@@ -431,22 +448,22 @@ function xsh () {
     }
 
     # @private
-    function __xsh_complete_lpue () {
-        local lpue=$1
+    function __xsh_complete_lpur () {
+        local lpur=$1
 
-        if [[ -z ${lpue} ]]; then
-            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
+        if [[ -z ${lpur} ]]; then
+            printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
             return 255
         fi
 
-        lpue=${lpue/#\//x\/}  # set default lib x if lpue is started with /
-        lpue=${lpue/%\//\/*}  # set default pue if lpue is ended with /
-        if [[ -n ${lpue##*\/*} ]]; then
-            lpue="${lpue}/*"
+        lpur=${lpur/#\//x\/}  # set default lib `x` if lpur is started with /
+        lpur=${lpur/%\//\/*}  # set default pur `*` if lpur is ended with /
+        if [[ -n ${lpur##*\/*} ]]; then
+            lpur="${lpur}/*"
         else
             :
         fi
-        echo "${lpue}"
+        echo "${lpur}"
     }
 
     # @private
@@ -478,16 +495,16 @@ function xsh () {
     }
 
     # @private
-    function __xsh_get_lib_by_lpue () {
-        local lpue=$1
+    function __xsh_get_lib_by_lpur () {
+        local lpur=$1
 
-        if [[ -z ${lpue} ]]; then
-            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
+        if [[ -z ${lpur} ]]; then
+            printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
             return 255
         fi
 
-        lpue=$(__xsh_complete_lpue "${lpue}")
-        echo "${lpue%%/*}"  # remove anything after first / (include the /)
+        lpur=$(__xsh_complete_lpur "${lpur}")
+        echo "${lpur%%/*}"  # remove anything after first / (include the /)
     }
 
     # @private
@@ -521,16 +538,16 @@ function xsh () {
     }
 
     # @private
-    function __xsh_get_pue_by_lpue () {
-        local lpue=$1
+    function __xsh_get_pur_by_lpur () {
+        local lpur=$1
 
-        if [[ -z ${lpue} ]]; then
-            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
+        if [[ -z ${lpur} ]]; then
+            printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
             return 255
         fi
 
-        lpue=$(__xsh_complete_lpue "${lpue}")
-        echo "${lpue#*/}"  # remove lib part
+        lpur=$(__xsh_complete_lpur "${lpur}")
+        echo "${lpur#*/}"  # remove lib part
     }
 
     # @private
@@ -571,34 +588,34 @@ function xsh () {
             return 255
         fi
 
-        lpue=$(__xsh_complete_lpue "${lpue}")
+        lpue=$(__xsh_complete_lpur "${lpue}")
         echo "${lpue//\//-}"  # replace each / with -
     }
 
     # @private
-    function __xsh_get_path_by_lpue () {
-        local lpue=$1
-        local lib_home lib pue
+    function __xsh_get_path_by_lpur () {
+        local lpur=$1
+        local lib_home lib pur
 
-        if [[ -z ${lpue} ]]; then
-            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
+        if [[ -z ${lpur} ]]; then
+            printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
             return 255
         fi
 
         lib_home="${xsh_home}/lib"
 
-        lib=$(__xsh_get_lib_by_lpue "${lpue}")
-        pue=$(__xsh_get_pue_by_lpue "${lpue}")
+        lib=$(__xsh_get_lib_by_lpur "${lpur}")
+        pur=$(__xsh_get_pur_by_lpur "${lpur}")
 
         find "${lib_home}" \
-             -path "${lib_home}/${lib}/functions/${pue}.sh" \
+             -path "${lib_home}/${lib}/functions/${pur}.sh" \
              -o \
-             -path "${lib_home}/${lib}/functions/${pue}/*" \
+             -path "${lib_home}/${lib}/functions/${pur}/*" \
              -name "*.sh" \
              -o \
-             -path "${lib_home}/${lib}/scripts/${pue}.sh" \
+             -path "${lib_home}/${lib}/scripts/${pur}.sh" \
              -o \
-             -path "${lib_home}/${lib}/scripts/${pue}/*" \
+             -path "${lib_home}/${lib}/scripts/${pur}/*" \
              -name "*.sh" \
              2>/dev/null
     }
@@ -628,17 +645,17 @@ function xsh () {
               __xsh_unimport_script \
               __xsh_calls \
               __xsh_call \
-              __xsh_complete_lpue \
+              __xsh_complete_lpur \
               __xsh_get_type_by_path \
               __xsh_get_lib_by_path \
-              __xsh_get_lib_by_lpue \
+              __xsh_get_lib_by_lpur \
               __xsh_get_util_by_path \
               __xsh_get_pue_by_path \
-              __xsh_get_pue_by_lpue \
+              __xsh_get_pur_by_lpur \
               __xsh_get_lpue_by_path \
               __xsh_get_lpuc_by_path \
               __xsh_get_lpuc_by_lpue \
-              __xsh_get_path_by_lpue \
+              __xsh_get_path_by_lpur \
               __xsh_clean
     }
 

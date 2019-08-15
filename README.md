@@ -165,9 +165,11 @@ xsh unload x
 
 There are 3 methods to invoke xsh utilities.
 
-Before to talk about that, lets get familier with the glossary `LPUE` and `LPUC`.
+Before to talk about that, lets get familier with the glossary `LPUE`, `LPUR` and `LPUC`.
 
 * LPUE stands for `Lib/Package/Util Expression`,  a LPUE example for the library xsh-lib-core is `x/string/upper`.
+
+* LPUR stands for `Lib/Package/Util Regex`,  a LPUR example for the library xsh-lib-core is `x/string` which is matching all the utilities under the package string.
 
 * LPUC stands for `Lib/Package/Util Callable`, a LPUC example for the library xsh-lib-core is `x-string-upper`.
 
