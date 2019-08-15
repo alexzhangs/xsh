@@ -1,3 +1,6 @@
+#? Description:
+#?     xsh is an extension of Bash. It works as a Bash library framework.
+#?
 #? Usage:
 #?     xsh [LIB][/PACKAGE]/UTIL [UTIL_OPTIONS]
 #?     xsh call [LIB][/PACKAGE]/UTIL [...]
@@ -58,6 +61,7 @@ function xsh () {
     local xsh_home old_trap_return
 
     # call __xsh_clean() while xsh() returns
+    # clean env if reaching the final exit point of xsh
     old_trap_return=$(trap -p RETURN)
     old_trap_return=${old_trap_return:-trap - RETURN}
     trap 'eval "${old_trap_return}";
@@ -248,11 +252,11 @@ function xsh () {
     function __xsh_import () {
         # legal input:
         #   '*'
-        #   /, x
-        #   x/pkg, /pkg
-        #   x/pkg/util, /pkg/util
-        #   x/util, /util
         local lpue=$1
+        #   /, <lib>
+        #   <lib>/<pkg>, /<pkg>
+        #   <lib>/<pkg>/<util>, /<pkg>/<util>
+        #   <lib>/<util>, /<util>
         local ln type
 
         if [[ -z ${lpue} ]]; then
@@ -328,11 +332,11 @@ function xsh () {
     function __xsh_unimport () {
         # legal input:
         #   '*'
-        #   /, x
-        #   x/pkg, /pkg
-        #   x/pkg/util, /pkg/util
-        #   x/util, /util
         local lpue=$1
+        #   /, <lib>
+        #   <lib>/<pkg>, /<pkg>
+        #   <lib>/<pkg>/<util>, /<pkg>/<util>
+        #   <lib>/<util>, /<util>
         local ln type
 
         if [[ -z ${lpue} ]]; then
@@ -407,8 +411,8 @@ function xsh () {
     # Call a function or a script by LPUE.
     function __xsh_call () {
         # legal input:
-        #   x/pkg/util, /pkg/util
-        #   x/util, /util
+        #   <lib>/<pkg>/<util>, /<pkg>/<util>
+        #   <lib>/<util>, /<util>
         local lpue=$1
         local lpuc
 
@@ -638,13 +642,13 @@ function xsh () {
               __xsh_clean
     }
 
-    # check input
+    # Check input
     if [[ -z $1 ]]; then
         __xsh_helps >&2
         return 255
     fi
 
-    # main
+    # Main
     case $1 in
         list)
             __xsh_list
