@@ -29,7 +29,7 @@ Currently this project is at version 0.x, and still in "heavy" deveolpment.
 
 * Easy to invoke.
 
-  e.g. Call a utility named `upper` under the package `array` in the library `x` :
+  e.g. Call an utility named `upper` under the package `string` in the library `x` :
 
   ```bash
   xsh x/string/upper 'hello world'
@@ -173,7 +173,7 @@ Before to talk about that, lets get familier with the glossary `LPUE` and `LPUC`
 
 Now lets get back the 3 methods:
 
-1. Call an individuel LPUE.
+1. Call an individual LPUE.
 
    The syntax:
 
@@ -221,7 +221,7 @@ Now lets get back the 3 methods:
    A sample:
 
    ```bash
-   xsh import x/string/*
+   xsh import x/string
 
    x-string-upper 'hello world'
    HELLO WORLD
