@@ -621,6 +621,21 @@ function xsh () {
     }
 
     # @private
+    function __xsh_get_lpuc_by_lpur () {
+        local lpur=$1
+        local ln
+
+        if [[ -z ${lpur} ]]; then
+            printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
+            return 255
+        fi
+
+        while read ln; do
+            __xsh_get_lpuc_by_path "${ln}"
+        done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
+    }
+
+    # @private
     # This function should only be called directly by function xsh().
     function __xsh_clean () {
         unset -f \
@@ -656,6 +671,7 @@ function xsh () {
               __xsh_get_lpuc_by_path \
               __xsh_get_lpuc_by_lpue \
               __xsh_get_path_by_lpur \
+              __xsh_get_lpuc_by_lpur \
               __xsh_clean
     }
 
