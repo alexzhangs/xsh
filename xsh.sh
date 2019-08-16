@@ -611,6 +611,18 @@ function xsh () {
     }
 
     # @private
+    function __xsh_get_lpuc_by_lpue () {
+        local lpue=$1
+
+        if [[ -z ${lpue} ]]; then
+            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
+            return 255
+        fi
+
+        echo "${lpue//\//-}"  # replace each / with -
+    }
+
+    # @private
     function __xsh_get_type_by_path () {
         local path=$1
         local type
@@ -694,20 +706,7 @@ function xsh () {
         fi
 
         lpue=$(__xsh_get_lpue_by_path "${path}")
-        echo "${lpue//\//-}"  # replace each / with -
-    }
-
-    # @private
-    function __xsh_get_lpuc_by_lpue () {
-        local lpue=$1
-
-        if [[ -z ${lpue} ]]; then
-            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
-            return 255
-        fi
-
-        lpue=$(__xsh_complete_lpur "${lpue}")
-        echo "${lpue//\//-}"  # replace each / with -
+        __xsh_get_lpuc_by_lpue "${lpue}"
     }
 
     # @private
