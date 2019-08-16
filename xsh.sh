@@ -128,13 +128,13 @@ function xsh () {
     esac
     ### DEBUG LOGIC ENDS  ###
 
-    local xsh_home old_trap_return
+    local xsh_home orig_trap_return
 
     # call __xsh_clean() while xsh() returns
     # clean env if reaching the final exit point of xsh
-    old_trap_return=$(trap -p RETURN)
-    old_trap_return=${old_trap_return:-trap - RETURN}
-    trap 'eval "${old_trap_return}";
+    orig_trap_return=$(trap -p RETURN)
+    orig_trap_return=${orig_trap_return:-trap - RETURN}
+    trap 'eval "${orig_trap_return}";
          if [[ ${FUNCNAME[0]} == xsh && $(__xsh_count_in_funcstack xsh ) -eq 1 ]]; then
              if type -t __xsh_clean >/dev/null 2>&1; then
                  __xsh_clean;
