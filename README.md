@@ -10,13 +10,13 @@ xsh - this repository, in a narrow sense, is not a library itself, it's just a f
 
 ## Status
 
-Currently this project is at version 0.x, and still in "heavy" deveolpment.
+Currently this project is at version 0.x, and still in "heavy" development.
 
 
 
 ## Philosophy
 
-* Reuse the shell code previously written, provide an uniform way to organize the code, document the code, format the code, execute the code, even the way you write the code. As a result, some of well organized bash code libraries will born.
+* Reuse the shell code previously written, provide a uniform way to organize the code, document the code, format the code, execute the code, even the way you write the code. As a result, some of well organized bash code libraries will born.
 
 * Easy to bootstrap(install).
 
@@ -29,7 +29,7 @@ Currently this project is at version 0.x, and still in "heavy" deveolpment.
 
 * Easy to invoke.
 
-  e.g. Call an utility named `upper` under the package `string` in the library `x` :
+  E.g. Call an utility named `upper` under the package `string` in the library `x` :
 
   ```bash
   xsh x/string/upper 'hello world'
@@ -49,7 +49,7 @@ Currently this project is at version 0.x, and still in "heavy" deveolpment.
 
 * Easy to make your existing code a library.
 
-  A xsh library is acturally just a Git repo following some simple rules. The rules will be talked about later in the development section. Any repoes following that rules could be loaded as xsh libraries.
+  A xsh library is actually just a Git repo following some simple rules. The rules will be talked about later in the development section. Any repos following that rules could be loaded as xsh libraries.
 
 
 
@@ -165,7 +165,7 @@ xsh unload x
 
 There are 3 methods to invoke xsh utilities.
 
-Before to talk about that, lets get familier with the glossary `LPUE`, `LPUR` and `LPUC`.
+Before to talk about that, lets get familiar with the glossary `LPUE`, `LPUR` and `LPUC`.
 
 * LPUE stands for `Lib/Package/Util Expression`,  a LPUE example for the library xsh-lib-core is `x/string/upper`.
 
@@ -327,7 +327,7 @@ XSH_DEBUG='/string' xsh /string/upper foo
 
 * Dependency
 
-* Library regsitration
+* Library registration
 
 * Document generation
 
