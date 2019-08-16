@@ -109,7 +109,7 @@ Before you can really do something useful with xsh, you must load some libraries
 Use `xsh load` command to load a library, for example, loading library [xsh-lib-core](https://github.com/alexzhangs/xsh-lib-core) on default branch `master`, and give a short lib name `x`, you should issue:
 
 ```bash
-xsh load -r https://github.com/alexzhangs/xsh-lib-core x
+xsh load -n x alexzhangs/xsh-lib-core
 
 Cloning into '/Users/alex/.xsh/lib/x'...
 remote: Enumerating objects: 12, done.
@@ -281,10 +281,16 @@ It's pretty the same with scripts files except that you don't have to define fun
 
 Push them to a Git repo, Github for example, then the library is ready.
 
-Load the sample library `xsh-lib-sample` and make a short name called `smpl`:
+Load the sample library `xsh-lib-sample` on Github and make a short name called `smpl`:
 
 ```bash
-xsh load -r https://github.com/yourusername/xsh-lib-sample smpl
+xsh load -n smpl yourusername/xsh-lib-sample
+```
+
+Or if the Git repo isn't on Github, issue:
+
+```
+xsh load -s http://yourgitserver.com -n smpl yourusername/xsh-lib-sample
 ```
 
 Then they are able to be called as:

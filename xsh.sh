@@ -7,7 +7,7 @@
 #?     xsh import <LPUR> [...]
 #?     xsh unimport <LPUR> [...]
 #?     xsh list
-#?     xsh load -r GIT_REPO_URL [-b BRANCH] LIB
+#?     xsh load [-s GIT_SERVER] [-b BRANCH] [-n NAME] REPO
 #?     xsh unload LIB
 #?     xsh update LIB
 #?     xsh help [LPUR]
@@ -50,21 +50,22 @@
 #?     list                 List loaded libraries, packages and utilities.
 #?
 #?     load                 Load library from Git repo.
-#?
-#?         -r GIT_REPO_URL  Git repo URL.
+#?         [-s GIT_SERVER]  Git server URL.
+#?                          E.g. `https://github.com`
 #?         [-b BRANCH]      Branch to use, default is repo's default branch.
-#?         LIB              Library name, must be unique in all loaded libraries.
+#?         [-n NAME]        Give the lib a name rather than the default one.
+#?         REPO             Git repo with username: `USERNAME/REPO`.
+#?                          E.g. `username/xsh-lib-foo`
+#?                          By default the repo name is used to name the lib.
+#?                          The prefix `xsh-lib-` will be stripped if present.
 #?
 #?     unload               Unload the loaded library.
-#?
 #?         LIB              Library name.
 #?
 #?     update               Update the loaded library.
-#?
 #?         LIB              Library name.
 #?
 #?     help                 Show this help if no option followed.
-#?
 #?         [LPUR]           Show help for matched utilities.
 #?
 #? Debugging:
@@ -217,16 +218,21 @@ function xsh () {
 
     # @private
     function __xsh_load () {
-        local repo branch branch_opt lib
+        local git_server branch name repo
         local opt OPTARG OPTIND
 
-        while getopts r:b: opt; do
+        local git_server='https://github.com'
+
+        while getopts u:b:n: opt; do
             case ${opt} in
-                r)
-                    repo=${OPTARG}
+                u)
+                    git_server=${OPTARG%/}  # remove tailing '/'
                     ;;
                 b)
                     branch=${OPTARG}
+                    ;;
+                n)
+                    name=${OPTARG}
                     ;;
                 *)
                     return 255
@@ -234,26 +240,32 @@ function xsh () {
             esac
         done
         shift $((OPTIND - 1))
-        lib=$1
+        repo=$1
 
-        if [[ -z ${lib} ]]; then
-            printf "$FUNCNAME: ERROR: library name is null or not set.\n" >&2
+        if [[ -z ${repo} ]]; then
+            printf "$FUNCNAME: ERROR: Repo name is null or not set.\n" >&2
             return 255
         fi
 
-        if [[ -z ${repo} ]]; then
+        if [[ -z ${git_server} ]]; then
             printf "$FUNCNAME: ERROR: repository URL is null or not set.\n" >&2
             return 255
         fi
 
-        [[ -n ${branch} ]] && branch_opt="-b ${branch}"
+        declare -a branch_opt
+        [[ -n ${branch} ]] && branch_opt=(-b "${branch}")
+        if [[ -z ${name} ]]; then
+            name=${repo#*/}  # remove leading username
+            name=${name#xsh-lib-}  # remove leading 'xsh-lib-'
+        fi
 
-        if [[ -e ${xsh_home}/lib/${lib} ]]; then
-            printf "$FUNCNAME: ERROR: library '%s' already exists.\n" "${lib}" >&2
+        local lib="${xsh_home}/lib/${name}"
+        if [[ -e ${lib} ]]; then
+            printf "$FUNCNAME: ERROR: library '%s' already exists at '%s'.\n" "${name}" "${lib}" >&2
             return 255
         else
-            git clone ${branch_opt} "${repo}" "${xsh_home}/lib/${lib}"
-            find "${xsh_home}/lib/${lib}/scripts" \
+            git clone "${branch_opt[@]}" "${git_server}/${repo}" "${lib}"
+            find "${lib}/scripts" \
                  -type f \
                  -name "*.sh" \
                  -exec chmod +x {} \;
