@@ -530,34 +530,6 @@ function xsh () {
     }
 
     # @private
-    function __xsh_get_type_by_path () {
-        local path=$1
-        local type
-
-        if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
-            return 255
-        fi
-
-        type=${path#${xsh_home}/lib/*/}  # strip path from begin
-        echo "${type%%/*}"  # strip path from end
-    }
-
-    # @private
-    function __xsh_get_lib_by_path () {
-        local path=$1
-        local lib
-
-        if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
-            return 255
-        fi
-
-        lib=${path#${xsh_home}/lib/}  # strip path from begin
-        echo "${lib%%/*}"  # remove anything after first / (include the /)
-    }
-
-    # @private
     function __xsh_get_lib_by_lpur () {
         local lpur=$1
 
@@ -571,36 +543,6 @@ function xsh () {
     }
 
     # @private
-    function __xsh_get_util_by_path () {
-        local path=$1
-        local util
-
-        if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
-            return 255
-        fi
-
-        util=${path%.sh}  # remove file extension
-        util=$(echo "${util}" | sed 's|/[0-9]*$||')  # handle util selector
-        util=${util##*/}  # get util
-        echo "${util}"
-    }
-
-    # @private
-    function __xsh_get_pue_by_path () {
-        local path=${1:?}
-        local pue
-
-        if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
-            return 255
-        fi
-
-        pue=${path#${xsh_home}/lib/*/*/}  # strip path from begin
-        echo "${pue%.sh}"  # remove file extension
-    }
-
-    # @private
     function __xsh_get_pur_by_lpur () {
         local lpur=$1
 
@@ -611,48 +553,6 @@ function xsh () {
 
         lpur=$(__xsh_complete_lpur "${lpur}")
         echo "${lpur#*/}"  # remove lib part
-    }
-
-    # @private
-    function __xsh_get_lpue_by_path () {
-        local path=${1:?}
-        local lib pue
-
-        if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
-            return 255
-        fi
-
-        lib=$(__xsh_get_lib_by_path "${path}")
-        pue=$(__xsh_get_pue_by_path "${path}")
-        echo "${lib}/${pue}"
-    }
-
-    # @private
-    function __xsh_get_lpuc_by_path () {
-        local path=$1
-        local lpue
-
-        if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
-            return 255
-        fi
-
-        lpue=$(__xsh_get_lpue_by_path "${path}")
-        echo "${lpue//\//-}"  # replace each / with -
-    }
-
-    # @private
-    function __xsh_get_lpuc_by_lpue () {
-        local lpue=$1
-
-        if [[ -z ${lpue} ]]; then
-            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
-            return 255
-        fi
-
-        lpue=$(__xsh_complete_lpur "${lpue}")
-        echo "${lpue//\//-}"  # replace each / with -
     }
 
     # @private
@@ -699,6 +599,106 @@ function xsh () {
     }
 
     # @private
+    function __xsh_get_type_by_path () {
+        local path=$1
+        local type
+
+        if [[ -z ${path} ]]; then
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        type=${path#${xsh_home}/lib/*/}  # strip path from begin
+        echo "${type%%/*}"  # strip path from end
+    }
+
+    # @private
+    function __xsh_get_lib_by_path () {
+        local path=$1
+        local lib
+
+        if [[ -z ${path} ]]; then
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        lib=${path#${xsh_home}/lib/}  # strip path from begin
+        echo "${lib%%/*}"  # remove anything after first / (include the /)
+    }
+
+    # @private
+    function __xsh_get_util_by_path () {
+        local path=$1
+        local util
+
+        if [[ -z ${path} ]]; then
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        util=${path%.sh}  # remove file extension
+        util=$(echo "${util}" | sed 's|/[0-9]*$||')  # handle util selector
+        util=${util##*/}  # get util
+        echo "${util}"
+    }
+
+    # @private
+    function __xsh_get_pue_by_path () {
+        local path=${1:?}
+        local pue
+
+        if [[ -z ${path} ]]; then
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        pue=${path#${xsh_home}/lib/*/*/}  # strip path from begin
+        echo "${pue%.sh}"  # remove file extension
+    }
+
+    # @private
+    function __xsh_get_lpue_by_path () {
+        local path=${1:?}
+        local lib pue
+
+        if [[ -z ${path} ]]; then
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        lib=$(__xsh_get_lib_by_path "${path}")
+        pue=$(__xsh_get_pue_by_path "${path}")
+        echo "${lib}/${pue}"
+    }
+
+    # @private
+    function __xsh_get_lpuc_by_path () {
+        local path=$1
+        local lpue
+
+        if [[ -z ${path} ]]; then
+            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            return 255
+        fi
+
+        lpue=$(__xsh_get_lpue_by_path "${path}")
+        echo "${lpue//\//-}"  # replace each / with -
+    }
+
+    # @private
+    function __xsh_get_lpuc_by_lpue () {
+        local lpue=$1
+
+        if [[ -z ${lpue} ]]; then
+            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
+            return 255
+        fi
+
+        lpue=$(__xsh_complete_lpur "${lpue}")
+        echo "${lpue//\//-}"  # replace each / with -
+    }
+
+    # @private
     # This function should only be called directly by function xsh().
     function __xsh_clean () {
         unset -f \
@@ -724,17 +724,17 @@ function xsh () {
               __xsh_calls \
               __xsh_call \
               __xsh_complete_lpur \
+              __xsh_get_lib_by_lpur \
+              __xsh_get_pur_by_lpur \
+              __xsh_get_path_by_lpur \
+              __xsh_get_lpuc_by_lpur \
               __xsh_get_type_by_path \
               __xsh_get_lib_by_path \
-              __xsh_get_lib_by_lpur \
               __xsh_get_util_by_path \
               __xsh_get_pue_by_path \
-              __xsh_get_pur_by_lpur \
               __xsh_get_lpue_by_path \
               __xsh_get_lpuc_by_path \
               __xsh_get_lpuc_by_lpue \
-              __xsh_get_path_by_lpur \
-              __xsh_get_lpuc_by_lpur \
               __xsh_clean
 
         ### DEBUG LOGIC BEGIN ###
