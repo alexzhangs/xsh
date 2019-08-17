@@ -152,6 +152,10 @@ function xsh () {
     local xsh_lib_home="${xsh_home}/lib"
     local xsh_git_server='https://github.com'
 
+    if [[ ! -e ${xsh_lib_home} ]]; then
+        mkdir -p "${xsh_lib_home}"
+    fi
+
     # @private
     function __xsh_helps () {
         local lpur title_only
