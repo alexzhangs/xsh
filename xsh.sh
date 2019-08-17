@@ -177,8 +177,6 @@ function xsh () {
             return
         fi
 
-        path=$(__xsh_get_path_by_lpur "${lpur}")
-
         while read ln; do
             if [[ -n ${ln} ]]; then
                 type=$(__xsh_get_type_by_path "${ln}" | tr [:lower:] [:upper:])
@@ -189,7 +187,7 @@ function xsh () {
                     __xsh_help "${ln}"
                 fi
             fi
-        done <<< "$(echo "${path}")"
+        done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
     }
 
     # @private
