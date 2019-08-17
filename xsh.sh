@@ -216,6 +216,37 @@ function xsh () {
     }
 
     # @private
+    function __xsh_get_cfg_property () {
+        local name=$1
+        local property=$2
+
+        if [[ -z ${name} ]]; then
+            printf "$FUNCNAME: ERROR: Lib or repo name is null or not set.\n" >&2
+            return 255
+        fi
+
+        if [[ -z ${property} ]]; then
+            printf "$FUNCNAME: ERROR: Property name is null or not set.\n" >&2
+            return 255
+        fi
+
+        local cfg
+
+        if [[ -z ${name##*/*} ]]; then
+            cfg="${xsh_repo_home}/${name}/xsh.lib"
+        else
+            cfg="${xsh_lib_home}/${name}/xsh.lib"
+        fi
+
+        if [[ ! -f ${cfg} ]]; then
+            printf "$FUNCNAME: ERROR: Not found xsh.lib at: '%s'.\n" "${cfg}" >&2
+            return 255
+        fi
+
+        awk -F= -v key="${property}" '{if ($1 == key) {print $2; exit}}' "${cfg}"
+    }
+
+    # @private
     function __xsh_get_lib_by_repo () {
         local repo=$1
 
@@ -224,8 +255,7 @@ function xsh () {
             return 255
         fi
 
-        local cfg="${xsh_repo_home}/${repo}/xsh.lib"
-        awk -F= '{if ($1 == "name") {print $2; exit}}' "${cfg}"
+        __xsh_get_cfg_property "${repo}" name
     }
 
     # @private
@@ -748,6 +778,7 @@ function xsh () {
               __xsh_helps \
               __xsh_help \
               __xsh_list \
+              __xsh_get_cfg_property \
               __xsh_get_lib_by_repo \
               __xsh_load \
               __xsh_unload \
