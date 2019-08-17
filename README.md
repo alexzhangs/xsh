@@ -8,13 +8,13 @@ xsh - this repository, in a narrow sense, is not a library itself, it's just a f
 
 
 
-## Status
+## 1. Status
 
 Currently this project is at version 0.x, and still in "heavy" development.
 
 
 
-## Philosophy
+## 2. Philosophy
 
 * Reuse the shell code previously written, provide a uniform way to organize the code, document the code, format the code, execute the code, even the way you write the code. As a result, some of well organized bash code libraries will born.
 
@@ -53,7 +53,7 @@ Currently this project is at version 0.x, and still in "heavy" development.
 
 
 
-### What does xsh Framework Do?
+### 2.1. What does xsh Framework Do?
 
 * Handle the extraction of help and usage information
 
@@ -61,7 +61,7 @@ Currently this project is at version 0.x, and still in "heavy" development.
 
 
 
-### What do xsh Libraries Do?
+### 2.2. What do xsh Libraries Do?
 
 * Provide container for utilities
 
@@ -71,7 +71,7 @@ The xsh framework supports both public and private libraries.
 
 
 
-### What do xsh Utilities Do?
+### 2.3 What do xsh Utilities Do?
 
 * Provide fundamental function
 
@@ -87,7 +87,7 @@ Of cause, some of above topics could be built as libraries, packages or utilitie
 
 
 
-## xsh Bootstrap/Installation
+## 3. xsh Bootstrap/Installation
 
 Only thing you need is bash and Git client.
 
@@ -98,26 +98,26 @@ bash xsh/install.sh
 
 
 
-## xsh Usage
+## 4. xsh Usage
 
 Before you can really do something useful with xsh, you must load some libraries.
 
 
 
-### Load xsh Libraries
+### 4.1. Load xsh Libraries
 
-Use `xsh load` command to load a library, for example, loading library [xsh-lib-core](https://github.com/alexzhangs/xsh-lib-core) on default branch `master`, and give a short lib name `x`, you should issue:
+Use `xsh load` command to load a library, for example, loading library [alexzhangs/xsh-lib-core](https://github.com/alexzhangs/xsh-lib-core) on default branch `master`, you should issue:
 
 ```bash
-xsh load -n x alexzhangs/xsh-lib-core
+xsh load alexzhangs/xsh-lib-core
 
-Cloning into '/Users/alex/.xsh/lib/x'...
-remote: Enumerating objects: 12, done.
-remote: Counting objects: 100% (12/12), done.
-remote: Compressing objects: 100% (10/10), done.
-remote: Total 887 (delta 2), reused 7 (delta 1), pack-reused 875
-Receiving objects: 100% (887/887), 110.90 KiB | 25.00 KiB/s, done.
-Resolving deltas: 100% (369/369), done.
+Cloning into '/Users/alex/.xsh/repo/alexzhangs/xsh-lib-core'...
+remote: Enumerating objects: 400, done.
+remote: Counting objects: 100% (400/400), done.
+remote: Compressing objects: 100% (236/236), done.
+remote: Total 1275 (delta 149), reused 366 (delta 133), pack-reused 875
+Receiving objects: 100% (1275/1275), 165.64 KiB | 28.00 KiB/s, done.
+Resolving deltas: 100% (516/516), done.
 ```
 
 After the lib is loaded, you can use `xsh list` command to list all loaded libraries and utilities.
@@ -135,33 +135,33 @@ xsh list
 
 
 
-#### Upgrade the Loaded xsh Libraries
+#### 4.1.1. Upgrade the Loaded xsh Libraries
 
 Use `xsh update` command to update loaded libraries.
 
-To update the previously loaded library xsh-lib-core, simply issue:
+To update the previously loaded library `alexzhangs/xsh-lib-core`, simply issue:
 
 ```
-xsh update x
+xsh update alexzhangs/xsh-lib-core
 
-HEAD is now at 9706514 use Array way to get Array index
+HEAD is now at c3129f2 Create xsh.lib
 ```
 
 
 
-#### Unload the loaded xsh Libraries
+#### 4.1.2. Unload the loaded xsh Libraries
 
 Use `xsh unload` command to unload loaded libraries.
 
-To unload the previously loaded library xsh-lib-core, simply issue:
+To unload the previously loaded library `alexzhangs/xsh-lib-core`, simply issue:
 
 ```bash
-xsh unload x
+xsh unload alexzhangs/xsh-lib-core
 ```
 
 
 
-### Invoke xsh Utilities
+### 4.2. Invoke xsh Utilities
 
 There are 3 methods to invoke xsh utilities.
 
@@ -234,15 +234,15 @@ Now lets get back the 3 methods:
 
 
 
-## Development
+## 5. Development
 
 
 
-### How to Make Your Own xsh Libraries?
+### 5.1. How to Make Your Own xsh Libraries?
 
 The directory structure and files of a sample library looks like this:
 
-``` 
+```
 xsh-lib-sample/
 ├── functions
 │   └── string
@@ -250,16 +250,34 @@ xsh-lib-sample/
 │       └── random.sh
 │       └── upper.sh
 │       └── uuid.sh
-└── scripts
-    └── log
-        └── filter.sh
+├── scripts
+│   └── log
+│       └── filter.sh
+└── xsh.lib
 ```
 
-Let each of your functions be a single .sh file, named as the same as the function name, put them under the directory `functions`, you are free to organize the sub directories, the sub directory in this sample is `string` and `log`, they are called `packages`.
+Let each of your functions be a single `.sh` file, named as the same as the function name, put them under the directory `functions`, you are free to organize the sub directories, the sub directory in this sample is `string` and `log`, they are called `packages`.
 
-Below is the code of file `xsh-lib-sample/functions/string/upper.sh`.
+#### 5.1.1. xsh.lib
 
-You will need to follow the code style in order to let xsh generate help info.
+`xsh.lib` is a config file for the library, `xsh` will read configuration from it.
+
+Supported configurations:
+
+##### name=<lib_name>
+* Required: YES
+
+* Description: <lib_name> is used as library name.
+
+#### 5.1.2 Sample code
+
+cat `xsh-lib-sample/xsh.lib`:
+
+```
+name=smpl
+```
+
+cat `xsh-lib-sample/functions/string/upper.sh`:
 
 ```bash
 #? Usage:
@@ -273,24 +291,34 @@ You will need to follow the code style in order to let xsh generate help info.
 #?   # FOO
 #?
 function upper () {
-    echo "$@" | xsh /string/pipe/upper
+    echo "$@" | tr [a-z] [A-Z]
 }
+```
+
+You will need to follow the comment style in order to let xsh generate help info.
+
+The function should be started with the exact syntax:
+
+```
+function <name> ()
 ```
 
 It's pretty the same with scripts files except that you don't have to define functions inside the script.
 
+#### 5.1.3. Publish the library and use it
+
 Push them to a Git repo, Github for example, then the library is ready.
 
-Load the sample library `xsh-lib-sample` on Github and make a short name called `smpl`:
+Load the sample library `xsh-lib-sample` on Github:
 
 ```bash
-xsh load -n smpl yourusername/xsh-lib-sample
+xsh load yourusername/xsh-lib-sample
 ```
 
 Or if the Git repo isn't on Github, issue:
 
 ```
-xsh load -s http://yourgitserver.com -n smpl yourusername/xsh-lib-sample
+xsh load -s http://yourgitserver.com yourusername/xsh-lib-sample
 ```
 
 Then they are able to be called as:
@@ -303,7 +331,7 @@ xsh smpl/log/filter
 
 
 
-### Debugging
+### 5.2. Debugging
 
 Debug the `xsh` itself:
 
@@ -325,7 +353,7 @@ XSH_DEBUG='/string' xsh /string/upper foo
 
 
 
-## TODO
+## 6. TODO
 
 * Versioning
 
