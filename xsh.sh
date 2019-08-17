@@ -7,9 +7,9 @@
 #?     xsh import <LPUR> [...]
 #?     xsh unimport <LPUR> [...]
 #?     xsh list
-#?     xsh load [-s GIT_SERVER] [-b BRANCH] [-n NAME] REPO
-#?     xsh unload LIB
-#?     xsh update LIB
+#?     xsh load [-s GIT_SERVER] [-b BRANCH] REPO
+#?     xsh unload REPO
+#?     xsh update REPO
 #?     xsh help [LPUR]
 #?
 #? Options:
@@ -53,17 +53,14 @@
 #?         [-s GIT_SERVER]  Git server URL.
 #?                          E.g. `https://github.com`
 #?         [-b BRANCH]      Branch to use, default is repo's default branch.
-#?         [-n NAME]        Give the lib a name rather than the default one.
-#?         REPO             Git repo with username: `USERNAME/REPO`.
+#?         REPO             Git repo in syntax: `USERNAME/REPO`.
 #?                          E.g. `username/xsh-lib-foo`
-#?                          By default the repo name is used to name the lib.
-#?                          The prefix `xsh-lib-` will be stripped if present.
 #?
 #?     unload               Unload the loaded library.
-#?         LIB              Library name.
+#?         REPO             Git repo in syntax: `USERNAME/REPO`.
 #?
 #?     update               Update the loaded library.
-#?         LIB              Library name.
+#?         REPO             Git repo in syntax: `USERNAME/REPO`.
 #?
 #?     help                 Show this help if no option followed.
 #?         [LPUR]           Show help for matched utilities.
@@ -151,10 +148,14 @@ function xsh () {
         return 255
     fi
 
+    local xsh_repo_home="${xsh_home}/repo"
+    local xsh_lib_home="${xsh_home}/lib"
+    local xsh_git_server='https://github.com'
+
     # @private
     function __xsh_helps () {
         local lpur title_only
-        local path ln
+        local ln
         local type lpue
         local opt OPTARG OPTIND
 
@@ -217,22 +218,32 @@ function xsh () {
     }
 
     # @private
+    function __xsh_get_lib_by_repo () {
+        local repo=$1
+
+        if [[ -z ${repo} ]]; then
+            printf "$FUNCNAME: ERROR: Repo is null or not set.\n" >&2
+            return 255
+        fi
+
+        local cfg="${xsh_repo_home}/${repo}/xsh.lib"
+        awk -F= '{if ($1 == "name") {print $2; exit}}' "${cfg}"
+    }
+
+    # @private
     function __xsh_load () {
-        local git_server branch name repo
+        local git_server branch repo
         local opt OPTARG OPTIND
 
-        local git_server='https://github.com'
+        git_server=${xsh_git_server}
 
-        while getopts u:b:n: opt; do
+        while getopts u:b: opt; do
             case ${opt} in
                 u)
                     git_server=${OPTARG%/}  # remove tailing '/'
                     ;;
                 b)
                     branch=${OPTARG}
-                    ;;
-                n)
-                    name=${OPTARG}
                     ;;
                 *)
                     return 255
@@ -248,70 +259,89 @@ function xsh () {
         fi
 
         if [[ -z ${git_server} ]]; then
-            printf "$FUNCNAME: ERROR: repository URL is null or not set.\n" >&2
+            printf "$FUNCNAME: ERROR: Git server is null or not set.\n" >&2
             return 255
         fi
 
         declare -a branch_opt
         [[ -n ${branch} ]] && branch_opt=(-b "${branch}")
-        if [[ -z ${name} ]]; then
-            name=${repo#*/}  # remove leading username
-            name=${name#xsh-lib-}  # remove leading 'xsh-lib-'
-        fi
 
-        local lib="${xsh_home}/lib/${name}"
-        if [[ -e ${lib} ]]; then
-            printf "$FUNCNAME: ERROR: library '%s' already exists at '%s'.\n" "${name}" "${lib}" >&2
+        local repo_path="${xsh_repo_home}/${repo}"
+        if [[ -e ${repo_path} ]]; then
+            printf "$FUNCNAME: ERROR: Repo already exists at '%s'.\n" "${repo_path}" >&2
             return 255
         else
-            git clone "${branch_opt[@]}" "${git_server}/${repo}" "${lib}"
-            find "${lib}/scripts" \
+            git clone "${branch_opt[@]}" "${git_server}/${repo}" "${repo_path}"
+            find "${repo_path}/scripts" \
                  -type f \
                  -name "*.sh" \
                  -exec chmod +x {} \;
+
+            local lib=$(__xsh_get_lib_by_repo "${repo}")
+            local lib_path="${xsh_lib_home}/${lib}"
+            if [[ -e ${lib_path} ]]; then
+                printf "$FUNCNAME: ERROR: Library already exists at '%s'.\n" "${lib_path}" >&2
+                return 255
+            else
+                ln -s "${repo_path}" "${lib_path}"
+            fi
         fi
     }
 
     # @private
     function __xsh_unload () {
-        local lib=$1
+        local repo=$1
 
-        if [[ -z ${lib} ]]; then
-            printf "$FUNCNAME: ERROR: library name is null or not set.\n" >&2
+        if [[ -z ${repo} ]]; then
+            printf "$FUNCNAME: ERROR: Repo name is null or not set.\n" >&2
             return 255
         fi
 
-        if [[ -e ${xsh_home}/lib/${lib} ]]; then
-            xsh unimport "$lib/*"
-            /bin/rm -rf "${xsh_home}/lib/${lib}"
+        local repo_path="${xsh_repo_home}/${repo}"
+        if [[ -e ${repo_path} ]]; then
+            local lib=$(__xsh_get_lib_by_repo "${repo}")
+            local lib_path="${xsh_lib_home}/${lib}"
+
+            xsh unimport "${lib}/*"
+            /bin/rm -rf "${repo_path}" "${lib_path}"
         else
-            printf "$FUNCNAME: ERROR: library '%s' doesn't exist.\n" "${lib}" >&2
+            printf "$FUNCNAME: ERROR: Repo doesn't exist at '%s'.\n" "${repo_path}" >&2
             return 255
         fi
     }
 
     # @private
     function __xsh_update () {
-        local lib=$1
+        local repo=$1
 
-        if [[ -z ${lib} ]]; then
-            printf "$FUNCNAME: ERROR: library name is null or not set.\n" >&2
+        if [[ -z ${repo} ]]; then
+            printf "$FUNCNAME: ERROR: Repo name is null or not set.\n" >&2
             return 255
         fi
 
-        if [[ -e ${xsh_home}/lib/${lib} ]]; then
-            xsh unimport "$lib/*"
-            (cd "${xsh_home}/lib/${lib}" \
+        local repo_path="${xsh_repo_home}/${repo}"
+        if [[ -e ${repo_path} ]]; then
+            local orig_lib=$(__xsh_get_lib_by_repo "${repo}")
+
+            xsh unimport "$orig_lib/*"
+            (cd "${repo_path}" \
                  && git fetch origin \
                  && git reset --hard FETCH_HEAD \
                  && git clean -df \
-                 && find "${xsh_home}/lib/${lib}/scripts" \
+                 && find "${repo_path}/scripts" \
                          -type f \
                          -name "*.sh" \
                          -exec chmod +x {} \;
             )
+
+            local lib=$(__xsh_get_lib_by_repo "${repo}")
+
+            if [[ ${orig_lib} != ${lib} ]]; then
+                ln -s "${repo_path}" "${xsh_lib_home}/${lib}"
+                rm -f "${xsh_lib_home}/${orig_lib}"
+            fi
         else
-            printf "$FUNCNAME: ERROR: library '%s' doesn't exist.\n" "${lib}" >&2
+            printf "$FUNCNAME: ERROR: Repo doesn't exist at '%s'.\n" "${repo_path}" >&2
             return 255
         fi
     }
@@ -570,27 +600,25 @@ function xsh () {
     # @private
     function __xsh_get_path_by_lpur () {
         local lpur=$1
-        local lib_home lib pur
+        local lib pur
 
         if [[ -z ${lpur} ]]; then
             printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
             return 255
         fi
 
-        lib_home="${xsh_home}/lib"
-
         lib=$(__xsh_get_lib_by_lpur "${lpur}")
         pur=$(__xsh_get_pur_by_lpur "${lpur}")
 
-        find "${lib_home}" \
-             -path "${lib_home}/${lib}/functions/${pur}.sh" \
+        find -L "${xsh_lib_home}" \
+             -path "${xsh_lib_home}/${lib}/functions/${pur}.sh" \
              -o \
-             -path "${lib_home}/${lib}/functions/${pur}/*" \
+             -path "${xsh_lib_home}/${lib}/functions/${pur}/*" \
              -name "*.sh" \
              -o \
-             -path "${lib_home}/${lib}/scripts/${pur}.sh" \
+             -path "${xsh_lib_home}/${lib}/scripts/${pur}.sh" \
              -o \
-             -path "${lib_home}/${lib}/scripts/${pur}/*" \
+             -path "${xsh_lib_home}/${lib}/scripts/${pur}/*" \
              -name "*.sh" \
              2>/dev/null
     }
@@ -619,6 +647,7 @@ function xsh () {
             return 255
         fi
 
+        lpue=$(__xsh_complete_lpur "${lpue}")
         echo "${lpue//\//-}"  # replace each / with -
     }
 
@@ -632,7 +661,7 @@ function xsh () {
             return 255
         fi
 
-        type=${path#${xsh_home}/lib/*/}  # strip path from begin
+        type=${path#${xsh_lib_home}/*/}  # strip path from begin
         echo "${type%%/*}"  # strip path from end
     }
 
@@ -646,7 +675,7 @@ function xsh () {
             return 255
         fi
 
-        lib=${path#${xsh_home}/lib/}  # strip path from begin
+        lib=${path#${xsh_lib_home}/}  # strip path from begin
         echo "${lib%%/*}"  # remove anything after first / (include the /)
     }
 
@@ -676,7 +705,7 @@ function xsh () {
             return 255
         fi
 
-        pue=${path#${xsh_home}/lib/*/*/}  # strip path from begin
+        pue=${path#${xsh_lib_home}/*/*/}  # strip path from begin
         echo "${pue%.sh}"  # remove file extension
     }
 
@@ -721,6 +750,7 @@ function xsh () {
               __xsh_helps \
               __xsh_help \
               __xsh_list \
+              __xsh_get_lib_by_repo \
               __xsh_load \
               __xsh_unload \
               __xsh_update \
