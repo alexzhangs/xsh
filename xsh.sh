@@ -1,3 +1,5 @@
+#? Version: 0.1.0
+#?
 #? Description:
 #?     xsh is an extension of Bash. It works as a Bash library framework.
 #?
