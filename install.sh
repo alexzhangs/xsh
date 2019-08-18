@@ -1,6 +1,4 @@
-#!/bin/bash
-
-set -e
+#!/bin/bash -e
 
 XSH_HOME=~/.xsh
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
@@ -61,7 +59,7 @@ if [[ -e ${XSH_HOME} ]]; then
     printf "ERROR: xsh home directory %s already exists\n" "${XSH_HOME}" >&2
     exit 255
 else
-    printf "creating xsh home directory %s\n" "${XSH_HOME}"
+    printf "creating xsh home directory: %s\n" "${XSH_HOME}"
     /bin/mkdir -p "${XSH_HOME}"
 fi
 
