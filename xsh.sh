@@ -179,7 +179,7 @@ function xsh () {
         lpur=$1
 
         if [[ -z ${lpur} ]]; then
-            __xsh_help "${XSH_HOME}/xsh.sh"
+            __xsh_help "${XSH_HOME}/xsh/xsh.sh"
             return
         fi
 

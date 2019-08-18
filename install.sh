@@ -3,7 +3,7 @@
 set -e
 
 XSH_HOME=~/.xsh
-SCRIPT_DIR=$(dirname "$0")
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 function is_mac () {
     uname | grep -iq 'darwin'
@@ -57,19 +57,20 @@ function replace_or_append () {
     fi
 }
 
-if [[ -e ~/${XSH_HOME} ]]; then
-    printf "WARN: xsh home directory %s already exists\n" "${XSH_HOME}" >&2
+if [[ -e ${XSH_HOME} ]]; then
+    printf "ERROR: xsh home directory %s already exists\n" "${XSH_HOME}" >&2
+    exit 255
 else
     printf "creating xsh home directory %s\n" "${XSH_HOME}"
     /bin/mkdir -p "${XSH_HOME}"
 fi
 
-printf "installing: ${XSH_HOME}/xsh.sh\n"
-/bin/cp -a "${SCRIPT_DIR}/xsh.sh" "${XSH_HOME}"
+printf "installing xsh repo to: ${XSH_HOME}\n"
+/bin/cp -a "${SCRIPT_DIR}" "${XSH_HOME}/"
 
 printf "updating: %s\n" ~/.bashrc
 replace_or_append ~/.bashrc '^export XSH_HOME=.*$' "export XSH_HOME=${XSH_HOME}"
-replace_or_append ~/.bashrc '^\. \$\{XSH_HOME\}\/xsh\.sh$' '. ${XSH_HOME}/xsh.sh'
+replace_or_append ~/.bashrc '^\. \$\{XSH_HOME\}\/xsh\/xsh\.sh$' '. ${XSH_HOME}/xsh/xsh.sh'
 
 printf "DONE.\n"
 
