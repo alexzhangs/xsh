@@ -12,6 +12,7 @@
 #?     xsh load [-s GIT_SERVER] [-b BRANCH] REPO
 #?     xsh unload REPO
 #?     xsh update REPO
+#?     xsh upgrade [VERSION]
 #?     xsh help [LPUR]
 #?
 #? Options:
@@ -63,6 +64,9 @@
 #?
 #?     update               Update the loaded library.
 #?         REPO             Git repo in syntax: `USERNAME/REPO`.
+#?
+#?     upgrade              Update xsh itself.
+#?         [VERSION]        Update to the specific VERSION, downgrade is possible.
 #?
 #?     help                 Show this help if no option followed.
 #?         [LPUR]           Show help for matched utilities.
@@ -486,6 +490,23 @@ function xsh () {
     }
 
     # @private
+    # Upgrade/Downgrade xsh to specific tagged version or latest tagged version.
+    function __xsh_upgrade () {
+        local version=$1
+
+        local repo_path="${xsh_home}/xsh"
+        if [[ -e ${repo_path} ]]; then
+            (cd "${repo_path}" \
+                 && __xsh_git_force_update "${version}"
+            )
+            source "${repo_path}/xsh.sh"
+        else
+            printf "$FUNCNAME: ERROR: Repo doesn't exist at '%s'.\n" "${repo_path}" >&2
+            return 255
+        fi
+    }
+
+    # @private
     function __xsh_imports () {
         local lpur
         local ret=0
@@ -900,6 +921,7 @@ function xsh () {
               __xsh_load \
               __xsh_unload \
               __xsh_update \
+              __xsh_upgrade \
               __xsh_imports \
               __xsh_import \
               __xsh_import_function \
@@ -948,6 +970,9 @@ function xsh () {
             ;;
         update)
             __xsh_update "${@:2}"
+            ;;
+        upgrade)
+            __xsh_upgrade "${@:2}"
             ;;
         import)
             __xsh_imports "${@:2}"
