@@ -187,6 +187,8 @@ function xsh () {
     # @private
     # Fetch remote tags to local
     function __xsh_git_fetch_remote_tags () {
+        # remove local tags that don't exist on remote
+        git tag | xargs git tag -d
         git fetch --tags
     }
 
