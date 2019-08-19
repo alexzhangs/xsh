@@ -917,52 +917,17 @@ function xsh () {
     }
 
     # @private
-    # This function should only be called directly by function xsh().
+    # List all internal functions.
+    function __xsh_get_internal_functions () {
+        typeset -f xsh \
+            | awk '$1 == "function" && match($2, "^__xsh_") > 0 && $3 == "()"
+                  {print $2}'
+    }
+
+    # @private
+    # Clean env on xsh() returns.
     function __xsh_clean () {
-        unset -f \
-              __xsh_backup_debug_state \
-              __xsh_restore_debug_state \
-              __xsh_enable_debug \
-              __xsh_disable_debug \
-              __xsh_count_in_funcstack \
-              __xsh_chmod_x_by_dir \
-              __xsh_git_discard_all \
-              __xsh_git_fetch_remote_tags \
-              __xsh_git_get_current_tag \
-              __xsh_git_get_latest_tag \
-              __xsh_git_force_update \
-              __xsh_helps \
-              __xsh_help \
-              __xsh_list \
-              __xsh_get_cfg_property \
-              __xsh_get_lib_by_repo \
-              __xsh_load \
-              __xsh_unload \
-              __xsh_update \
-              __xsh_upgrade \
-              __xsh_imports \
-              __xsh_import \
-              __xsh_import_function \
-              __xsh_import_script \
-              __xsh_unimports \
-              __xsh_unimport \
-              __xsh_unimport_function \
-              __xsh_unimport_script \
-              __xsh_calls \
-              __xsh_call \
-              __xsh_complete_lpur \
-              __xsh_get_lib_by_lpur \
-              __xsh_get_pur_by_lpur \
-              __xsh_get_path_by_lpur \
-              __xsh_get_lpuc_by_lpur \
-              __xsh_get_type_by_path \
-              __xsh_get_lib_by_path \
-              __xsh_get_util_by_path \
-              __xsh_get_pue_by_path \
-              __xsh_get_lpue_by_path \
-              __xsh_get_lpuc_by_path \
-              __xsh_get_lpuc_by_lpue \
-              __xsh_clean
+        unset -f $(__xsh_get_internal_functions)
 
         ### DEBUG LOGIC BEGIN ###
         set "$orig_debug_state"  # restore debug state
