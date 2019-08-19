@@ -197,8 +197,8 @@ function xsh () {
     # Fetch remote tags to local
     function __xsh_git_fetch_remote_tags () {
         # remove local tags that don't exist on remote
-        git tag | xargs git tag -d
         git fetch --tags
+        __xsh_git_get_all_tags | xargs git tag --delete
     }
 
     # @private
@@ -210,7 +210,13 @@ function xsh () {
     # @private
     # Get the latest tag
     function __xsh_git_get_latest_tag () {
-        git tag | sed -n '$p'
+        __xsh_git_get_all_tags | sed -n '$p'
+    }
+
+    # @private
+    # Check if the work directory is clean.
+    function __xsh_git_is_workdir_clean () {
+        test -n $(git status -s)
     }
 
     # @private
@@ -242,7 +248,7 @@ function xsh () {
             unstable=0
         fi
 
-        if [[ -n $(git status -s) ]]; then
+        if __xsh_git_is_workdir_clean; then
             # discard all local changes and untracked files
             __xsh_git_discard_all
         fi
