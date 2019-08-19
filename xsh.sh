@@ -187,7 +187,7 @@ function xsh () {
     # @private
     # Fetch remote tags to local
     function __xsh_git_fetch_remote_tags () {
-        git fetch --all --tags --prune-tags
+        git fetch --tags
     }
 
     # @private
