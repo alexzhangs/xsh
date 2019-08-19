@@ -12,6 +12,7 @@
 #?     xsh update REPO
 #?     xsh upgrade [VERSION]
 #?     xsh version
+#?     xsh versions
 #?     xsh help [LPUR]
 #?
 #? Options:
@@ -67,7 +68,9 @@
 #?     upgrade              Update xsh itself.
 #?         [VERSION]        Update to the specific VERSION, downgrade is possible.
 #?
-#?     version              Show xsh version.
+#?     version              Show current xsh version.
+#?
+#?     versions             Show available xsh versions.
 #?
 #?     help                 Show this help if no option followed.
 #?         [LPUR]           Show help for matched utilities.
@@ -182,6 +185,12 @@ function xsh () {
     function __xsh_git_discard_all () {
         git reset --hard \
             && git clean -df
+    }
+
+    # @private
+    # Get all tags
+    function __xsh_git_get_all_tags () {
+        git tag --list
     }
 
     # @private
@@ -988,6 +997,9 @@ function xsh () {
             ;;
         version)
             __xsh_git_get_current_tag
+            ;;
+        versions)
+            __xsh_git_get_all_tags
             ;;
         help)
             __xsh_helps "${@:2}"
