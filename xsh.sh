@@ -1,5 +1,3 @@
-#? Version: 0.1.0
-#?
 #? Description:
 #?     xsh is an extension of Bash. It works as a Bash library framework.
 #?
@@ -13,6 +11,7 @@
 #?     xsh unload REPO
 #?     xsh update REPO
 #?     xsh upgrade [VERSION]
+#?     xsh version
 #?     xsh help [LPUR]
 #?
 #? Options:
@@ -67,6 +66,8 @@
 #?
 #?     upgrade              Update xsh itself.
 #?         [VERSION]        Update to the specific VERSION, downgrade is possible.
+#?
+#?     version              Show xsh version.
 #?
 #?     help                 Show this help if no option followed.
 #?         [LPUR]           Show help for matched utilities.
@@ -982,6 +983,9 @@ function xsh () {
             ;;
         call)
             __xsh_calls "${@:2}"
+            ;;
+        version)
+            __xsh_git_get_current_tag
             ;;
         help)
             __xsh_helps "${@:2}"
