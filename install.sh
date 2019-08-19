@@ -76,8 +76,8 @@ xsh upgrade
 
 printf "DONE.\n"
 
-printf "##################################################\n"
-printf "## please run 'exec bash' to apply ~/.bashrc    ##\n"
-printf "##################################################\n"
+printf "##########################################################################\n"
+printf "## please run 'exec bash' to apply ~/.bashrc for other Bash terminal.   ##\n"
+printf "##########################################################################\n"
 
 exit
