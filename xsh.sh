@@ -89,7 +89,9 @@ function xsh () {
     local orig_debug_state
 
     # @private
-    #
+    # Backup 'set' options to variable: orig_debug_state
+    #   verbose: -v
+    #   xtrace:  -x
     function __xsh_backup_debug_state () {
         case "${-//[^vx]/}" in
             v)
@@ -108,7 +110,7 @@ function xsh () {
     }
 
     # @private
-    #
+    # Count the number of given function name in ${FUNCNAME[@]}
     function __xsh_count_in_funcstack () {
         printf '%s\n' "${FUNCNAME[@]}" \
             | grep -c "^${1}$"
