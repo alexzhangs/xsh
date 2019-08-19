@@ -232,7 +232,7 @@ function xsh () {
         local unstable=0
         while getopts u opt; do
             case ${opt} in
-                t)
+                u)
                     unstable=1
                     ;;
                 *)
