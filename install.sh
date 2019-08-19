@@ -66,9 +66,13 @@ fi
 printf "installing xsh repo to: ${XSH_HOME}\n"
 /bin/cp -a "${SCRIPT_DIR}" "${XSH_HOME}/"
 
-printf "updating: %s\n" ~/.bashrc
+printf "updating and sourcing: %s\n" ~/.bashrc
 replace_or_append ~/.bashrc '^export XSH_HOME=.*$' "export XSH_HOME=${XSH_HOME}"
 replace_or_append ~/.bashrc '^\. \$\{XSH_HOME\}\/xsh\/xsh\.sh$' '. ${XSH_HOME}/xsh/xsh.sh'
+. ~/.bashrc
+
+printf "updating xsh to the latest stable version.\n"
+xsh upgrade
 
 printf "DONE.\n"
 
