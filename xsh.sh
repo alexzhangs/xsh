@@ -160,6 +160,113 @@ function xsh () {
         mkdir -p "${xsh_lib_home}"
     fi
 
+
+    # @private
+    # chmod +x all files under the given dir
+    function __xsh_chmod_x_by_dir () {
+        local path=$1
+
+        find "${path}" \
+             -type f \
+             -name "*.sh" \
+             -exec chmod +x {} \;
+    }
+
+    # @private
+    # Discard all local changes and untracked files
+    function __xsh_git_discard_all () {
+        git reset --hard \
+            && git clean -df
+    }
+
+    # @private
+    # Fetch remote tags to local
+    function __xsh_git_fetch_remote_tags () {
+        git fetch --all --tags --prune-tags
+    }
+
+    # @private
+    # Get the tag current on
+    function __xsh_git_get_current_tag () {
+        git describe --tags
+    }
+
+    # @private
+    # Get the latest tag
+    function __xsh_git_get_latest_tag () {
+        git tag | sed -n '$p'
+    }
+
+    # @private
+    # Update current repo to a specific tag or latest tag.
+    # If '-u' (unstable) is sepcified without any tag, then the repo will be
+    #   updated to lastest state even no tag is attached.
+    # Any local changes will be DISCARDED after update.
+    # Any untracked files will be REMOVED after update.
+    function __xsh_git_force_update () {
+        local OPTIND OPTARG opt
+        local tag
+
+        local unstable=0
+        while getopts u opt; do
+            case ${opt} in
+                t)
+                    unstable=1
+                    ;;
+                *)
+                    return 255
+                    ;;
+            esac
+        done
+        shift $((OPTIND - 1))
+        tag=$1
+
+        if [[ -n ${tag} ]]; then
+            # ignore -u if tag is specified
+            unstable=0
+        fi
+
+        if [[ -n $(git status -s) ]]; then
+            # discard all local changes and untracked files
+            __xsh_git_discard_all
+        fi
+
+        # fetch remote tags to local
+        __xsh_git_fetch_remote_tags
+
+        if [[ -z ${tag} && ${unstable} -eq 0 ]]; then
+            tag=$(__xsh_git_get_latest_tag)
+
+            if [[ -z ${tag} ]]; then
+                printf "$FUNCNAME: ERROR: No any available tagged version found.\n" >&2
+                return 255
+            fi
+
+            local current=$(__xsh_git_get_current_tag)
+            if [[ ${current} == ${tag} ]]; then
+                printf "$FUNCNAME: INFO: Already at the latest version: %s.\n" "${current}"
+                return
+            fi
+        fi
+
+        printf "$FUNCNAME: INFO: Updating repo to '%s'.\n" "${tag:-latest(unstable)}"
+        if [[ -n ${tag} ]]; then
+            git checkout "${tag}"
+        else
+            git fetch origin
+        fi
+
+        if [[ $? -ne 0 ]]; then
+            printf "$FUNCNAME: ERROR: Failed to update repo.\n" >&2
+            return 255
+        fi
+
+        if [[ -d ./scripts ]]; then
+            # chmod +x scripts if the repo is a library
+            __xsh_chmod_x_by_dir "${repo}/scripts"
+        fi
+    }
+
     # @private
     function __xsh_helps () {
         local lpur title_only
@@ -347,6 +454,7 @@ function xsh () {
     }
 
     # @private
+    # Update a loaded library to latest tagged version.
     function __xsh_update () {
         local repo=$1
 
@@ -357,21 +465,16 @@ function xsh () {
 
         local repo_path="${xsh_repo_home}/${repo}"
         if [[ -e ${repo_path} ]]; then
-            local orig_lib=$(__xsh_get_lib_by_repo "${repo}")
+            local orig_lib lib
 
+            orig_lib=$(__xsh_get_lib_by_repo "${repo}")
             xsh unimport "$orig_lib/*"
+
             (cd "${repo_path}" \
-                 && git fetch origin \
-                 && git reset --hard FETCH_HEAD \
-                 && git clean -df \
-                 && find "${repo_path}/scripts" \
-                         -type f \
-                         -name "*.sh" \
-                         -exec chmod +x {} \;
+                 && __xsh_git_force_update
             )
 
-            local lib=$(__xsh_get_lib_by_repo "${repo}")
-
+            lib=$(__xsh_get_lib_by_repo "${repo}")
             if [[ ${orig_lib} != ${lib} ]]; then
                 ln -s "${repo_path}" "${xsh_lib_home}/${lib}"
                 rm -f "${xsh_lib_home}/${orig_lib}"
@@ -783,6 +886,12 @@ function xsh () {
               __xsh_enable_debug \
               __xsh_disable_debug \
               __xsh_count_in_funcstack \
+              __xsh_chmod_x_by_dir \
+              __xsh_git_discard_all \
+              __xsh_git_fetch_remote_tags \
+              __xsh_git_get_current_tag \
+              __xsh_git_get_latest_tag \
+              __xsh_git_force_update \
               __xsh_helps \
               __xsh_help \
               __xsh_list \
