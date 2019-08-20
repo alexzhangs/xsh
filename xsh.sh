@@ -285,7 +285,7 @@ function xsh () {
 
         if [[ -d ./scripts ]]; then
             # chmod +x scripts if the repo is a library
-            __xsh_chmod_x_by_dir "${repo}/scripts"
+            __xsh_chmod_x_by_dir "./scripts"
         fi
     }
 
