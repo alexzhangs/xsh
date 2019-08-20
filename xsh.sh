@@ -216,7 +216,7 @@ function xsh () {
     # @private
     # Check if the work directory is clean.
     function __xsh_git_is_workdir_clean () {
-        test -n $(git status -s)
+        test -n "$(git status -s)"
     }
 
     # @private
