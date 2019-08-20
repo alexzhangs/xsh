@@ -184,7 +184,7 @@ function xsh () {
     # Discard all local changes and untracked files
     function __xsh_git_discard_all () {
         git reset --hard \
-            && git clean -df
+            && git clean -d --force
     }
 
     # @private
