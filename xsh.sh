@@ -920,8 +920,7 @@ function xsh () {
     # List all internal functions.
     function __xsh_get_internal_functions () {
         typeset -f xsh \
-            | awk '$1 == "function" && match($2, "^__xsh_") > 0 && $3 == "()"
-                  {print $2}'
+            | awk '$1 == "function" && match($2, "^__xsh_") > 0 && $3 == "()" {print $2}'
     }
 
     # @private
