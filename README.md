@@ -2,7 +2,7 @@
 
 xsh is an e<span style="color:red">__x__</span>tension of ba<span style="color:red">__sh__</span>. It works as a bash library framework.
 
-xsh is aimed to provide an uniform and easy way to reuse bash code, like what a library does.
+xsh is aimed to provide a uniform and easy way to reuse bash code, like what a library does.
 
 xsh - this repository, in a narrow sense, is not a library itself, it's just a framework, in a broad sense, xsh along with other repositories, such as xsh-lib-core, as a whole, is a bash library with a framework.
 
@@ -29,7 +29,7 @@ Currently this project is at version 0.x, and still in "heavy" development.
 
 * Easy to invoke.
 
-  E.g. Call an utility named `upper` under the package `string` in the library `x` :
+  E.g. Call a utility named `upper` under the package `string` in the library `x` :
 
   ```bash
   xsh x/string/upper 'hello world'
@@ -64,8 +64,8 @@ Currently this project is at version 0.x, and still in "heavy" development.
 ### 2.2. What do xsh Libraries Do?
 
 * Provide container for utilities
-
 * Provide rules for organizing utilities by packages
+* Handle versioning
 
 The xsh framework supports both public and private libraries.
 
@@ -106,24 +106,44 @@ Before you can really do something useful with xsh, you must load some libraries
 
 ### 4.1. Load xsh Libraries
 
-Use `xsh load` command to load a library, for example, loading library [alexzhangs/xsh-lib-core](https://github.com/alexzhangs/xsh-lib-core) on default branch `master`, you should issue:
+Use `xsh load` command to load a library.
+
+Loading the latest tagged version of library [alexzhangs/xsh-lib-core](https://github.com/alexzhangs/xsh-lib-core), you should issue:
 
 ```bash
 xsh load alexzhangs/xsh-lib-core
 
 Cloning into '/Users/alex/.xsh/repo/alexzhangs/xsh-lib-core'...
-remote: Enumerating objects: 400, done.
-remote: Counting objects: 100% (400/400), done.
-remote: Compressing objects: 100% (236/236), done.
-remote: Total 1275 (delta 149), reused 366 (delta 133), pack-reused 875
-Receiving objects: 100% (1275/1275), 165.64 KiB | 28.00 KiB/s, done.
+remote: Enumerating objects: 401, done.
+remote: Counting objects: 100% (401/401), done.
+remote: Compressing objects: 100% (237/237), done.
+remote: Total 1276 (delta 149), reused 367 (delta 133), pack-reused 875
+Receiving objects: 100% (1276/1276), 165.74 KiB | 18.00 KiB/s, done.
 Resolving deltas: 100% (516/516), done.
+Deleted tag '0.1.0' (was 5e7dcfb)
+From https://github.com/alexzhangs/xsh-lib-core
+ * [new tag]         0.1.0      -> 0.1.0
+__xsh_git_force_update: INFO: Already at the latest version: 0.1.0.
 ```
 
-After the lib is loaded, you can use `xsh list` command to list all loaded libraries and utilities.
+Loading the latest development state of library [alexzhangs/xsh-lib-core](https://github.com/alexzhangs/xsh-lib-core) on default branch `master`, you should issue:
+
+```bash
+xsh load -b master alexzhangs/xsh-lib-core
+```
+
+After the lib is loaded, you can use `xsh list` command to list all loaded libraries.
 
 ```bash
 xsh list
+
+x (0.1.0) => alexzhangs/xsh-lib-core
+```
+
+To list all the utilities of the library `x`, use:
+
+```bash
+xsh list x
 
 [SCRIPT] x/log/filter
 [FUNCTIONS] x/string/lower
@@ -135,7 +155,7 @@ xsh list
 
 
 
-#### 4.1.1. Upgrade the Loaded xsh Libraries
+#### 4.1.1. Updade the Loaded xsh Libraries
 
 Use `xsh update` command to update loaded libraries.
 
@@ -144,7 +164,10 @@ To update the previously loaded library `alexzhangs/xsh-lib-core`, simply issue:
 ```
 xsh update alexzhangs/xsh-lib-core
 
-HEAD is now at c3129f2 Create xsh.lib
+Deleted tag '0.1.0' (was 5e7dcfb)
+From https://github.com/alexzhangs/xsh-lib-core
+ * [new tag]         0.1.0      -> 0.1.0
+__xsh_git_force_update: INFO: Already at the latest version: 0.1.0.
 ```
 
 
@@ -234,6 +257,78 @@ Now lets get back the 3 methods:
 
 
 
+### 4.3. Update xsh itself
+
+See the current xsh version:
+
+```bash
+xsh version
+
+0.1.4
+```
+
+List all available xsh versions(tags):
+
+```bash
+xsh versions
+
+0.1.0
+0.1.1
+0.1.2
+0.1.3
+0.1.4
+```
+
+Update xsh to the latest tagged version:
+
+```bash
+xsh upgrade
+```
+
+Update xsh to a historical tagged version:
+
+```bash
+xsh upgrade -t <tag>
+```
+
+
+
+### 4.4. Get Help
+
+See the usage info of xsh itself:
+
+```bash
+xsh help
+```
+
+See the usage info of xsh utilities by LPUR:
+
+```bash
+xsh help <LPUR>
+```
+
+List all loaded libraries:
+
+```bash
+xsh list
+
+x (0.1.0) => alexzhangs/xsh-lib-core
+```
+
+List utilities by LPUR:
+
+```bash
+xsh list <LPUR>
+```
+
+List all utilities of all libraries:
+
+```
+xsh list '*'
+```
+
+
+
 ## 5. Development
 
 
@@ -258,6 +353,8 @@ xsh-lib-sample/
 
 Let each of your functions be a single `.sh` file, named as the same as the function name, put them under the directory `functions`, you are free to organize the sub directories, the sub directory in this sample is `string` and `log`, they are called `packages`.
 
+
+
 #### 5.1.1. xsh.lib
 
 `xsh.lib` is a config file for the library, `xsh` will read configuration from it.
@@ -268,6 +365,8 @@ Supported configurations:
 * Required: YES
 
 * Description: <lib_name> is used as library name.
+
+
 
 #### 5.1.2 Sample code
 
@@ -305,20 +404,24 @@ function <name> ()
 
 It's pretty the same with scripts files except that you don't have to define functions inside the script.
 
-#### 5.1.3. Publish the library and use it
 
-Push them to a Git repo, Github for example, then the library is ready.
+
+#### 5.1.3. Commit the code and test it
+
+Push the code to a Git repo, for example Github, on branch `master`, then the library is ready for test.
 
 Load the sample library `xsh-lib-sample` on Github:
 
+Note: Option `-b master` is neccessary to tell that you are loading the latest untagged version for testing purpose.
+
 ```bash
-xsh load yourusername/xsh-lib-sample
+xsh load -b master yourusername/xsh-lib-sample
 ```
 
 Or if the Git repo isn't on Github, issue:
 
 ```
-xsh load -s http://yourgitserver.com yourusername/xsh-lib-sample
+xsh load -s http://yourgitserver.com -b master yourusername/xsh-lib-sample
 ```
 
 Then they are able to be called as:
@@ -327,6 +430,28 @@ Then they are able to be called as:
 xsh smpl/string/lower
 xsh smpl/string/upper
 xsh smpl/log/filter
+```
+
+
+
+#### 5.1.4. Publish the library
+
+In order to tell world that the library is ready, you have to make at least one Git tag to publish the library.
+
+To use [Semantic Versioning](https://semver.org) for the tag name is recommended.
+
+To make an annotated tag `1.0.0` on the latest commit of branch `master`, issue:
+
+```
+git tag -a -m 'v1.0.0' 1.0.0
+```
+
+Then the library is ready.
+
+Load the published sample library `xsh-lib-sample` on Github:
+
+```bash
+xsh load yourusername/xsh-lib-sample
 ```
 
 
@@ -354,10 +479,6 @@ XSH_DEBUG='/string' xsh /string/upper foo
 
 
 ## 6. TODO
-
-* Versioning
-
-  Refer to: https://semver.org
 
 * Dependency
 
