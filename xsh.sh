@@ -440,6 +440,20 @@ function xsh () {
     }
 
     # @private
+    function __xsh_versions () {
+        (cd "${xsh_home}/xsh" \
+             && __xsh_git_get_all_tags
+        )
+    }
+
+    # @private
+    function __xsh_version () {
+        (cd "${xsh_home}/xsh" \
+             && __xsh_git_get_current_tag
+        )
+    }
+
+    # @private
     function __xsh_list () {
         __xsh_helps -t '*'
     }
@@ -1086,10 +1100,10 @@ function xsh () {
             __xsh_calls "${@:2}"
             ;;
         version)
-            __xsh_git_get_current_tag
+            __xsh_version
             ;;
         versions)
-            __xsh_git_get_all_tags
+            __xsh_versions
             ;;
         help)
             __xsh_helps "${@:2}"
