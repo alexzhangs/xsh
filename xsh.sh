@@ -6,7 +6,7 @@
 #?     xsh call <LPUE> [...]
 #?     xsh import <LPUR> [...]
 #?     xsh unimport <LPUR> [...]
-#?     xsh list
+#?     xsh list [LPUR]
 #?     xsh load [-s GIT_SERVER] [-b BRANCH | -t TAG] REPO
 #?     xsh unload REPO
 #?     xsh update [-b BRANCH | -t TAG] REPO
@@ -50,7 +50,9 @@
 #?
 #?         <LPUR>           The syntax is the same with import.
 #?
-#?     list                 List loaded libraries, packages and utilities.
+#?     list                 List loaded libraries if no options passed.
+#?         [LPUR]           List matched libraries, packages and utilities.
+#?                          The syntax is the same with import.
 #?
 #?     load                 Load library from Git repo.
 #?                          Without '-b' or '-t', it will load the latest tagged
@@ -474,7 +476,13 @@ function xsh () {
 
     # @private
     function __xsh_list () {
-        __xsh_helps -t '*'
+        local lpur=$1
+
+        if [[ -z ${lpur} ]]; then
+            __xsh_lib_list
+        else
+            __xsh_helps -t "${lpur}"
+        fi
     }
 
     # @private
@@ -518,6 +526,21 @@ function xsh () {
         fi
 
         __xsh_get_cfg_property "${repo}" name
+    }
+
+    # @private
+    # List loaded libraries with version.
+    function __xsh_lib_list () {
+        local lib lib_path repo version
+
+        while read lib_path; do
+            lib=${lib_path##*/}
+            version=$(cd "${lib_path}" && __xsh_git_get_current_tag)
+            repo=$(readlink "${lib_path}" \
+                       | awk -F/ '{print $(NF-1) FS $NF}')
+
+            printf '%s (%s) => %s\n' "${lib}" "${version:-latest}" "${repo}"
+        done <<< "$(find ~/.xsh/lib -type l -maxdepth 1)"
     }
 
     # @private
@@ -1095,7 +1118,7 @@ function xsh () {
     # Main
     case $1 in
         list)
-            __xsh_list
+            __xsh_list "${@:2}"
             ;;
         load)
             __xsh_lib_load "${@:2}"
