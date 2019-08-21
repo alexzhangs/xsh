@@ -350,21 +350,19 @@ function xsh () {
         # fetch remote tags to local
         __xsh_git_fetch_remote_tags
 
-        if [[ -z ${git_options[@]} ]]; then
-            local tag=$(__xsh_git_get_latest_tag)
+        if [[ -z ${git_options} ]]; then
+            local git_options=$(__xsh_git_get_latest_tag)
 
-            if [[ -z ${tag} ]]; then
+            if [[ -z ${git_options} ]]; then
                 printf "$FUNCNAME: ERROR: No any available tagged version found.\n" >&2
                 return 255
             fi
+        fi
 
-            local current=$(__xsh_git_get_current_tag)
-            if [[ ${current} == ${tag} ]]; then
-                printf "$FUNCNAME: INFO: Already at the latest version: %s.\n" "${current}"
-                return
-            fi
-
-            git_options=("${tag}")
+        local current=$(__xsh_git_get_current_tag)
+        if [[ ${current} == ${git_options} ]]; then
+            printf "$FUNCNAME: INFO: Already at the latest version: %s.\n" "${current}"
+            return
         fi
 
         printf "$FUNCNAME: INFO: Updating repo to '%s'.\n" "${git_options}"
