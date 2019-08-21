@@ -138,6 +138,27 @@ function xsh () {
             | grep -c "^${1}$"
     }
 
+    # @private
+    # Log message to stdout/stderr.
+    #
+    # Usage:
+    #   __xsh_log [debug|info|wanning|error|fail|fatal] <MESSAGE>
+    function __xsh_log () {
+        local level="$(echo "$1" | tr [[:lower:]] [[:upper:]])"
+
+        case ${level} in
+            WARNING|ERROR|FAIL|FATAL)
+                printf "${FUNCNAME[1]}: ${level}: %s\n" "${*:2}" >&2
+                ;;
+            DEBUG|INFO)
+                printf "${FUNCNAME[1]}: ${level}: %s\n" "${*:2}"
+                ;;
+            *)
+                printf "${FUNCNAME[1]}: %s\n" "$*"
+                ;;
+        esac
+    }
+
     ### DEBUG LOGIC BEGIN ###
     __xsh_backup_debug_state  # backup debug state
 
@@ -170,7 +191,7 @@ function xsh () {
         # remove tailing '/'
         xsh_home=${XSH_HOME%/}
     else
-        printf "$FUNCNAME: ERROR: XSH_HOME is not set properly: '%s'.\n" "${XSH_HOME}" >&2
+        __xsh_log error "XSH_HOME is not set properly."
         return 255
     fi
 
@@ -272,23 +293,23 @@ function xsh () {
         repo=$1
 
         if [[ -z ${repo} ]]; then
-            printf "$FUNCNAME: ERROR: Repo name is null or not set.\n" >&2
+            __xsh_log error "Repo name is null or not set."
             return 255
         fi
 
         if [[ -z ${git_server} ]]; then
-            printf "$FUNCNAME: ERROR: Git server is null or not set.\n" >&2
+            __xsh_log error "Git server is null or not set."
             return 255
         fi
 
         local repo_path="${xsh_repo_home}/${repo}"
         if [[ -e ${repo_path} ]]; then
-            printf "$FUNCNAME: ERROR: Repo already exists at '%s'.\n" "${repo_path}" >&2
+            __xsh_log error "Repo already exists at ${repo_path}."
             return 255
         fi
 
         if [[ ${#git_options[@]} -gt 2 ]]; then
-            printf "$FUNCNAME: ERROR: -b and -t can't be used together.\n" >&2
+            __xsh_log error "-b and -t can't be used together."
             return 255
         fi
 
@@ -302,7 +323,7 @@ function xsh () {
 
             local ret=$?
             if [[ ${ret} -ne 0 ]]; then
-                printf "$FUNCNAME: WARNING: Deleting repo '%s'.\n" "${repo_path}" >&2
+                __xsh_log warning "Deleting repo ${repo_path}."
                 /bin/rm -rf "${repo_path}"
                 return ${ret}
             fi
@@ -338,7 +359,7 @@ function xsh () {
         done
 
         if [[ ${#git_options[@]} -gt 1 ]]; then
-            printf "$FUNCNAME: ERROR: -b and -t can't be used together.\n" >&2
+            __xsh_log error "-b and -t can't be used together."
             return 255
         fi
 
@@ -354,22 +375,22 @@ function xsh () {
             local git_options=$(__xsh_git_get_latest_tag)
 
             if [[ -z ${git_options} ]]; then
-                printf "$FUNCNAME: ERROR: No any available tagged version found.\n" >&2
+                __xsh_log error "No any available tagged version found."
                 return 255
             fi
         fi
 
         local current=$(__xsh_git_get_current_tag)
         if [[ ${current} == ${git_options} ]]; then
-            printf "$FUNCNAME: INFO: Already at the latest version: %s.\n" "${current}"
+            __xsh_log info "Already at the latest version: ${current}."
             return
         fi
 
-        printf "$FUNCNAME: INFO: Updating repo to '%s'.\n" "${git_options}"
+        __xsh_log info "Updating repo to ${git_options}."
         git checkout "${git_options}"
 
         if [[ $? -ne 0 ]]; then
-            printf "$FUNCNAME: ERROR: Failed to update repo.\n" >&2
+            __xsh_log error "Failed to update repo."
             return 255
         fi
 
@@ -423,7 +444,7 @@ function xsh () {
         local util lpue
 
         if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
@@ -462,12 +483,12 @@ function xsh () {
         local property=$2
 
         if [[ -z ${name} ]]; then
-            printf "$FUNCNAME: ERROR: Lib or repo name is null or not set.\n" >&2
+            __xsh_log error "Lib or repo name is null or not set."
             return 255
         fi
 
         if [[ -z ${property} ]]; then
-            printf "$FUNCNAME: ERROR: Property name is null or not set.\n" >&2
+            __xsh_log error "Property name is null or not set."
             return 255
         fi
 
@@ -480,7 +501,7 @@ function xsh () {
         fi
 
         if [[ ! -f ${cfg} ]]; then
-            printf "$FUNCNAME: ERROR: Not found xsh.lib at: '%s'.\n" "${cfg}" >&2
+            __xsh_log error "Not found xsh.lib at: ${cfg}."
             return 255
         fi
 
@@ -492,7 +513,7 @@ function xsh () {
         local repo=$1
 
         if [[ -z ${repo} ]]; then
-            printf "$FUNCNAME: ERROR: Repo is null or not set.\n" >&2
+            __xsh_log error "Repo is null or not set."
             return 255
         fi
 
@@ -521,19 +542,19 @@ function xsh () {
         shift
 
         if [[ -z ${repo} ]]; then
-            printf "$FUNCNAME: ERROR: Repo name is null or not set.\n" >&2
+            __xsh_log error "Repo name is null or not set."
             return 255
         fi
 
         local repo_path="${xsh_repo_home}/${repo}"
         if [[ ! -d ${repo_path} ]]; then
-            printf "$FUNCNAME: ERROR: Repo doesn't exist at '%s'.\n" "${repo_path}" >&2
+            __xsh_log error "Repo doesn't exist at ${repo_path}."
             return 255
         fi
 
         local lib=$(__xsh_get_lib_by_repo "${repo}")
         if [[ -z ${lib} ]]; then
-            printf "$FUNCNAME: ERROR: library name is null for the repo '%s'.\n" "${repo}" >&2
+            __xsh_log error "library name is null for the repo ${repo}."
             return 255
         fi
 
@@ -561,7 +582,7 @@ function xsh () {
 
             ret=$?
             if [[ ${ret} -ne 0 ]]; then
-                printf "$FUNCNAME: ERROR: Command failed: %s: %s.\n" "$1" "${ret}" >&2
+                __xsh_log error "Command failed: $1: ${ret}."
                 return ${ret}
             fi
 
@@ -623,7 +644,7 @@ function xsh () {
         local repo=${@:(-1)}
 
         if [[ -z ${repo} ]]; then
-            printf "$FUNCNAME: ERROR: Repo name is null or not set.\n" >&2
+            __xsh_log error "Repo name is null or not set."
             return 255
         fi
 
@@ -682,7 +703,7 @@ function xsh () {
         local ln type
 
         if [[ -z ${lpur} ]]; then
-            printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
+            __xsh_log error "LPUR is null or not set."
             return 255
         fi
 
@@ -711,7 +732,7 @@ function xsh () {
         local util lpuc
 
         if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
@@ -728,7 +749,7 @@ function xsh () {
         local lpuc
 
         if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
@@ -762,7 +783,7 @@ function xsh () {
         local ln type
 
         if [[ -z ${lpur} ]]; then
-            printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
+            __xsh_log error "LPUR is null or not set."
             return 255
         fi
 
@@ -792,7 +813,7 @@ function xsh () {
         local util lpuc
 
         if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
@@ -809,7 +830,7 @@ function xsh () {
         local lpuc
 
         if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
@@ -839,7 +860,7 @@ function xsh () {
         local lpuc
 
         if [[ -z ${lpue} ]]; then
-            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
+            __xsh_log error "LPUE is null or not set."
             return 255
         fi
 
@@ -867,7 +888,7 @@ function xsh () {
         local lpur=$1
 
         if [[ -z ${lpur} ]]; then
-            printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
+            __xsh_log error "LPUR is null or not set."
             return 255
         fi
 
@@ -886,7 +907,7 @@ function xsh () {
         local lpur=$1
 
         if [[ -z ${lpur} ]]; then
-            printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
+            __xsh_log error "LPUR is null or not set."
             return 255
         fi
 
@@ -899,7 +920,7 @@ function xsh () {
         local lpur=$1
 
         if [[ -z ${lpur} ]]; then
-            printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
+            __xsh_log error "LPUR is null or not set."
             return 255
         fi
 
@@ -913,7 +934,7 @@ function xsh () {
         local lib pur
 
         if [[ -z ${lpur} ]]; then
-            printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
+            __xsh_log error "LPUR is null or not set."
             return 255
         fi
 
@@ -939,7 +960,7 @@ function xsh () {
         local ln
 
         if [[ -z ${lpur} ]]; then
-            printf "$FUNCNAME: ERROR: LPUR is null or not set.\n" >&2
+            __xsh_log error "LPUR is null or not set."
             return 255
         fi
 
@@ -953,7 +974,7 @@ function xsh () {
         local lpue=$1
 
         if [[ -z ${lpue} ]]; then
-            printf "$FUNCNAME: ERROR: LPUE is null or not set.\n" >&2
+            __xsh_log error "LPUE is null or not set."
             return 255
         fi
 
@@ -967,7 +988,7 @@ function xsh () {
         local type
 
         if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
@@ -981,7 +1002,7 @@ function xsh () {
         local lib
 
         if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
@@ -995,7 +1016,7 @@ function xsh () {
         local util
 
         if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
@@ -1011,7 +1032,7 @@ function xsh () {
         local pue
 
         if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
@@ -1025,7 +1046,7 @@ function xsh () {
         local lib pue
 
         if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
@@ -1040,7 +1061,7 @@ function xsh () {
         local lpue
 
         if [[ -z ${path} ]]; then
-            printf "$FUNCNAME: ERROR: LPU path is null or not set.\n" >&2
+            __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
