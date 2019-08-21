@@ -633,6 +633,12 @@ function xsh () {
 
         __xsh_git_clone "$@" || return
         __xsh_lib_manager "${repo}" link
+        local ret=$?
+        if [[ ${ret} -ne 0 ]]; then
+            __xsh_log warning "Deleting repo ${repo_path}."
+            rm -rf "${xsh_repo_home}/${repo}"
+            return ${ret}
+        fi
     }
 
     # @private
