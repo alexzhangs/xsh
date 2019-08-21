@@ -7,10 +7,10 @@
 #?     xsh import <LPUR> [...]
 #?     xsh unimport <LPUR> [...]
 #?     xsh list
-#?     xsh load [-s GIT_SERVER] [-b BRANCH] REPO
+#?     xsh load [-s GIT_SERVER] [-b BRANCH | -t TAG] REPO
 #?     xsh unload REPO
-#?     xsh update REPO
-#?     xsh upgrade [VERSION]
+#?     xsh update [-b BRANCH | -t TAG] REPO
+#?     xsh upgrade [-b BRANCH | -t TAG]
 #?     xsh version
 #?     xsh versions
 #?     xsh help [LPUR]
@@ -53,9 +53,13 @@
 #?     list                 List loaded libraries, packages and utilities.
 #?
 #?     load                 Load library from Git repo.
+#?                          Without '-b' or '-t', it will load the latest tagged
+#?                          version, if there's no any tagged version, returns error.
 #?         [-s GIT_SERVER]  Git server URL.
 #?                          E.g. `https://github.com`
-#?         [-b BRANCH]      Branch to use, default is repo's default branch.
+#?         [-b BRANCH]      Load the BRANCH's latest state.
+#?                          This option is for developers.
+#?         [-t TAG]         Load a specific TAG version.
 #?         REPO             Git repo in syntax: `USERNAME/REPO`.
 #?                          E.g. `username/xsh-lib-foo`
 #?
@@ -63,10 +67,20 @@
 #?         REPO             Git repo in syntax: `USERNAME/REPO`.
 #?
 #?     update               Update the loaded library.
+#?                          Without '-b' or '-t', it will update to the latest tagged
+#?                          version, if there's no any tagged version, returns error.
+#?         [-b BRANCH]      Update to the BRANCH's latest state.
+#?                          This option is for developers.
+#?         [-t TAG]         Load a specific TAG version.
 #?         REPO             Git repo in syntax: `USERNAME/REPO`.
+#?                          E.g. `username/xsh-lib-foo`
 #?
 #?     upgrade              Update xsh itself.
-#?         [VERSION]        Update to the specific VERSION, downgrade is possible.
+#?                          Without '-b' or '-t', it will update to the latest tagged
+#?                          version, if there's no any tagged version, returns error.
+#?         [-b BRANCH]      Update to the BRANCH's latest state.
+#?                          This option is for developers.
+#?         [-t TAG]         Load a specific TAG version.
 #?
 #?     version              Show current xsh version.
 #?
@@ -220,20 +234,34 @@ function xsh () {
     }
 
     # @private
-    # Update current repo to a specific tag or latest tag.
-    # If '-u' (unstable) is sepcified without any tag, then the repo will be
-    #   updated to lastest state even no tag is attached.
-    # Any local changes will be DISCARDED after update.
-    # Any untracked files will be REMOVED after update.
-    function __xsh_git_force_update () {
-        local OPTIND OPTARG opt
-        local tag
+    # Clone a Git repo.
+    #
+    # Usage:
+    #   __xsh_git_clone [-s GIT_SERVER] [-b BRANCH | -t TAG] REPO
+    #
+    # Options:
+    #   [-s GIT_SERVER]  Git server URL.
+    #                    E.g. `https://github.com`
+    #   [-b BRANCH]      Clone the BRANCH's latest state.
+    #                    This option is for developers.
+    #   [-t TAG]         Clone a specific TAG version.
+    #   REPO             Git repo in syntax: `USERNAME/REPO`.
+    #                    E.g. `username/xsh-lib-foo`
+    function __xsh_git_clone () {
+        local OPTARG OPTIND opt
+        local git_server repo
 
-        local unstable=0
-        while getopts u opt; do
+        declare -a git_options
+        git_server=${xsh_git_server}
+
+        while getopts s:b:t: opt; do
             case ${opt} in
-                u)
-                    unstable=1
+                s)
+                    git_server=${OPTARG%/}  # remove tailing '/'
+                    ;;
+                b|t)
+                    git_options[${#git_options[@]}]='-b'
+                    git_options[${#git_options[@]}]="${OPTARG}"
                     ;;
                 *)
                     return 255
@@ -241,11 +269,77 @@ function xsh () {
             esac
         done
         shift $((OPTIND - 1))
-        tag=$1
+        repo=$1
 
-        if [[ -n ${tag} ]]; then
-            # ignore -u if tag is specified
-            unstable=0
+        if [[ -z ${repo} ]]; then
+            printf "$FUNCNAME: ERROR: Repo name is null or not set.\n" >&2
+            return 255
+        fi
+
+        if [[ -z ${git_server} ]]; then
+            printf "$FUNCNAME: ERROR: Git server is null or not set.\n" >&2
+            return 255
+        fi
+
+        local repo_path="${xsh_repo_home}/${repo}"
+        if [[ -e ${repo_path} ]]; then
+            printf "$FUNCNAME: ERROR: Repo already exists at '%s'.\n" "${repo_path}" >&2
+            return 255
+        fi
+
+        if [[ ${#git_options[@]} -gt 2 ]]; then
+            printf "$FUNCNAME: ERROR: -b and -t can't be used together.\n" >&2
+            return 255
+        fi
+
+        git clone "${git_options[@]}" "${git_server}/${repo}" "${repo_path}"
+
+        if [[ -z ${git_options[@]} ]]; then
+            # update to latest tagged version
+            (cd "${repo_path}" \
+                 && __xsh_git_force_update
+            )
+
+            local ret=$?
+            if [[ ${ret} -ne 0 ]]; then
+                printf "$FUNCNAME: WARNING: Deleting repo '%s'.\n" "${repo_path}" >&2
+                /bin/rm -rf "${repo_path}"
+                return ${ret}
+            fi
+        fi
+    }
+
+    # @private
+    # Update current repo.
+    # Any local changes will be DISCARDED after update.
+    # Any untracked files will be REMOVED after update.
+    #
+    # Usage:
+    #   __xsh_git_force_update [-b BRANCH | -t TAG]
+    #
+    # Options:
+    #   [-b BRANCH]      Update to the BRANCH's latest state.
+    #                    This option is for developers.
+    #   [-t TAG]         Update to a specific TAG version.
+    function __xsh_git_force_update () {
+        local OPTIND OPTARG opt
+
+        declare -a git_options
+
+        while getopts b:t: opt; do
+            case ${opt} in
+                b|t)
+                    git_options[${#git_options[@]}]="${OPTARG}"
+                    ;;
+                *)
+                    return 255
+                    ;;
+            esac
+        done
+
+        if [[ ${#git_options[@]} -gt 1 ]]; then
+            printf "$FUNCNAME: ERROR: -b and -t can't be used together.\n" >&2
+            return 255
         fi
 
         if __xsh_git_is_workdir_clean; then
@@ -256,8 +350,8 @@ function xsh () {
         # fetch remote tags to local
         __xsh_git_fetch_remote_tags
 
-        if [[ -z ${tag} && ${unstable} -eq 0 ]]; then
-            tag=$(__xsh_git_get_latest_tag)
+        if [[ -z ${git_options[@]} ]]; then
+            local tag=$(__xsh_git_get_latest_tag)
 
             if [[ -z ${tag} ]]; then
                 printf "$FUNCNAME: ERROR: No any available tagged version found.\n" >&2
@@ -269,14 +363,12 @@ function xsh () {
                 printf "$FUNCNAME: INFO: Already at the latest version: %s.\n" "${current}"
                 return
             fi
+
+            git_options=("${tag}")
         fi
 
-        printf "$FUNCNAME: INFO: Updating repo to '%s'.\n" "${tag:-latest(unstable)}"
-        if [[ -n ${tag} ]]; then
-            git checkout "${tag}"
-        else
-            git fetch origin
-        fi
+        printf "$FUNCNAME: INFO: Updating repo to '%s'.\n" "${git_options}"
+        git checkout "${git_options}"
 
         if [[ $? -ne 0 ]]; then
             printf "$FUNCNAME: ERROR: Failed to update repo.\n" >&2
@@ -396,132 +488,160 @@ function xsh () {
     }
 
     # @private
-    function __xsh_load () {
-        local git_server branch repo
-        local opt OPTARG OPTIND
+    # Library manager.
+    #
+    # Usage:
+    #   __xsh_lib_manager REPO [unimport] [link] [unlink] [delete]
+    #
+    # Options:
+    #   REPO             Git repo in syntax: `USERNAME/REPO`.
+    #                    E.g. `username/xsh-lib-foo`
+    #
+    # Commands:
+    #   [unimport]       unimport all imported utilities for the REPO.
+    #   [link]           link the REPO as library.
+    #   [unlink]         unlink the linked REPO.
+    #   [delete]         delete the REPO.
+    #
+    #   The order of the commands matters.
+    function __xsh_lib_manager () {
+        local repo=$1
+        shift
 
-        git_server=${xsh_git_server}
+        if [[ -z ${repo} ]]; then
+            printf "$FUNCNAME: ERROR: Repo name is null or not set.\n" >&2
+            return 255
+        fi
 
-        while getopts u:b: opt; do
-            case ${opt} in
-                u)
-                    git_server=${OPTARG%/}  # remove tailing '/'
+        local repo_path="${xsh_repo_home}/${repo}"
+        if [[ ! -d ${repo_path} ]]; then
+            printf "$FUNCNAME: ERROR: Repo doesn't exist at '%s'.\n" "${repo_path}" >&2
+            return 255
+        fi
+
+        local lib=$(__xsh_get_lib_by_repo "${repo}")
+        if [[ -z ${lib} ]]; then
+            printf "$FUNCNAME: ERROR: library name is null for the repo '%s'.\n" "${repo}" >&2
+            return 255
+        fi
+
+        local lib_path="${xsh_lib_home}/${lib}"
+
+        local ret
+        while [[ $# -gt 0 ]]; do
+            case $1 in
+                unimport)
+                    __xsh_unimport "${lib}/*"
                     ;;
-                b)
-                    branch=${OPTARG}
+                link)
+                    ln -sf "${repo_path}" "${lib_path}"
+                    ;;
+                unlink)
+                    /bin/rm -f "${lib_path}"
+                    ;;
+                delete)
+                    /bin/rm -rf "${repo_path}"
                     ;;
                 *)
                     return 255
                     ;;
             esac
+
+            ret=$?
+            if [[ ${ret} -ne 0 ]]; then
+                printf "$FUNCNAME: ERROR: Command failed: %s: %s.\n" "$1" "${ret}" >&2
+                return ${ret}
+            fi
+
+            shift
         done
-        shift $((OPTIND - 1))
-        repo=$1
-
-        if [[ -z ${repo} ]]; then
-            printf "$FUNCNAME: ERROR: Repo name is null or not set.\n" >&2
-            return 255
-        fi
-
-        if [[ -z ${git_server} ]]; then
-            printf "$FUNCNAME: ERROR: Git server is null or not set.\n" >&2
-            return 255
-        fi
-
-        declare -a branch_opt
-        [[ -n ${branch} ]] && branch_opt=(-b "${branch}")
-
-        local repo_path="${xsh_repo_home}/${repo}"
-        if [[ -e ${repo_path} ]]; then
-            printf "$FUNCNAME: ERROR: Repo already exists at '%s'.\n" "${repo_path}" >&2
-            return 255
-        else
-            git clone "${branch_opt[@]}" "${git_server}/${repo}" "${repo_path}"
-            find "${repo_path}/scripts" \
-                 -type f \
-                 -name "*.sh" \
-                 -exec chmod +x {} \;
-
-            local lib=$(__xsh_get_lib_by_repo "${repo}")
-            local lib_path="${xsh_lib_home}/${lib}"
-            if [[ -e ${lib_path} ]]; then
-                printf "$FUNCNAME: ERROR: Library already exists at '%s'.\n" "${lib_path}" >&2
-                return 255
-            else
-                ln -s "${repo_path}" "${lib_path}"
-            fi
-        fi
     }
 
     # @private
-    function __xsh_unload () {
+    # Load a xsh library.
+    #
+    # Usage:
+    #   __xsh_lib_load [-s GIT_SERVER] [-b BRANCH | -t TAG] REPO
+    #
+    # Options:
+    #   [-s GIT_SERVER]  Git server URL.
+    #                    E.g. `https://github.com`
+    #   [-b BRANCH]      Load the BRANCH's latest state.
+    #                    This option is for developers.
+    #   [-t TAG]         Load a specific TAG version.
+    #   REPO             Git repo in syntax: `USERNAME/REPO`.
+    #                    E.g. `username/xsh-lib-foo`
+    function __xsh_lib_load () {
+        # get repo from last parameter
+        local repo=${@:(-1)}
+
+        __xsh_git_clone "$@" || return
+        __xsh_lib_manager "${repo}" link
+    }
+
+    # @private
+    # Unload a xsh library.
+    #
+    # Usage:
+    #   __xsh_lib_unload REPO
+    #
+    # Options:
+    #   REPO             Git repo in syntax: `USERNAME/REPO`.
+    #                    E.g. `username/xsh-lib-foo`
+    function __xsh_lib_unload () {
         local repo=$1
 
+        __xsh_lib_manager "${repo}" unimport unlink delete
+    }
+
+    # @private
+    # Update a loaded library.
+    #
+    # Usage:
+    #   __xsh_lib_update [-b BRANCH | -t TAG] REPO
+    #
+    # Options:
+    #   [-b BRANCH]      Update to the BRANCH's latest state.
+    #                    This option is for developers.
+    #   [-t TAG]         Update to a specific TAG version.
+    #   REPO             Git repo in syntax: `USERNAME/REPO`.
+    #                    E.g. `username/xsh-lib-foo`
+    function __xsh_lib_update () {
+        # get repo from last parameter
+        local repo=${@:(-1)}
+
         if [[ -z ${repo} ]]; then
             printf "$FUNCNAME: ERROR: Repo name is null or not set.\n" >&2
             return 255
         fi
 
-        local repo_path="${xsh_repo_home}/${repo}"
-        if [[ -e ${repo_path} ]]; then
-            local lib=$(__xsh_get_lib_by_repo "${repo}")
-            local lib_path="${xsh_lib_home}/${lib}"
+        __xsh_lib_manager "${repo}" unimport unlink || return
 
-            xsh unimport "${lib}/*"
-            /bin/rm -rf "${repo_path}" "${lib_path}"
-        else
-            printf "$FUNCNAME: ERROR: Repo doesn't exist at '%s'.\n" "${repo_path}" >&2
-            return 255
-        fi
+        (cd "${xsh_repo_home}/${repo}" \
+             && __xsh_git_force_update "$@"
+        ) || return
+
+        __xsh_lib_manager "${repo}" link
     }
 
     # @private
-    # Update a loaded library to latest tagged version.
-    function __xsh_update () {
-        local repo=$1
-
-        if [[ -z ${repo} ]]; then
-            printf "$FUNCNAME: ERROR: Repo name is null or not set.\n" >&2
-            return 255
-        fi
-
-        local repo_path="${xsh_repo_home}/${repo}"
-        if [[ -e ${repo_path} ]]; then
-            local orig_lib lib
-
-            orig_lib=$(__xsh_get_lib_by_repo "${repo}")
-            xsh unimport "$orig_lib/*"
-
-            (cd "${repo_path}" \
-                 && __xsh_git_force_update
-            )
-
-            lib=$(__xsh_get_lib_by_repo "${repo}")
-            if [[ ${orig_lib} != ${lib} ]]; then
-                ln -s "${repo_path}" "${xsh_lib_home}/${lib}"
-                rm -f "${xsh_lib_home}/${orig_lib}"
-            fi
-        else
-            printf "$FUNCNAME: ERROR: Repo doesn't exist at '%s'.\n" "${repo_path}" >&2
-            return 255
-        fi
-    }
-
-    # @private
-    # Upgrade/Downgrade xsh to specific tagged version or latest tagged version.
+    # Update xsh itself.
+    #
+    # Usage:
+    #   __xsh_upgrade [-b BRANCH | -t TAG]
+    #
+    # Options:
+    #   [-b BRANCH]      Update to the BRANCH's latest state.
+    #                    This option is for developers.
+    #   [-t TAG]         Update to a specific TAG version.
     function __xsh_upgrade () {
-        local version=$1
-
         local repo_path="${xsh_home}/xsh"
-        if [[ -e ${repo_path} ]]; then
-            (cd "${repo_path}" \
-                 && __xsh_git_force_update "${version}"
-            )
-            source "${repo_path}/xsh.sh"
-        else
-            printf "$FUNCNAME: ERROR: Repo doesn't exist at '%s'.\n" "${repo_path}" >&2
-            return 255
-        fi
+
+        (cd "${repo_path}" \
+             && __xsh_git_force_update "$@"
+        ) || return
+
+        source "${repo_path}/xsh.sh"
     }
 
     # @private
@@ -945,13 +1065,13 @@ function xsh () {
             __xsh_list
             ;;
         load)
-            __xsh_load "${@:2}"
+            __xsh_lib_load "${@:2}"
             ;;
         unload)
-            __xsh_unload "${@:2}"
+            __xsh_lib_unload "${@:2}"
             ;;
         update)
-            __xsh_update "${@:2}"
+            __xsh_lib_update "${@:2}"
             ;;
         upgrade)
             __xsh_upgrade "${@:2}"
