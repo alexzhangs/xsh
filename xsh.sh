@@ -251,8 +251,8 @@ function xsh () {
     }
 
     # @private
-    # Check if the work directory is clean.
-    function __xsh_git_is_workdir_clean () {
+    # Check if the work directory is dirty.
+    function __xsh_git_is_workdir_dirty () {
         test -n "$(git status -s)"
     }
 
@@ -372,7 +372,7 @@ function xsh () {
             return 255
         fi
 
-        if __xsh_git_is_workdir_clean; then
+        if __xsh_git_is_workdir_dirty; then
             # discard all local changes and untracked files
             __xsh_git_discard_all
         fi
