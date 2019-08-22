@@ -298,7 +298,7 @@ function xsh () {
                     git_server=${OPTARG%/}  # remove tailing '/'
                     ;;
                 b|t)
-                    git_options[${#git_options[@]}]=${opt}
+                    git_options[${#git_options[@]}]=-${opt}
                     git_options[${#git_options[@]}]=${OPTARG}
                     ;;
                 *)
