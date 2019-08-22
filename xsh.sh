@@ -257,6 +257,13 @@ function xsh () {
     }
 
     # @private
+    # Get current branch.
+    # Output 'HEAD' if detached at a tag.
+    function __xsh_git_get_current_branch () {
+        git rev-parse --abbrev-ref HEAD
+    }
+
+    # @private
     # Clone a Git repo.
     #
     # Usage:
@@ -390,6 +397,10 @@ function xsh () {
 
         __xsh_log info "Updating repo to ${git_options}."
         git checkout "${git_options}"
+
+        if [[ $(__xsh_git_get_current_branch) != 'HEAD' ]]; then
+           git pull
+        fi
 
         if [[ $? -ne 0 ]]; then
             __xsh_log error "Failed to update repo."
