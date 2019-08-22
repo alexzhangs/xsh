@@ -876,6 +876,9 @@ function xsh () {
 
         lpuc=$(__xsh_get_lpuc_by_path "${path}")
         rm -f "/usr/local/bin/${lpuc}"
+
+        # forget remembered commands locations
+        hash -r
     }
 
     # @private
