@@ -207,7 +207,7 @@ function xsh () {
 
 
     # @private
-    # chmod +x all files under the given dir
+    # chmod +x all .sh files under the given dir
     function __xsh_chmod_x_by_dir () {
         local path=$1
 
@@ -215,6 +215,14 @@ function xsh () {
              -type f \
              -name "*.sh" \
              -exec chmod +x {} \;
+    }
+
+    # @private
+    # chmod +x all .sh files under ./scripts
+    function __xsh_git_chmod_x () {
+        if [[ -d ./scripts ]]; then
+            __xsh_chmod_x_by_dir ./scripts
+        fi
     }
 
     # @private
@@ -290,8 +298,8 @@ function xsh () {
                     git_server=${OPTARG%/}  # remove tailing '/'
                     ;;
                 b|t)
-                    git_options[${#git_options[@]}]='-b'
-                    git_options[${#git_options[@]}]="${OPTARG}"
+                    git_options[${#git_options[@]}]=${opt}
+                    git_options[${#git_options[@]}]=${OPTARG}
                     ;;
                 *)
                     return 255
@@ -322,20 +330,19 @@ function xsh () {
             return 255
         fi
 
-        git clone "${git_options[@]}" "${git_server}/${repo}" "${repo_path}"
+        git clone "${git_server}/${repo}" "${repo_path}"
 
-        if [[ -z ${git_options[@]} ]]; then
-            # update to latest tagged version
-            (cd "${repo_path}" \
-                 && __xsh_git_force_update
-            )
+        # update to latest tagged version
+        (cd "${repo_path}" \
+             && __xsh_git_force_update "${git_options[@]}" \
+             && __xsh_git_chmod_x
+        )
 
-            local ret=$?
-            if [[ ${ret} -ne 0 ]]; then
-                __xsh_log warning "Deleting repo ${repo_path}."
-                /bin/rm -rf "${repo_path}"
-                return ${ret}
-            fi
+        local ret=$?
+        if [[ ${ret} -ne 0 ]]; then
+            __xsh_log warning "Deleting repo ${repo_path}."
+            /bin/rm -rf "${repo_path}"
+            return ${ret}
         fi
     }
 
@@ -405,11 +412,6 @@ function xsh () {
         if [[ $? -ne 0 ]]; then
             __xsh_log error "Failed to update repo."
             return 255
-        fi
-
-        if [[ -d ./scripts ]]; then
-            # chmod +x scripts if the repo is a library
-            __xsh_chmod_x_by_dir "./scripts"
         fi
     }
 
@@ -691,7 +693,8 @@ function xsh () {
         __xsh_lib_manager "${repo}" unimport unlink || return
 
         (cd "${xsh_repo_home}/${repo}" \
-             && __xsh_git_force_update "$@"
+             && __xsh_git_force_update "$@" \
+             && __xsh_git_chmod_x
         ) || return
 
         __xsh_lib_manager "${repo}" link
@@ -711,7 +714,8 @@ function xsh () {
         local repo_path="${xsh_home}/xsh"
 
         (cd "${repo_path}" \
-             && __xsh_git_force_update "$@"
+             && __xsh_git_force_update "$@" \
+             && __xsh_git_chmod_x
         ) || return
 
         source "${repo_path}/xsh.sh"
