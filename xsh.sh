@@ -722,6 +722,58 @@ function xsh () {
     }
 
     # @private
+    # Apply init files under the given library path, start from library root.
+    # For example: `__xsh_init /home/user/.xsh/lib/x/string` will try to
+    #   apply following init files if they present.
+    #
+    #   * /home/user/.xsh/lib/x/__init__.sh
+    #   * /home/user/.xsh/lib/x/string/__init__.sh
+    #
+    # Previously applied init files will be skipped.
+    #
+    # A global environment variable `__XSH_INIT__` is used to track all
+    #   applied init files.
+    function __xsh_init () {
+        local dir=$1
+
+        local scope=${dir#${xsh_lib_home}}  # remove xsh_lib_home path from beginning
+
+        # remove the leading `/`
+        scope=${scope%/}
+        # remove the tailing `/`
+        scope=${scope#/}
+
+        if [[ -z ${scope} ]]; then
+            __xsh_log ERROR "Found empty init scope for dir: ${dir}"
+            return 255
+        fi
+
+        local ln init_subdir
+        while read ln; do
+            if [[ -z ${init_subdir} ]]; then
+                init_subdir=${ln}
+            else
+                init_subdir="${init_subdir}/${ln}"
+            fi
+
+            local init_file="${xsh_lib_home}/${init_subdir}/__init__.sh"
+
+            if [[ -f ${init_file} ]]; then
+                # replace all `/` to `-`
+                local init_expr=${init_subdir//\//-}
+
+                if [[ -z $(xsh /array/search __XSH_INIT__ "${init_expr}") ]]; then
+                    # apply the init file
+                    source "${init_file}"
+
+                    # remember the applied init file
+                    __XSH_INIT__[${#__XSH_INIT__[@]}]=${init_expr}
+                fi
+            fi
+        done <<< "$(echo "${scope//\//$'\n'}")"  # replace all `/` to newline
+    }
+
+    # @private
     function __xsh_imports () {
         local lpur
         local ret=0
@@ -782,6 +834,11 @@ function xsh () {
 
         util=$(__xsh_get_util_by_path "${path}")
         lpuc=$(__xsh_get_lpuc_by_path "${path}")
+
+        # apply init files
+        __xsh_init "${path%/*}"
+
+        # source the function
         source /dev/stdin <<< "$(sed "s/function ${util} ()/function ${lpuc} ()/g" "${path}")"
     }
 
