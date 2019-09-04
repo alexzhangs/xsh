@@ -11,6 +11,7 @@
 #?     xsh unload REPO
 #?     xsh update [-b BRANCH | -t TAG] REPO
 #?     xsh upgrade [-b BRANCH | -t TAG]
+#?     xsh dev <LPUE> [UTIL_OPTIONS]
 #?     xsh version
 #?     xsh versions
 #?     xsh help [LPUR]
@@ -83,6 +84,18 @@
 #?         [-b BRANCH]      Update to the BRANCH's latest state.
 #?                          This option is for developers.
 #?         [-t TAG]         Load a specific TAG version.
+#?
+#?     dev                  Call an individual utility in development library.
+#?
+#?                          The development library path is set by a user-defined
+#?                          environment variable: XSH_DEV_HOME.
+#?                          Within the development library home, the symbol links
+#?                          pointing to the repos must exist.
+#?
+#?                          This option is for developers.
+#?
+#?         <LPUE>           Utility to call.
+#?         [UTIL_OPTIONS]   Will be passed to utility.
 #?
 #?     version              Show current xsh version.
 #?
@@ -998,6 +1011,28 @@ function xsh () {
     }
 
     # @private
+    # Call util in the dev lib rather than the normal lib.
+    function __xsh_dev () {
+        if [[ -n ${XSH_DEV_HOME} ]]; then
+            xsh_lib_home=${XSH_DEV_HOME}
+        else
+            __xsh_log error "XSH_DEV_HOME is not set properly."
+            return 255
+        fi
+
+        # always import the dev util to get latest version
+        __xsh_import "$1"
+
+        __xsh_call "$@"
+        local ret=$?
+
+        # always unimport the dev util after the call
+        __xsh_unimport "$1"
+
+        return $ret
+    }
+
+    # @private
     function __xsh_complete_lpur () {
         local lpur=$1
 
@@ -1231,6 +1266,9 @@ function xsh () {
             ;;
         call)
             __xsh_calls "${@:2}"
+            ;;
+        dev)
+            __xsh_dev "${@:2}"
             ;;
         version)
             __xsh_version
