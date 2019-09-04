@@ -553,7 +553,7 @@ function xsh () {
                        | awk -F/ '{print $(NF-1) FS $NF}')
 
             printf '%s (%s) => %s\n' "${lib}" "${version:-latest}" "${repo}"
-        done <<< "$(find ~/.xsh/lib -type l -maxdepth 1)"
+        done <<< "$(find "${xsh_lib_home}" -type l -maxdepth 1)"
     }
 
     # @private
@@ -906,7 +906,6 @@ function xsh () {
     }
 
     # @private
-    # Unset
     # Source a file ".../<lib>/functions/<package>/<util>.sh"
     #   and unset function by name "<lib>-<package>-<util>"
     function __xsh_unimport_function () {
