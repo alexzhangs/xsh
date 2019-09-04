@@ -973,17 +973,28 @@ function xsh () {
             __xsh_import "${lpue}"
         fi
 
+        local ret
+
         ### DEBUG LOGIC BEGIN ###
         if test -n "$XSH_DEBUG" && __xsh_get_lpuc_by_lpur "$XSH_DEBUG" | grep "^${lpuc}$" >/dev/null; then
             # enable debug for the utility
             [[ $orig_debug_state == '-vx' ]] && : || set -vx  # enable debug
+
+            # call util
             ${lpuc} "${@:2}"
+            ret=$?
+
             set +vx  # disable debug
         else
             [[ $orig_debug_state == '+vx' ]] && : || set +vx  # disable debug
+
+            # call util
             ${lpuc} "${@:2}"
+            ret=$?
         fi
         ### DEBUG LOGIC ENDS  ###
+
+        return $ret
     }
 
     # @private
