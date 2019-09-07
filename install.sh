@@ -66,13 +66,16 @@ fi
 printf "installing xsh repo to: ${XSH_HOME}\n"
 /bin/cp -a "${SCRIPT_DIR}" "${XSH_HOME}/"
 
+function update_profile () {
+    replace_or_append "${1:?}" '^export XSH_HOME=.*$' "export XSH_HOME=${XSH_HOME}"
+    replace_or_append "${1:?}" '^\. \$\{XSH_HOME\}\/xsh\/xsh\.sh$' '. ${XSH_HOME}/xsh/xsh.sh'
+}
+
 printf "updating: %s\n" ~/.bash_profile
-replace_or_append ~/.bash_profile '^export XSH_HOME=.*$' "export XSH_HOME=${XSH_HOME}"
-replace_or_append ~/.bash_profile '^\. \$\{XSH_HOME\}\/xsh\/xsh\.sh$' '. ${XSH_HOME}/xsh/xsh.sh'
+update_profile ~/.bash_profile
 
 printf "updating: %s\n" ~/.bashrc
-replace_or_append ~/.bashrc '^export XSH_HOME=.*$' "export XSH_HOME=${XSH_HOME}"
-replace_or_append ~/.bashrc '^\. \$\{XSH_HOME\}\/xsh\/xsh\.sh$' '. ${XSH_HOME}/xsh/xsh.sh'
+update_profile ~/.bashrc
 
 printf "applying xsh for current terminal.\n"
 source <(cat << EOF
