@@ -429,16 +429,33 @@ function xsh () {
     }
 
     # @private
-    function __xsh_helps () {
-        local lpur title_only
-        local ln
-        local type lpue
-        local opt OPTARG OPTIND
+    # Get help for a utility.
+    #
+    # Usage:
+    #   __xsh_help [-t] [-c] [-d] [-s SECTION [...]] [LPUR]
+    #
+    # Options:
+    #   [-t]          Output title.
+    #   [-c]          Output code.
+    #   [-d]          Output whole document.
+    #                 This is the default option.
+    #   [-s SECTION]  Output specific section of the document.
+    #                 This option can be used multi times.
+    #
+    #   The output order is the same with the options order.
+    #
+    function __xsh_help () {
+        local OPTIND OPTARG opt
 
-        while getopts t opt; do
+        declare -a options
+        while getopts tcds: opt; do
             case ${opt} in
-                t)
-                    title_only=1
+                t|c|d)
+                    options[${#options[@]}]=-${opt}
+                    ;;
+                s)
+                    options[${#options[@]}]=-${opt}
+                    options[${#options[@]}]=${OPTARG}
                     ;;
                 *)
                     return 255
@@ -446,44 +463,104 @@ function xsh () {
             esac
         done
         shift $((OPTIND - 1))
-        lpur=$1
 
+        if [[ ${#options[@]} -eq 0 ]]; then
+            options=-d
+        fi
+
+        local lpur=$1
         if [[ -z ${lpur} ]]; then
-            __xsh_help "${XSH_HOME}/xsh/xsh.sh"
+            __xsh_info "${options[@]}" "${XSH_HOME}/xsh/xsh.sh"
             return
         fi
 
+        local ln
         while read ln; do
             if [[ -n ${ln} ]]; then
-                type=$(__xsh_get_type_by_path "${ln}" | tr [:lower:] [:upper:])
-                lpue=$(__xsh_get_lpue_by_path "${ln}")
-                printf "[${type}] ${lpue}\n"
-
-                if [[ -z ${title_only} ]]; then
-                    __xsh_help "${ln}"
-                fi
+                __xsh_info "${options[@]}" "${ln}"
             fi
         done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
     }
 
     # @private
-    function __xsh_help () {
-        local path=$1
-        local util lpue
+    # Extract specific info for a utility.
+    #
+    # Usage:
+    #   __xsh_info [-t] [-c] [-d] [-s SECTION [...]] PATH
+    #
+    # Options:
+    #   [-t]          Output title.
+    #   [-c]          Output code.
+    #   [-d]          Output whole document.
+    #   [-s SECTION]  Output specific section of the document.
+    #                 This option can be used multi times.
+    #
+    #   The output order is the same with the options order.
+    #
+    function __xsh_info () {
+        local OPTIND OPTARG opt
 
-        if [[ -z ${path} ]]; then
+        local path=${@:(-1)}
+
+        if [[ -z ${path} || ${path:1:1} == - ]]; then
             __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
+        local util lpue
         util=$(__xsh_get_util_by_path "${path}")
         lpue=$(__xsh_get_lpue_by_path "${path}")
 
-        # read doc-help
-        sed -n '/^#?/p' "${path}" \
-            | sed -e 's/^#? //' \
-                  -e 's/^#?//' \
-                  -e "s|@${util}|xsh ${lpue}|g"
+        if [[ -z ${util} ]]; then
+            __xsh_log error "util is null: %s." "${path}"
+            return 255
+        fi
+
+        if [[ -z ${lpue} ]]; then
+            __xsh_log error "lpue is null: %s." "${path}"
+            return 255
+        fi
+
+        local output
+
+        while getopts tcds: opt; do
+            case ${opt} in
+                t)
+                    local type=$(__xsh_get_type_by_path "${path}")
+                    if [[ -z ${type} ]]; then
+                        __xsh_log error "type is null: %s." "${path}"
+                        return 255
+                    fi
+
+                    output=$(printf "%s[%s] %s\n" "${output}" "${type}" "${lpue}")
+                    ;;
+                d)
+                    output=$(printf "%s%s\n" "${output}" \
+                                    "$(sed -n '/^#?/p' "${path}" \
+                                           | sed -e 's/^#? //' \
+                                                 -e 's/^#?//' \
+                                                 -e "s|@${util}|xsh ${lpue}|g")"
+                          )
+                    ;;
+                c)
+                    output=$(printf "%s%s\n" "${output}" \
+                                    "$(sed '/^#?/d' "${path}")"
+                          )
+                    ;;
+                s)
+                    output=$(printf "%s%s\n" "${output}" \
+                                    "$(__xsh_info -d "${path}" \
+                                                  | sed -n "/^${OPTARG}/,/^[^ ]/p" \
+                                                  | sed '$d')"
+                          )
+                    ;;
+                *)
+                    return 255
+                    ;;
+            esac
+        done
+
+        echo "${output}"
     }
 
     # @private
@@ -507,7 +584,7 @@ function xsh () {
         if [[ -z ${lpur} ]]; then
             __xsh_lib_list
         else
-            __xsh_helps -t "${lpur}"
+            __xsh_help -t "${lpur}"
         fi
     }
 
@@ -1237,48 +1314,29 @@ function xsh () {
 
     # Check input
     if [[ -z $1 ]]; then
-        __xsh_helps >&2
+        __xsh_help >&2
         return 255
     fi
 
     # Main
     case $1 in
-        list)
-            __xsh_list "${@:2}"
+        # xsh command
+        list|upgrade|import|unimport|version|versions|help)
+            __xsh_$1 "${@:2}"
             ;;
-        load)
-            __xsh_lib_load "${@:2}"
-            ;;
-        unload)
-            __xsh_lib_unload "${@:2}"
-            ;;
-        update)
-            __xsh_lib_update "${@:2}"
-            ;;
-        upgrade)
-            __xsh_upgrade "${@:2}"
-            ;;
-        import)
-            __xsh_imports "${@:2}"
-            ;;
-        unimport)
-            __xsh_unimports "${@:2}"
-            ;;
+        # xsh command
         call)
-            __xsh_calls "${@:2}"
+            __xsh_${1}s "${@:2}"
+            ;;
+        # xsh library command
+        load|unload|update)
+            __xsh_lib_$1 "${@:2}"
             ;;
         dev)
             __xsh_dev "${@:2}"
             ;;
-        version)
-            __xsh_version
             ;;
-        versions)
-            __xsh_versions
-            ;;
-        help)
-            __xsh_helps "${@:2}"
-            ;;
+        # xsh library utility
         *)
             __xsh_call "$1" "${@:2}"
             ;;
