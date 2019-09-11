@@ -14,7 +14,7 @@
 #?     xsh dev <LPUE> [UTIL_OPTIONS]
 #?     xsh version
 #?     xsh versions
-#?     xsh help [LPUR]
+#?     xsh help [-t] [-c] [-d] [-s SECTION] [LPUR]
 #?
 #? Options:
 #?     <LPUE>               Call an individual utility.
@@ -102,7 +102,13 @@
 #?     versions             Show available xsh versions.
 #?
 #?     help                 Show this help if no option followed.
+#?         [-t]             Show the title.
+#?                          This option must be followed by a LPUR.
+#?         [-c]             Show the code.
+#?         [-d]             Show the document.
+#?         [-s SECTION]     Show specific section of the document.
 #?         [LPUR]           Show help for matched utilities.
+#?                          If unset, show help for xsh itself.
 #?
 #? Debugging:
 #?     Enable debug mode by setting environment varaible: XSH_DEBUG
