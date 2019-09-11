@@ -125,32 +125,71 @@
 #?         XSH_DEBUG=1 xsh /string/upper foo
 #?
 function xsh () {
-    ### DEBUG LOGIC BEGIN ###
-    set +vx  # disable debug
-    ### DEBUG LOGIC ENDS  ###
 
-    local orig_debug_state
+    # Output the given shell options state.
+    #
+    # Usage:
+    #   __xsh_option [OPTION_NAME][...]
+    function __xsh_option () {
+        local on=${-//[^$1]/}
+        [[ -n $on ]] && on=-$on || :
 
-    # @private
-    # Backup 'set' options to variable: orig_debug_state
-    #   verbose: -v
-    #   xtrace:  -x
-    function __xsh_backup_debug_state () {
-        case "${-//[^vx]/}" in
-            v)
-                orig_debug_state='-v'
-                ;;
-            x)
-                orig_debug_state='-x'
-                ;;
-            vx)
-                orig_debug_state='-vx'
-                ;;
-            *)
-                orig_debug_state='+vx'
-                ;;
-        esac
+        local off=${1//[$-]/}
+        [[ -n $off ]] && off=+$off || :
+
+        echo $on $off
     }
+
+    function __xsh_debug_begin () {
+        if [[ -n ${XSH_DEBUG} ]]; then
+            xsh_exdebug=$(__xsh_option vx)
+
+            if [[ ${XSH_DEBUG} == xsh ]]; then
+                set -vx  # enable debug
+            else
+                set +vx  # disable debug
+            fi
+        fi
+    }
+
+    function __xsh_debug_end () {
+        set "${xsh_exdebug}"  # restore debug state
+    }
+
+    function __xsh_util_debug_begin () {
+        if [[ -n ${XSH_DEBUG} ]]; then
+            local xsh_debug
+
+            case $XSH_DEBUG in
+                xsh|'')
+                    xsh_debug=${XSH_DEBUG}
+                    ;;
+                1)
+                    xsh_debug=${lpuc}
+                    ;;
+                *)
+                    xsh_debug=$(__xsh_get_lpuc_by_lpur "${XSH_DEBUG}")
+                    ;;
+            esac
+
+            xsh_util_exdebug=$(__xsh_option vx)
+
+            if grep -q "^${lpuc}$" <(echo "${xsh_debug}"); then
+                set -vx  # enable debug
+            else
+                set +vx  # disable debug
+            fi
+        fi
+    }
+
+    function __xsh_util_debug_end () {
+        if [[ -n ${XSH_DEBUG} ]]; then
+            set "${xsh_util_exdebug}"  # restore debug state
+        fi
+    }
+
+    local xsh_exdebug
+    __xsh_debug_begin
 
     # @private
     # Count the number of given function name in ${FUNCNAME[@]}
@@ -158,6 +197,30 @@ function xsh () {
         printf '%s\n' "${FUNCNAME[@]}" \
             | grep -c "^${1}$"
     }
+
+    # @private
+    # Fire the command on the RETURN signal of function `xsh`.
+    # The trapped command is cleared after it's fired once.
+    #
+    # Usage:
+    #   __xsh_trap_return [COMMAND]
+    function __xsh_trap_return () {
+        local command="
+        if [[ \$FUNCNAME == xsh ]]; then
+            trap - RETURN
+            ${1:?}
+        fi;"
+        trap "$command" RETURN
+    }
+
+    # call __xsh_clean() while xsh() returns
+    # clean env if reaching the final exit point of xsh
+    __xsh_trap_return '
+            __xsh_debug_end
+
+            if [[ $(__xsh_count_in_funcstack xsh) -eq 1 ]]; then
+                __xsh_clean >/dev/null 2>&1
+            fi;'
 
     # @private
     # Log message to stdout/stderr.
@@ -180,32 +243,7 @@ function xsh () {
         esac
     }
 
-    ### DEBUG LOGIC BEGIN ###
-    __xsh_backup_debug_state  # backup debug state
-
-    case $XSH_DEBUG in
-        xsh)
-            unset XSH_DEBUG  # avoid further debugging
-            [[ $orig_debug_state == '-vx' ]] && : || set -vx  # enable debug
-            ;;
-        1)
-            XSH_DEBUG=$1  # set XSH_DEBUG=<lpue>
-            ;;
-    esac
-    ### DEBUG LOGIC ENDS  ###
-
-    local xsh_home orig_trap_return
-
-    # call __xsh_clean() while xsh() returns
-    # clean env if reaching the final exit point of xsh
-    orig_trap_return=$(trap -p RETURN)
-    orig_trap_return=${orig_trap_return:-trap - RETURN}
-    trap 'eval "${orig_trap_return}";
-         if [[ ${FUNCNAME[0]} == xsh && $(__xsh_count_in_funcstack xsh ) -eq 1 ]]; then
-             if type -t __xsh_clean >/dev/null 2>&1; then
-                 __xsh_clean;
-             fi;
-         fi;' RETURN
+    local xsh_home
 
     # check environment variable
     if [[ -n ${XSH_HOME%/} ]]; then
@@ -1069,26 +1107,14 @@ function xsh () {
             __xsh_import "${lpue}"
         fi
 
-        local ret
+        local xsh_util_exdebug
+        __xsh_util_debug_begin
 
-        ### DEBUG LOGIC BEGIN ###
-        if test -n "$XSH_DEBUG" && __xsh_get_lpuc_by_lpur "$XSH_DEBUG" | grep "^${lpuc}$" >/dev/null; then
-            # enable debug for the utility
-            [[ $orig_debug_state == '-vx' ]] && : || set -vx  # enable debug
+        # call util
+        ${lpuc} "${@:2}"
+        local ret=$?
 
-            # call util
-            ${lpuc} "${@:2}"
-            ret=$?
-
-            set +vx  # disable debug
-        else
-            [[ $orig_debug_state == '+vx' ]] && : || set +vx  # disable debug
-
-            # call util
-            ${lpuc} "${@:2}"
-            ret=$?
-        fi
-        ### DEBUG LOGIC ENDS  ###
+        __xsh_util_debug_end
 
         return $ret
     }
@@ -1312,10 +1338,6 @@ function xsh () {
     # Clean env on xsh() returns.
     function __xsh_clean () {
         unset -f $(__xsh_get_internal_functions)
-
-        ### DEBUG LOGIC BEGIN ###
-        set "$orig_debug_state"  # restore debug state
-        ### DEBUG LOGIC ENDS  ###
     }
 
     # Check input
