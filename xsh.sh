@@ -938,19 +938,21 @@ function xsh () {
         fi
 
         while read ln; do
-            type=$(__xsh_get_type_by_path "${ln}")
+            if [[ -n ${ln} ]]; then
+                type=$(__xsh_get_type_by_path "${ln}")
 
-            case ${type} in
-                functions)
-                    __xsh_import_function "${ln}"
-                    ;;
-                scripts)
-                    __xsh_import_script "${ln}"
-                    ;;
-                *)
-                    return 255
-                    ;;
-            esac
+                case ${type} in
+                    functions)
+                        __xsh_import_function "${ln}"
+                        ;;
+                    scripts)
+                        __xsh_import_script "${ln}"
+                        ;;
+                    *)
+                        return 255
+                        ;;
+                esac
+            fi
         done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
     }
 
@@ -1023,19 +1025,21 @@ function xsh () {
         fi
 
         while read ln; do
-            type=$(__xsh_get_type_by_path "${ln}")
+            if [[ -n ${ln} ]]; then
+                type=$(__xsh_get_type_by_path "${ln}")
 
-            case ${type} in
-                functions)
-                    __xsh_unimport_function "${ln}"
-                    ;;
-                scripts)
-                    __xsh_unimport_script "${ln}"
-                    ;;
-                *)
-                    return 255
-                    ;;
-            esac
+                case ${type} in
+                    functions)
+                        __xsh_unimport_function "${ln}"
+                        ;;
+                    scripts)
+                        __xsh_unimport_script "${ln}"
+                        ;;
+                    *)
+                        return 255
+                        ;;
+                esac
+            fi
         done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
     }
 
@@ -1223,7 +1227,9 @@ function xsh () {
         fi
 
         while read ln; do
-            __xsh_get_lpuc_by_path "${ln}"
+            if [[ -n ${ln} ]]; then
+                __xsh_get_lpuc_by_path "${ln}"
+            fi
         done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
     }
 
