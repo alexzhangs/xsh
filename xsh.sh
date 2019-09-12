@@ -12,6 +12,7 @@
 #?     xsh update [-b BRANCH | -t TAG] REPO
 #?     xsh upgrade [-b BRANCH | -t TAG]
 #?     xsh dev <LPUE> [UTIL_OPTIONS]
+#?     xsh debug [-enuvx] <FUNCTION | SCRIPT>
 #?     xsh version
 #?     xsh versions
 #?     xsh help [-t] [-c] [-d] [-s SECTION] [LPUR]
@@ -97,6 +98,11 @@
 #?         <LPUE>           Utility to call.
 #?         [UTIL_OPTIONS]   Will be passed to utility.
 #?
+#?     debug                Debug the called function or script.
+#?         [-enuvx]         The same with shell options.
+#?                          See `help set`.
+#?                          Default is `-x`.
+#?
 #?     version              Show current xsh version.
 #?
 #?     versions             Show available xsh versions.
@@ -111,26 +117,46 @@
 #?                          If unset, show help for xsh itself.
 #?
 #? Debugging:
+#?     This is for debugging xsh libraries.
+#?     For general debugging purpose, see `xsh debug`.
+#?
+#?     Debug mode is enabled by shell options `-vx`.
+#?     Debug mode is only available with the syntax started with `xsh`.
+#?
 #?     Enable debug mode by setting environment varaible: XSH_DEBUG
 #?
-#?     Debug mode is enabled by setting `set -vx`.
-#?     Debug mode is only available with syntax: `xsh <LPUE> [UTIL_OPTIONS]`.
-#?
 #?     Values:
-#?         xsh:    Debug xsh itself.
 #?         1:      Debug current called xsh utility.
 #?         <LPUR>: Debug matched xsh utilities.
 #?
 #?     Example:
-#?         XSH_DEBUG=1 xsh /string/upper foo
+#?         $ XSH_DEBUG=1 xsh /string/upper foo
 #?
 function xsh () {
+
+    # Get the mime type of a file.
+    #
+    # Usage:
+    #   __xsh_mime_type <FILE> [...]
+    #
+    # Example:
+    #   $ __xsh_mime_type /usr/bin/command /bin/ls ~
+    #   text/x-shellscript
+    #   application/x-mach-binary
+    #   inode/directory
+    function __xsh_mime_type () {
+        /usr/bin/file -b --mime-type "$@"
+    }
 
     # Output the given shell options state.
     #
     # Usage:
-    #   __xsh_option [OPTION_NAME][...]
-    function __xsh_option () {
+    #   __xsh_shell_option [OPTION_NAME][...]
+    #
+    # Example:
+    #   $ __xsh_shell_option vxhimBH
+    #   -himBH +vx
+    function __xsh_shell_option () {
         local on=${-//[^$1]/}
         [[ -n $on ]] && on=-$on || :
 
@@ -140,56 +166,78 @@ function xsh () {
         echo $on $off
     }
 
-    function __xsh_debug_begin () {
-        if [[ -n ${XSH_DEBUG} ]]; then
-            xsh_exdebug=$(__xsh_option vx)
 
-            if [[ ${XSH_DEBUG} == xsh ]]; then
-                set -vx  # enable debug
-            else
-                set +vx  # disable debug
-            fi
-        fi
-    }
+    # Call a function or a script with specific shell options turning on.
+    # The shell options will be restored afterwards.
+    #
+    # Usage:
+    #   __xsh_call_with_shell_option <OPTION> [...] <FUNCTION | SCRIPT>
+    #
+    # Options:
+    #   <OPTION>   The same with shell options.
+    #              See `help set`.
+    #
+    # Example:
+    #   $ __xsh_call_with_shell_option -v -x echo $HOME
+    #
+    function __xsh_call_with_shell_option () {
+        local OPTIND OPTARG opt
 
-    function __xsh_debug_end () {
-        set "${xsh_exdebug}"  # restore debug state
-    }
+        local options
 
-    function __xsh_util_debug_begin () {
-        if [[ -n ${XSH_DEBUG} ]]; then
-            local xsh_debug
-
-            case $XSH_DEBUG in
-                xsh|'')
-                    xsh_debug=${XSH_DEBUG}
-                    ;;
-                1)
-                    xsh_debug=${lpuc}
+        while getopts abefhkmnptuvxBCHP opt; do
+            case ${opt} in
+                [abefhkmnptuvxBCHP])
+                    options=${options}${opt}
                     ;;
                 *)
-                    xsh_debug=$(__xsh_get_lpuc_by_lpur "${XSH_DEBUG}")
+                    return 255
                     ;;
             esac
+        done
+        shift $((OPTIND - 1))
 
-            xsh_util_exdebug=$(__xsh_option vx)
+        # save former state of options
+        local exopts=$(__xsh_shell_option "${options}")
+        local ret=0
 
-            if grep -q "^${lpuc}$" <(echo "${xsh_debug}"); then
-                set -vx  # enable debug
-            else
-                set +vx  # disable debug
-            fi
+        if [[ $(type -t "$1") == file &&
+                  $(__xsh_mime_type "$(which "$1")" | cut -d/ -f1) == text ]]; then
+            # call script with shell options enabled
+            bash -${options} "$(which "$1")" "${@:2}" || ret=$?
+            return ${ret}
         fi
+
+        # enable shell options
+        set -${options}
+
+        # call function
+        "$@" || ret=$?
+
+        # restore state of shell options
+        set ${exopts}  # do not double quote the parameter
+
+        return ${ret}
     }
 
-    function __xsh_util_debug_end () {
-        if [[ -n ${XSH_DEBUG} ]]; then
-            set "${xsh_util_exdebug}"  # restore debug state
+    # Enable debug mode for the called function or script.
+    #
+    # Usage:
+    #   __xsh_debug [-enuvx] <FUNCTION | SCRIPT>
+    #
+    # Options:
+    #   [-enuvx]   The same with shell options.
+    #              See `help set`.
+    #
+    #   If no option given, `-x` is set as default.
+    #
+    function __xsh_debug () {
+        if [[ ${1:0:1} != - ]]; then
+            set -- -x "$@"
         fi
-    }
 
-    local xsh_exdebug
-    __xsh_debug_begin
+        __xsh_call_with_shell_option "$@"
+    }
 
     # @private
     # Count the number of given function name in ${FUNCNAME[@]}
@@ -216,8 +264,6 @@ function xsh () {
     # call __xsh_clean() while xsh() returns
     # clean env if reaching the final exit point of xsh
     __xsh_trap_return '
-            __xsh_debug_end
-
             if [[ $(__xsh_count_in_funcstack xsh) -eq 1 ]]; then
                 __xsh_clean >/dev/null 2>&1
             fi;'
@@ -1098,29 +1144,38 @@ function xsh () {
         #   <lib>/<pkg>/<util>, /<pkg>/<util>
         #   <lib>/<util>, /<util>
         local lpue=$1
-        local lpuc
 
         if [[ -z ${lpue} ]]; then
             __xsh_log error "LPUE is null or not set."
             return 255
         fi
 
-        lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
+        local lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
 
         if ! type -t ${lpuc} >/dev/null 2>&1; then
             __xsh_import "${lpue}"
         fi
 
-        local xsh_util_exdebug
-        __xsh_util_debug_begin
+        local xsh_debug
 
-        # call util
-        ${lpuc} "${@:2}"
-        local ret=$?
+        if [[ -n ${XSH_DEBUG} ]]; then
+            case ${XSH_DEBUG} in
+                1)
+                    xsh_debug=${lpuc}
+                    ;;
+                *)
+                    xsh_debug=$(__xsh_get_lpuc_by_lpur "${XSH_DEBUG}")
+                    ;;
+            esac
 
-        __xsh_util_debug_end
-
-        return $ret
+            if grep -q "^${lpuc}$" <(echo "${xsh_debug}"); then
+                __xsh_call_with_shell_option -vx "${lpuc}" "${@:2}"
+            else
+                ${lpuc} "${@:2}"
+            fi
+        else
+            ${lpuc} "${@:2}"
+        fi
     }
 
     # @private
@@ -1355,7 +1410,7 @@ function xsh () {
     # Main
     case $1 in
         # xsh command
-        list|upgrade|import|unimport|version|versions|help)
+        list|upgrade|import|unimport|dev|debug|version|versions|help)
             __xsh_$1 "${@:2}"
             ;;
         # xsh command
@@ -1365,10 +1420,6 @@ function xsh () {
         # xsh library command
         load|unload|update)
             __xsh_lib_$1 "${@:2}"
-            ;;
-        dev)
-            __xsh_dev "${@:2}"
-            ;;
             ;;
         # xsh library utility
         *)
