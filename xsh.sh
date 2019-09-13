@@ -14,7 +14,7 @@
 #?     xsh debug [-enuvx] <FUNCTION | SCRIPT>
 #?     xsh version
 #?     xsh versions
-#?     xsh help [-t] [-c] [-d] [-s SECTION] [LPUR]
+#?     xsh help [-t] [-c] [-d] [-s SECTION] [BUILTIN | LPUR]
 #?
 #?     xsh log [debug|info|warning|error|fail|fatal] <MESSAGE>
 #?
@@ -60,6 +60,7 @@
 #?     load                 Load library from Git repo.
 #?                          Without '-b' or '-t', it will load the latest tagged
 #?                          version, if there's no any tagged version, returns error.
+#?
 #?         [-s GIT_SERVER]  Git server URL.
 #?                          E.g. `https://github.com`
 #?         [-b BRANCH]      Load the BRANCH's latest state.
@@ -96,14 +97,22 @@
 #?
 #?     versions             Show available xsh versions.
 #?
-#?     help                 Show this help if no option followed.
+#?     help                 Show help for xsh builtin functions or utilities.
 #?         [-t]             Show the title.
-#?                          This option must be followed by a LPUR.
-#?         [-c]             Show the code.
-#?         [-d]             Show the document.
+#?                          This option can't be used with BUILTIN.
+#?         [-c]             Show code.
+#?         [-d]             Show entire document.
 #?         [-s SECTION]     Show specific section of the document.
-#?         [LPUR]           Show help for matched utilities.
+#?                          The section name is case sensitive.
+#?                          This option can be used multi times.
+#?         [BUILTIN]        xsh builtin function name without leading `__xsh_`.
+#?                          Show help for xsh builtin functions.
+#?         [LPUR]           LPUR.
+#?                          Show help for matched utilities.
 #?                          If unset, show help for xsh itself.
+#?
+#?         If both BUILTIN and LPUR unset, then show help for xsh itself.
+#?         The options order matters to the output.
 #?
 #? Debug Mode:
 #?     Enable debug mode by setting environment varaible: XSH_DEBUG
@@ -140,28 +149,32 @@
 #?
 function xsh () {
 
-    # Get the mime type of a file.
-    #
-    # Usage:
-    #   __xsh_mime_type <FILE> [...]
-    #
-    # Example:
-    #   $ __xsh_mime_type /usr/bin/command /bin/ls ~
-    #   text/x-shellscript
-    #   application/x-mach-binary
-    #   inode/directory
+    #? Description:
+    #?   Get the mime type of a file.
+    #?
+    #? Usage:
+    #?   __xsh_mime_type <FILE> [...]
+    #?
+    #? Example:
+    #?   $ __xsh_mime_type /usr/bin/command /bin/ls ~
+    #?   text/x-shellscript
+    #?   application/x-mach-binary
+    #?   inode/directory
+    #?
     function __xsh_mime_type () {
         /usr/bin/file -b --mime-type "$@"
     }
 
-    # Output the given shell options state.
-    #
-    # Usage:
-    #   __xsh_shell_option [OPTION_NAME][...]
-    #
-    # Example:
-    #   $ __xsh_shell_option vxhimBH
-    #   -himBH +vx
+    #? Description:
+    #?   Output the given shell options state.
+    #?
+    #? Usage:
+    #?   __xsh_shell_option [OPTION_NAME][...]
+    #?
+    #? Example:
+    #?   $ __xsh_shell_option vxhimBH
+    #?   -himBH +vx
+    #?
     function __xsh_shell_option () {
         local on=${-//[^$1]/}
         [[ -n $on ]] && on=-$on || :
@@ -173,19 +186,20 @@ function xsh () {
     }
 
 
-    # Call a function or a script with specific shell options turning on.
-    # The shell options will be restored afterwards.
-    #
-    # Usage:
-    #   __xsh_call_with_shell_option <OPTION> [...] <FUNCTION | SCRIPT>
-    #
-    # Options:
-    #   <OPTION>   The same with shell options.
-    #              See `help set`.
-    #
-    # Example:
-    #   $ __xsh_call_with_shell_option -v -x echo $HOME
-    #
+    #? Description:
+    #?   Call a function or a script with specific shell options turning on.
+    #?   The shell options will be restored afterwards.
+    #?
+    #? Usage:
+    #?   __xsh_call_with_shell_option <OPTION> [...] <FUNCTION | SCRIPT>
+    #?
+    #? Options:
+    #?   <OPTION>   The same with shell options.
+    #?              See `help set`.
+    #?
+    #? Example:
+    #?   $ __xsh_call_with_shell_option -v -x echo $HOME
+    #?
     function __xsh_call_with_shell_option () {
         local OPTIND OPTARG opt
 
@@ -226,17 +240,18 @@ function xsh () {
         return ${ret}
     }
 
-    # Enable debug mode for the called function or script.
-    #
-    # Usage:
-    #   __xsh_debug [-enuvx] <FUNCTION | SCRIPT>
-    #
-    # Options:
-    #   [-enuvx]   The same with shell options.
-    #              See `help set`.
-    #
-    #   If no option given, `-x` is set as default.
-    #
+    #? Description:
+    #?   Enable debug mode for the called function or script.
+    #?
+    #? Usage:
+    #?   __xsh_debug [-enuvx] <FUNCTION | SCRIPT>
+    #?
+    #? Options:
+    #?   [-enuvx]   The same with shell options.
+    #?              See `help set`.
+    #?
+    #?   If no option given, `-x` is set as default.
+    #?
     function __xsh_debug () {
         if [[ ${1:0:1} != - ]]; then
             set -- -x "$@"
@@ -245,19 +260,24 @@ function xsh () {
         __xsh_call_with_shell_option "$@"
     }
 
-    # @private
-    # Count the number of given function name in ${FUNCNAME[@]}
+    #? Description:
+    #?   Count the number of given function name in ${FUNCNAME[@]}
+    #?
+    #? Usage:
+    #?   __xsH_count_in_funcstack <FUNCNAME>
+    #?
     function __xsh_count_in_funcstack () {
         printf '%s\n' "${FUNCNAME[@]}" \
             | grep -c "^${1}$"
     }
 
-    # @private
-    # Fire the command on the RETURN signal of function `xsh`.
-    # The trapped command is cleared after it's fired once.
-    #
-    # Usage:
-    #   __xsh_trap_return [COMMAND]
+    #? Description:
+    #?   Fire the command on the RETURN signal of function `xsh`.
+    #?   The trapped command is cleared after it's fired once.
+    #?
+    #? Usage:
+    #?   __xsh_trap_return [COMMAND]
+    #?
     function __xsh_trap_return () {
         local command="
         if [[ \$FUNCNAME == xsh ]]; then
@@ -274,11 +294,12 @@ function xsh () {
                 __xsh_clean >/dev/null 2>&1
             fi;'
 
-    # @private
-    # Log message to stdout/stderr.
-    #
-    # Usage:
-    #   __xsh_log [debug|info|warning|error|fail|fatal] <MESSAGE>
+    #? Description:
+    #?   Log message to stdout/stderr.
+    #?
+    #? Usage:
+    #?   __xsh_log [debug|info|warning|error|fail|fatal] <MESSAGE>
+    #?
     function __xsh_log () {
         local level="$(echo "$1" | tr [[:lower:]] [[:upper:]])"
 
@@ -315,8 +336,12 @@ function xsh () {
     fi
 
 
-    # @private
-    # chmod +x all .sh files under the given dir
+    #? Description:
+    #?   chmod +x all .sh regular files under the given dir.
+    #?
+    #? Usage:
+    #?   __xsh_chmod_x_by_dir <PATH>
+    #?
     function __xsh_chmod_x_by_dir () {
         local path=$1
 
@@ -326,74 +351,106 @@ function xsh () {
              -exec chmod +x {} \;
     }
 
-    # @private
-    # chmod +x all .sh files under ./scripts
+    #? Description:
+    #?   chmod +x all .sh regular files under `./scripts`.
+    #?
+    #? Usage:
+    #?   __xsh_git_chmod_x
+    #?
     function __xsh_git_chmod_x () {
         if [[ -d ./scripts ]]; then
             __xsh_chmod_x_by_dir ./scripts
         fi
     }
 
-    # @private
-    # Discard all local changes and untracked files
+    #? Description:
+    #?   Discard all local changes and untracked files.
+    #?
+    #? Usage:
+    #?   __xsh_git_discard_all
+    #?
     function __xsh_git_discard_all () {
         git reset --hard \
             && git clean -d --force
     }
 
-    # @private
-    # Get all tags
+    #? Description:
+    #?   Get all tags.
+    #?
+    #? Usage:
+    #?   __xsh_git_get_all_tags
+    #?
     function __xsh_git_get_all_tags () {
         git tag --list
     }
 
-    # @private
-    # Fetch remote tags to local
+    #? Description:
+    #?   Fetch remote tags to local.
+    #?
+    #? Usage:
+    #?   __xsh_git_fetch_remote_tags
+    #?
     function __xsh_git_fetch_remote_tags () {
         # remove local tags that don't exist on remote
         __xsh_git_get_all_tags | xargs git tag --delete
         git fetch --tags
     }
 
-    # @private
-    # Get the tag current on
+    #? Description:
+    #?   Get the tag current on.
+    #?
+    #? Usage:
+    #?   __xsh_git_get_current_tag
+    #?
     function __xsh_git_get_current_tag () {
         git describe --tags
     }
 
-    # @private
-    # Get the latest tag
+    #? Description:
+    #?   Get the latest tag
+    #?
+    #? Usage:
+    #?   __xsh_git_get_latest_tag
+    #?
     function __xsh_git_get_latest_tag () {
         __xsh_git_get_all_tags | sed -n '$p'
     }
 
-    # @private
-    # Check if the work directory is dirty.
+    #? Description:
+    #?   Check if the work directory is dirty.
+    #?
+    #? Usage:
+    #?   __xsh_git_is_workdir_dirty
+    #?
     function __xsh_git_is_workdir_dirty () {
         test -n "$(git status -s)"
     }
 
-    # @private
-    # Get current branch.
-    # Output 'HEAD' if detached at a tag.
+    #? Description:
+    #?   Get current branch.
+    #?   Output 'HEAD' if detached at a tag.
+    #?
+    #? Usage:
+    #?   __xsh_git_get_current_branch
+    #?
     function __xsh_git_get_current_branch () {
         git rev-parse --abbrev-ref HEAD
     }
 
-    # @private
-    # Clone a Git repo.
-    #
-    # Usage:
-    #   __xsh_git_clone [-s GIT_SERVER] [-b BRANCH | -t TAG] REPO
-    #
-    # Options:
-    #   [-s GIT_SERVER]  Git server URL.
-    #                    E.g. `https://github.com`
-    #   [-b BRANCH]      Clone the BRANCH's latest state.
-    #                    This option is for developers.
-    #   [-t TAG]         Clone a specific TAG version.
-    #   REPO             Git repo in syntax: `USERNAME/REPO`.
-    #                    E.g. `username/xsh-lib-foo`
+    #? Description:
+    #?   Clone a Git repo.
+    #?
+    #? Usage:
+    #?   __xsh_git_clone [-s GIT_SERVER] [-b BRANCH | -t TAG] REPO
+    #?
+    #? Options:
+    #?   [-s GIT_SERVER]  Git server URL.
+    #?                    E.g. `https://github.com`
+    #?   [-b BRANCH]      Clone the BRANCH's latest state.
+    #?                    This option is for developers.
+    #?   [-t TAG]         Clone a specific TAG version.
+    #?   REPO             Git repo in syntax: `USERNAME/REPO`.
+    #?                    E.g. `username/xsh-lib-foo`
     function __xsh_git_clone () {
         local OPTARG OPTIND opt
         local git_server repo
@@ -455,18 +512,19 @@ function xsh () {
         fi
     }
 
-    # @private
-    # Update current repo.
-    # Any local changes will be DISCARDED after update.
-    # Any untracked files will be REMOVED after update.
-    #
-    # Usage:
-    #   __xsh_git_force_update [-b BRANCH | -t TAG]
-    #
-    # Options:
-    #   [-b BRANCH]      Update to the BRANCH's latest state.
-    #                    This option is for developers.
-    #   [-t TAG]         Update to a specific TAG version.
+    #? Description:
+    #?   Update current repo.
+    #?   Any local changes will be DISCARDED after update.
+    #?   Any untracked files will be REMOVED after update.
+    #?
+    #? Usage:
+    #?   __xsh_git_force_update [-b BRANCH | -t TAG]
+    #?
+    #? Options:
+    #?   [-b BRANCH]      Update to the BRANCH's latest state.
+    #?                    This option is for developers.
+    #?   [-t TAG]         Update to a specific TAG version.
+    #?
     function __xsh_git_force_update () {
         local OPTIND OPTARG opt
 
@@ -524,22 +582,28 @@ function xsh () {
         fi
     }
 
-    # @private
-    # Get help for a utility.
-    #
-    # Usage:
-    #   __xsh_help [-t] [-c] [-d] [-s SECTION [...]] [LPUR]
-    #
-    # Options:
-    #   [-t]          Output title.
-    #   [-c]          Output code.
-    #   [-d]          Output whole document.
-    #                 This is the default option.
-    #   [-s SECTION]  Output specific section of the document.
-    #                 This option can be used multi times.
-    #
-    #   The output order is the same with the options order.
-    #
+    #? Description:
+    #?   Show help for xsh builtin functions or utilities.
+    #?
+    #? Usage:
+    #?   __xsh_help [-t] [-c] [-d] [-s SECTION [...]] [BUILTIN | LPUR]
+    #?
+    #? Options:
+    #?   [-t]             Show title.
+    #?                    This option can't be used with BUILTIN.
+    #?   [-c]             Show code.
+    #?   [-d]             Show entire document.
+    #?   [-s SECTION]     Show specific section of the document.
+    #?                    The section name is case sensitive.
+    #?                    This option can be used multi times.
+    #?   [BUILTIN]        xsh builtin function name without leading `__xsh_`.
+    #?                    Show help for xsh builtin functions.
+    #?   [LPUR]           LPUR.
+    #?                    Show help for matched utilities.
+    #?
+    #?   If both BUILTIN and LPUR unset, then show help for xsh itself.
+    #?   The options order matters to the output.
+    #?
     function __xsh_help () {
         local OPTIND OPTARG opt
 
@@ -564,10 +628,14 @@ function xsh () {
             options=-d
         fi
 
-        local lpur=$1
-        if [[ -z ${lpur} ]]; then
-            __xsh_info "${options[@]}" "${XSH_HOME}/xsh/xsh.sh"
+        local topic=$1
+        if [[ -z ${topic} ]]; then
+            __xsh_info "${options[@]}" "${xsh_home}/xsh/xsh.sh"
             return
+        fi
+
+        if [[ $(type -t "__xsh_${topic}") == function ]]; then
+            __xsh_info -f "__xsh_${topic}" "${options[@]}" "${xsh_home}/xsh/xsh.sh"
         fi
 
         local ln
@@ -575,24 +643,31 @@ function xsh () {
             if [[ -n ${ln} ]]; then
                 __xsh_info "${options[@]}" "${ln}"
             fi
-        done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
+        done <<< "$(__xsh_get_path_by_lpur "${topic}")"
     }
 
-    # @private
-    # Extract specific info for a utility.
-    #
-    # Usage:
-    #   __xsh_info [-t] [-c] [-d] [-s SECTION [...]] PATH
-    #
-    # Options:
-    #   [-t]          Output title.
-    #   [-c]          Output code.
-    #   [-d]          Output whole document.
-    #   [-s SECTION]  Output specific section of the document.
-    #                 This option can be used multi times.
-    #
-    #   The output order is the same with the options order.
-    #
+    #? Description:
+    #?   Show specific info for xsh builtin functions or utilities.
+    #?
+    #? Usage:
+    #?   __xsh_info [-f NAME] [-t] [-c] [-d] [-s SECTION [...]] PATH
+    #?
+    #? Options:
+    #?   [-f NAME]        Get info for this function name rather than the one in path.
+    #?                    This option is valid only with `-d` and `-s`, else it's ignored.
+    #?   [-t]             Show title.
+    #?                    This option can't be used with BUILTIN.
+    #?   [-c]             Show code.
+    #?   [-d]             Show entire document.
+    #?   [-s SECTION]     Show specific section of the document.
+    #?                    The section name is case sensitive.
+    #?                    This option can be used multi times.
+    #?   PATH             Path to the scripts file.
+    #?
+    #?   The util name appearing in the doc in syntax `@<UTIL>` will be replaced
+    #?   as the full util name.
+    #?   The options order matters to the output.
+    #?
     function __xsh_info () {
         local OPTIND OPTARG opt
 
@@ -617,63 +692,88 @@ function xsh () {
             return 255
         fi
 
-        local output
+        local funcname
 
-        while getopts tcds: opt; do
+        while getopts f:tcds: opt; do
             case ${opt} in
+                f)
+                    funcname=${OPTARG}
+                    ;;
                 t)
                     local type=$(__xsh_get_type_by_path "${path}")
+
                     if [[ -z ${type} ]]; then
                         __xsh_log error "type is null: %s." "${path}"
                         return 255
                     fi
 
-                    output=$(printf "%s[%s] %s\n" "${output}" "${type}" "${lpue}")
+                    printf "[%s] %s\n" "${type}" "${lpue}"
                     ;;
                 d)
-                    output=$(printf "%s%s\n" "${output}" \
-                                    "$(sed -n '/^#?/p' "${path}" \
-                                           | sed -e 's/^#? //' \
-                                                 -e 's/^#?//' \
-                                                 -e "s|@${util}|xsh ${lpue}|g")"
-                          )
+                    awk -v util=${util} -v fname=${funcname} \
+                        '{
+                            if (flag == 1 && $1 == "function" && $2 == (fname?fname:util)) {
+                                for (j=0;j<=i;j++) print a[j]
+                                exit
+                            }
+                            if ($1 == "#?") {
+                                a[i++] = $0
+                                flag = 1
+                            } else {
+                                i = flag = 0
+                                delete a
+                            }
+                        }' "${path}" \
+                            | sed -e 's/[ ]*#? //' \
+                                  -e 's/[ ]*#?//' \
+                                  -e "s|@${util}|xsh ${lpue}|g"
                     ;;
                 c)
-                    output=$(printf "%s%s\n" "${output}" \
-                                    "$(sed '/^#?/d' "${path}")"
-                          )
+                    sed '/^#?/d' "${path}"
                     ;;
                 s)
-                    output=$(printf "%s%s\n" "${output}" \
-                                    "$(__xsh_info -d "${path}" \
-                                                  | sed -n "/^${OPTARG}/,/^[^ ]/p" \
-                                                  | sed '$d')"
-                          )
+                    __xsh_info -f "${funcname}" -d "${path}" \
+                        | sed -n "/^${OPTARG}/,/^[^ ]/p" \
+                        | sed '$d'
                     ;;
                 *)
                     return 255
                     ;;
             esac
         done
-
-        echo "${output}"
     }
 
-    # @private
+    #? Description:
+    #?   Show a list of xsh versions.
+    #?
+    #? Usage:
+    #?   __xsh_versions
+    #?
     function __xsh_versions () {
         (cd "${xsh_home}/xsh" \
              && __xsh_git_get_all_tags
         )
     }
 
-    # @private
+    #? Description:
+    #?   Show current version of xsh.
+    #?
+    #? Usage:
+    #?   __xsh_version
+    #?
     function __xsh_version () {
         (cd "${xsh_home}/xsh" \
              && __xsh_git_get_current_tag
         )
     }
 
-    # @private
+    #? Description:
+    #?   Show a list of xsh libraries.
+    #?   If the LPUR is given, show a list of matching utils.
+    #?
+    #? Usage:
+    #?   __xsh_list [LPUR]
+    #?
     function __xsh_list () {
         local lpur=$1
 
@@ -684,7 +784,12 @@ function xsh () {
         fi
     }
 
-    # @private
+    #? Description:
+    #?   Get specific property of `xsh.lib` of a lib or repo.
+    #?
+    #? Usage:
+    #?   __xsh_get_cfg_property <LIB | REPO> <PROPERTY>
+    #?
     function __xsh_get_cfg_property () {
         local name=$1
         local property=$2
@@ -715,7 +820,12 @@ function xsh () {
         awk -F= -v key="${property}" '{if ($1 == key) {print $2; exit}}' "${cfg}"
     }
 
-    # @private
+    #? Description:
+    #?
+    #?
+    #? Usage:
+    #?
+    #?
     function __xsh_get_lib_by_repo () {
         local repo=$1
 
@@ -727,8 +837,12 @@ function xsh () {
         __xsh_get_cfg_property "${repo}" name
     }
 
-    # @private
-    # List loaded libraries with version.
+    #? Description:
+    #?   List loaded libraries with version.
+    #?
+    #? Usage:
+    #?   __xsh_lib_list
+    #?
     function __xsh_lib_list () {
         local lib lib_path repo version
 
@@ -742,23 +856,24 @@ function xsh () {
         done <<< "$(find "${xsh_lib_home}" -type l -maxdepth 1)"
     }
 
-    # @private
-    # Library manager.
-    #
-    # Usage:
-    #   __xsh_lib_manager REPO [unimport] [link] [unlink] [delete]
-    #
-    # Options:
-    #   REPO             Git repo in syntax: `USERNAME/REPO`.
-    #                    E.g. `username/xsh-lib-foo`
-    #
-    # Commands:
-    #   [unimport]       unimport all imported utilities for the REPO.
-    #   [link]           link the REPO as library.
-    #   [unlink]         unlink the linked REPO.
-    #   [delete]         delete the REPO.
-    #
-    #   The order of the commands matters.
+    #? Description:
+    #?   Library manager.
+    #?
+    #? Usage:
+    #?   __xsh_lib_manager REPO [unimport] [link] [unlink] [delete]
+    #?
+    #? Options:
+    #?   REPO             Git repo in syntax: `USERNAME/REPO`.
+    #?                    E.g. `username/xsh-lib-foo`
+    #?
+    #? Commands:
+    #?   [unimport]       unimport all imported utilities for the REPO.
+    #?   [link]           link the REPO as library.
+    #?   [unlink]         unlink the linked REPO.
+    #?   [delete]         delete the REPO.
+    #?
+    #?   The order of the commands matters.
+    #?
     function __xsh_lib_manager () {
         local repo=$1
         shift
@@ -812,21 +927,24 @@ function xsh () {
         done
     }
 
-    # @private
-    # Load a xsh library.
-    #
-    # Usage:
-    #   __xsh_lib_load [-s GIT_SERVER] [-b BRANCH | -t TAG] REPO
-    #
-    # Options:
-    #   [-s GIT_SERVER]  Git server URL.
-    #                    E.g. `https://github.com`
-    #   [-b BRANCH]      Load the BRANCH's latest state.
-    #                    This option is for developers.
-    #   [-t TAG]         Load a specific TAG version.
-    #   REPO             Git repo in syntax: `USERNAME/REPO`.
-    #                    E.g. `username/xsh-lib-foo`
-    function __xsh_lib_load () {
+    #? Description:
+    #?   Load library from Git repo.
+    #?   Without '-b' or '-t', it will load the latest tagged
+    #?   version, if there's no any tagged version, returns error.
+    #?
+    #? Usage:
+    #?   __xsh_load [-s GIT_SERVER] [-b BRANCH | -t TAG] REPO
+    #?
+    #? Options:
+    #?   [-s GIT_SERVER]  Git server URL.
+    #?                    E.g. `https://github.com`
+    #?   [-b BRANCH]      Load the BRANCH's latest state.
+    #?                    This option is for developers.
+    #?   [-t TAG]         Load a specific TAG version.
+    #?   REPO             Git repo in syntax: `USERNAME/REPO`.
+    #?                    E.g. `username/xsh-lib-foo`
+    #?
+    function __xsh_load () {
         # get repo from last parameter
         local repo=${@:(-1)}
 
@@ -840,34 +958,36 @@ function xsh () {
         fi
     }
 
-    # @private
-    # Unload a xsh library.
-    #
-    # Usage:
-    #   __xsh_lib_unload REPO
-    #
-    # Options:
-    #   REPO             Git repo in syntax: `USERNAME/REPO`.
-    #                    E.g. `username/xsh-lib-foo`
-    function __xsh_lib_unload () {
+    #? Description:
+    #?   Unload a xsh library.
+    #?
+    #? Usage:
+    #?   __xsh_unload REPO
+    #?
+    #? Options:
+    #?   REPO             Git repo in syntax: `USERNAME/REPO`.
+    #?                    E.g. `username/xsh-lib-foo`
+    #?
+    function __xsh_unload () {
         local repo=$1
 
         __xsh_lib_manager "${repo}" unimport unlink delete
     }
 
-    # @private
-    # Update a loaded library.
-    #
-    # Usage:
-    #   __xsh_lib_update [-b BRANCH | -t TAG] REPO
-    #
-    # Options:
-    #   [-b BRANCH]      Update to the BRANCH's latest state.
-    #                    This option is for developers.
-    #   [-t TAG]         Update to a specific TAG version.
-    #   REPO             Git repo in syntax: `USERNAME/REPO`.
-    #                    E.g. `username/xsh-lib-foo`
-    function __xsh_lib_update () {
+    #? Description:
+    #?   Update a loaded library.
+    #?
+    #? Usage:
+    #?   __xsh_update [-b BRANCH | -t TAG] REPO
+    #?
+    #? Options:
+    #?   [-b BRANCH]      Update to the BRANCH's latest state.
+    #?                    This option is for developers.
+    #?   [-t TAG]         Update to a specific TAG version.
+    #?   REPO             Git repo in syntax: `USERNAME/REPO`.
+    #?                    E.g. `username/xsh-lib-foo`
+    #?
+    function __xsh_update () {
         # get repo from last parameter
         local repo=${@:(-1)}
 
@@ -886,16 +1006,17 @@ function xsh () {
         __xsh_lib_manager "${repo}" link
     }
 
-    # @private
-    # Update xsh itself.
-    #
-    # Usage:
-    #   __xsh_upgrade [-b BRANCH | -t TAG]
-    #
-    # Options:
-    #   [-b BRANCH]      Update to the BRANCH's latest state.
-    #                    This option is for developers.
-    #   [-t TAG]         Update to a specific TAG version.
+    #? Description:
+    #?   Update xsh itself.
+    #?
+    #? Usage:
+    #?   __xsh_upgrade [-b BRANCH | -t TAG]
+    #?
+    #? Options:
+    #?   [-b BRANCH]      Update to the BRANCH's latest state.
+    #?                    This option is for developers.
+    #?   [-t TAG]         Update to a specific TAG version.
+    #?
     function __xsh_upgrade () {
         local repo_path="${xsh_home}/xsh"
 
@@ -907,18 +1028,22 @@ function xsh () {
         source "${repo_path}/xsh.sh"
     }
 
-    # @private
-    # Apply init files under the given library path, start from library root.
-    # For example: `__xsh_init /home/user/.xsh/lib/x/string` will try to
-    #   apply following init files if they present.
-    #
-    #   * /home/user/.xsh/lib/x/__init__.sh
-    #   * /home/user/.xsh/lib/x/string/__init__.sh
-    #
-    # Previously applied init files will be skipped.
-    #
-    # A global environment variable `__XSH_INIT__` is used to track all
-    #   applied init files.
+    #? Description:
+    #?   Apply init files under the given library path, start from library root.
+    #?   For example: `__xsh_init /home/user/.xsh/lib/x/string` will try to
+    #?   apply following init files if they present.
+    #?
+    #?     * /home/user/.xsh/lib/x/__init__.sh
+    #?     * /home/user/.xsh/lib/x/string/__init__.sh
+    #?
+    #?   Previously applied init files will be skipped.
+    #?
+    #?   A global environment variable `__XSH_INIT__` is used to track all
+    #?   applied init files.
+    #?
+    #? Usage:
+    #?   __xsh_init <DIR>
+    #?
     function __xsh_init () {
         local dir=$1
 
@@ -959,7 +1084,12 @@ function xsh () {
         done <<< "$(echo "${scope//\//$'\n'}")"  # replace all `/` to newline
     }
 
-    # @private
+    #? Description:
+    #?   Import the matching utilities by a list of LPUR.
+    #?
+    #? Usage:
+    #?   __xsh_imports [LPUR] [...]
+    #?
     function __xsh_imports () {
         local lpur
         local ret=0
@@ -971,9 +1101,13 @@ function xsh () {
         return ${ret}
     }
 
-    # @private
-    # Source functions by LPUR.
-    # Link scripts by LPUR.
+    #? Description:
+    #?   Import the matching utilities for LPUR.
+    #?   The functions are sourced, and the scripts are linked at /usr/local/bin.
+    #?
+    #? Usage:
+    #?   __xsh_import <LPUR>
+    #?
     function __xsh_import () {
         # legal input:
         #   '*'
@@ -1008,9 +1142,13 @@ function xsh () {
         done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
     }
 
-    # @private
-    # Source a file ".../<lib>/functions/<package>/<util>.sh"
-    #   as function "<lib>-<package>-<util>"
+    #? Description:
+    #?   Source a file like `.../<lib>/functions/<package>/<util>.sh`
+    #?   as function `<lib>-<package>-<util>`
+    #?
+    #? Usage:
+    #?   __xsh_import_function <FILE>
+    #?
     function __xsh_import_function () {
         local path=$1
         local util lpuc
@@ -1030,9 +1168,13 @@ function xsh () {
         source /dev/stdin <<< "$(sed "s/function ${util} ()/function ${lpuc} ()/g" "${path}")"
     }
 
-    # @private
-    # Link a file ".../<lib>/scripts/<package>/<util>.sh"
-    #   as "/usr/local/bin/<lib>-<package>-<util>"
+    #? Description:
+    #?   Link a file like `.../<lib>/scripts/<package>/<util>.sh`
+    #?   as `/usr/local/bin/<lib>-<package>-<util>`
+    #?
+    #? Usage:
+    #?   __xsh_import_script <FILE>
+    #?
     function __xsh_import_script () {
         local path=$1
         local lpuc
@@ -1046,7 +1188,12 @@ function xsh () {
         ln -sf "${path}" "/usr/local/bin/${lpuc}"
     }
 
-    # @private
+    #? Description:
+    #?   Un-import the matching utilities by a list of LPUR.
+    #?
+    #? Usage:
+    #?   __xsh_unimports [LPUR] [...]
+    #?
     function __xsh_unimports () {
         local lpur
         local ret=0
@@ -1058,9 +1205,13 @@ function xsh () {
         return ${ret}
     }
 
-    # @private
-    # Unset a sourced function by LPUR.
-    # Unlink a linked script by LPUR.
+    #? Description:
+    #?   Un-import the matching utilities for LPUR.
+    #?   The sourced functions are unset, and the linked scripts are unlinked.
+    #?
+    #? Usage:
+    #?   __xsh_unimport <LPUR>
+    #?
     function __xsh_unimport () {
         # legal input:
         #   '*'
@@ -1095,9 +1246,13 @@ function xsh () {
         done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
     }
 
-    # @private
-    # Source a file ".../<lib>/functions/<package>/<util>.sh"
-    #   and unset function by name "<lib>-<package>-<util>"
+    #? Description:
+    #?   Source a file like `.../<lib>/functions/<package>/<util>.sh`
+    #?   and unset the function by name `<lib>-<package>-<util>`
+    #?
+    #? Usage:
+    #?   __xsh_unimport_function <FILE>
+    #?
     function __xsh_unimport_function () {
         local path=$1
         local util lpuc
@@ -1112,9 +1267,13 @@ function xsh () {
         source /dev/stdin <<< "$(sed -n "s/^function ${util} ().*/unset -f ${lpuc}/p" "${path}")"
     }
 
-    # @private
-    # Unlink a file ".../<lib>/scripts/<package>/<util>.sh"
-    #   at "/usr/local/bin/<lib>-<package>-<util>"
+    #? Description:
+    #?   Unlink a file like `.../<lib>/scripts/<package>/<util>.sh`
+    #?   at `/usr/local/bin/<lib>-<package>-<util>`
+    #?
+    #? Usage:
+    #?   __xsh_unimport_script <FILE>
+    #?
     function __xsh_unimport_script () {
         local path=$1
         local lpuc
@@ -1131,7 +1290,12 @@ function xsh () {
         hash -r
     }
 
-    # @private
+    #? Description:
+    #?   Call utilities in a batch. No options can be passed.
+    #?
+    #? Usage:
+    #?   __xsh_calls <LPUE> [...]
+    #?
     function __xsh_calls () {
         local lpue
         local ret=0
@@ -1143,8 +1307,13 @@ function xsh () {
         return ${ret}
     }
 
-    # @private
-    # Call a function or a script by LPUE.
+    #? Description:
+    #?   Call a function or a script by LPUE.
+    #?   `XSH_DEV` and `XSH_DEBUG` are being handled.
+    #?
+    #? Usage:
+    #?   __xsh_call <LPUE> [OPTIONS]
+    #?
     function __xsh_call () {
         # legal input:
         #   <lib>/<pkg>/<util>, /<pkg>/<util>
@@ -1187,9 +1356,17 @@ function xsh () {
         __xsh_exec "${lpue}" "${@:2}"
     }
 
-    # Call a function or a script by LPUE
-    # Usage:
-    #   __xsh_exec [-i] [-u] <LPUE>
+    #? Description:
+    #?   Call a function or a script by LPUE.
+    #?   `XSH_DEBUG` is being handled.
+    #?
+    #? Usage:
+    #?   __xsh_exec [-i] [-u] <LPUE>
+    #?
+    #? Options:
+    #?   [-i]   Import the util before the execution no matter if it's available.
+    #?   [-u]   Unimport the util after the execution.
+    #?
     function __xsh_exec () {
         local OPTIND OPTARG opt
 
@@ -1219,7 +1396,7 @@ function xsh () {
 
         if [[ ${import} -eq 1 ]]; then
             __xsh_import "${lpue}"
-        elif ! type -t ${lpuc} >/dev/null 2>&1; then
+        elif ! type -t "${lpuc}" >/dev/null 2>&1; then
             __xsh_import "${lpue}"
         fi
 
@@ -1253,7 +1430,12 @@ function xsh () {
         return ${ret}
     }
 
-    # @private
+    #? Description:
+    #?   Complete a LPUR.
+    #?
+    #? Usage:
+    #?   __xsh_complete_lpur <LPUR>
+    #?
     function __xsh_complete_lpur () {
         local lpur=$1
 
@@ -1272,7 +1454,12 @@ function xsh () {
         echo "${lpur}"
     }
 
-    # @private
+    #? Description:
+    #?   TODO
+    #?
+    #? Usage:
+    #?   __xsh_get_lib_by_lpur <LPUR>
+    #?
     function __xsh_get_lib_by_lpur () {
         local lpur=$1
 
@@ -1285,7 +1472,12 @@ function xsh () {
         echo "${lpur%%/*}"  # remove anything after first / (include the /)
     }
 
-    # @private
+    #? Description:
+    #?   TODO
+    #?
+    #? Usage:
+    #?   __xsh_get_pur_by_lpur <LPUR>
+    #?
     function __xsh_get_pur_by_lpur () {
         local lpur=$1
 
@@ -1298,7 +1490,12 @@ function xsh () {
         echo "${lpur#*/}"  # remove lib part
     }
 
-    # @private
+    #? Description:
+    #?   TODO
+    #?
+    #? Usage:
+    #?   __xsh_get_path_by_lpur <LPUR>
+    #?
     function __xsh_get_path_by_lpur () {
         local lpur=$1
         local lib pur
@@ -1324,7 +1521,12 @@ function xsh () {
              2>/dev/null
     }
 
-    # @private
+    #? Description:
+    #?   TODO
+    #?
+    #? Usage:
+    #?   __xsh_get_lpuc_by_lpur <LPUR>
+    #?
     function __xsh_get_lpuc_by_lpur () {
         local lpur=$1
         local ln
@@ -1341,7 +1543,12 @@ function xsh () {
         done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
     }
 
-    # @private
+    #? Description:
+    #?   TODO
+    #?
+    #? Usage:
+    #?   __xsh_get_lpuc_by_lpue <LPUE>
+    #?
     function __xsh_get_lpuc_by_lpue () {
         local lpue=$1
 
@@ -1354,7 +1561,12 @@ function xsh () {
         echo "${lpue//\//-}"  # replace each / with -
     }
 
-    # @private
+    #? Description:
+    #?   TODO
+    #?
+    #? Usage:
+    #?   __xsh_get_type_by_path <PATH>
+    #?
     function __xsh_get_type_by_path () {
         local path=$1
         local type
@@ -1368,7 +1580,12 @@ function xsh () {
         echo "${type%%/*}"  # strip path from end
     }
 
-    # @private
+    #? Description:
+    #?   TODO
+    #?
+    #? Usage:
+    #?   __xsh_get_lib_by_path <PATH>
+    #?
     function __xsh_get_lib_by_path () {
         local path=$1
         local lib
@@ -1382,7 +1599,12 @@ function xsh () {
         echo "${lib%%/*}"  # remove anything after first / (include the /)
     }
 
-    # @private
+    #? Description:
+    #?   TODO
+    #?
+    #? Usage:
+    #?   __xsh_get_util_by_path <PATH>
+    #?
     function __xsh_get_util_by_path () {
         local path=$1
         local util
@@ -1398,7 +1620,12 @@ function xsh () {
         echo "${util}"
     }
 
-    # @private
+    #? Description:
+    #?   TODO
+    #?
+    #? Usage:
+    #?   __xsh_get_pue_by_path <PATH>
+    #?
     function __xsh_get_pue_by_path () {
         local path=${1:?}
         local pue
@@ -1412,7 +1639,12 @@ function xsh () {
         echo "${pue%.sh}"  # remove file extension
     }
 
-    # @private
+    #? Description:
+    #?   TODO
+    #?
+    #? Usage:
+    #?   __xsh_get_lpue_by_path <PATH>
+    #?
     function __xsh_get_lpue_by_path () {
         local path=${1:?}
         local lib pue
@@ -1427,7 +1659,12 @@ function xsh () {
         echo "${lib}/${pue}"
     }
 
-    # @private
+    #? Description:
+    #?   TODO
+    #?
+    #? Usage:
+    #?   __xsh_get_lpuc_by_path <PATH>
+    #?
     function __xsh_get_lpuc_by_path () {
         local path=$1
         local lpue
@@ -1441,15 +1678,23 @@ function xsh () {
         __xsh_get_lpuc_by_lpue "${lpue}"
     }
 
-    # @private
-    # List all internal functions.
+    #? Description:
+    #?   List all xsh internal functions.
+    #?
+    #? Usage:
+    #?   __xsh_get_internal_functions
+    #?
     function __xsh_get_internal_functions () {
         typeset -f xsh \
             | awk '$1 == "function" && match($2, "^__xsh_") > 0 && $3 == "()" {print $2}'
     }
 
-    # @private
-    # Clean env on xsh() returns.
+    #? Description:
+    #?   Clean environment on xsh() returns.
+    #?
+    #? Usage:
+    #?   __xsh_clean
+    #?
     function __xsh_clean () {
         unset -f $(__xsh_get_internal_functions)
     }
@@ -1461,19 +1706,11 @@ function xsh () {
     fi
 
     # Main
-    case $1 in
-        # xsh command
-        list|upgrade|import|unimport|calls|dev|debug|version|versions|help|log)
-            __xsh_$1 "${@:2}"
-            ;;
-        # xsh library command
-        load|unload|update)
-            __xsh_lib_$1 "${@:2}"
-            ;;
-        # xsh library utility
-        *)
-            __xsh_call "$1" "${@:2}"
-            ;;
-    esac
+    if [[ $(type -t "__xsh_$1") == function ]]; then
+        # xsh command and builtin function
+        __xsh_$1 "${@:2}"
+    else
+        __xsh_call "$1" "${@:2}"
+    fi
 }
 export -f xsh
