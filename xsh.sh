@@ -101,6 +101,7 @@
 #?         [-t]             Show the title.
 #?                          This option can't be used with BUILTIN.
 #?         [-c]             Show code.
+#?                          The shown code is formatted by shell with BUILTIN.
 #?         [-d]             Show entire document.
 #?         [-s SECTION]     Show specific section of the document.
 #?                          The section name is case sensitive.
@@ -592,6 +593,7 @@ function xsh () {
     #?   [-t]             Show title.
     #?                    This option can't be used with BUILTIN.
     #?   [-c]             Show code.
+    #?                    The shown code is formatted by shell with BUILTIN.
     #?   [-d]             Show entire document.
     #?   [-s SECTION]     Show specific section of the document.
     #?                    The section name is case sensitive.
@@ -654,10 +656,11 @@ function xsh () {
     #?
     #? Options:
     #?   [-f NAME]        Get info for this function name rather than the one in path.
-    #?                    This option is valid only with `-d` and `-s`, else it's ignored.
+    #?                    This option can't be used with `-t`.
     #?   [-t]             Show title.
-    #?                    This option can't be used with BUILTIN.
+    #?                    This option can't be used with `-f`.
     #?   [-c]             Show code.
+    #?                    The shown code is formatted by shell if `-f` used.
     #?   [-d]             Show entire document.
     #?   [-s SECTION]     Show specific section of the document.
     #?                    The section name is case sensitive.
@@ -729,7 +732,11 @@ function xsh () {
                                   -e "s|@${util}|xsh ${lpue}|g"
                     ;;
                 c)
-                    sed '/^#?/d' "${path}"
+                    if [[ -n ${funcname} ]]; then
+                        declare -f "${funcname}"
+                    else
+                        sed '/^#?/d' "${path}"
+                    fi
                     ;;
                 s)
                     __xsh_info -f "${funcname}" -d "${path}" \
