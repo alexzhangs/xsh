@@ -11,7 +11,6 @@
 #?     xsh unload REPO
 #?     xsh update [-b BRANCH | -t TAG] REPO
 #?     xsh upgrade [-b BRANCH | -t TAG]
-#?     xsh dev <LPUE> [UTIL_OPTIONS]
 #?     xsh debug [-enuvx] <FUNCTION | SCRIPT>
 #?     xsh version
 #?     xsh versions
@@ -88,18 +87,6 @@
 #?                          This option is for developers.
 #?         [-t TAG]         Load a specific TAG version.
 #?
-#?     dev                  Call an individual utility in development library.
-#?
-#?                          The development library path is set by a user-defined
-#?                          environment variable: XSH_DEV_HOME.
-#?                          Within the development library home, the symbol links
-#?                          pointing to the repos must exist.
-#?
-#?                          This option is for developers.
-#?
-#?         <LPUE>           Utility to call.
-#?         [UTIL_OPTIONS]   Will be passed to utility.
-#?
 #?     debug                Debug the called function or script.
 #?         [-enuvx]         The same with shell options.
 #?                          See `help set`.
@@ -118,21 +105,38 @@
 #?         [LPUR]           Show help for matched utilities.
 #?                          If unset, show help for xsh itself.
 #?
-#? Debugging:
-#?     This is for debugging xsh libraries.
-#?     For general debugging purpose, see `xsh debug`.
-#?
-#?     Debug mode is enabled by shell options `-vx`.
-#?     Debug mode is only available with the syntax started with `xsh`.
-#?
+#? Debug Mode:
 #?     Enable debug mode by setting environment varaible: XSH_DEBUG
 #?
-#?     Values:
+#?     With debug mode enabled, set shell options: `-vx`.
+#?     Debug mode is available only for the command started with `xsh`.
+#?
+#?     Values for XSH_DEBUG:
 #?         1:      Debug current called xsh utility.
 #?         <LPUR>: Debug matched xsh utilities.
 #?
 #?     Example:
 #?         $ XSH_DEBUG=1 xsh /string/upper foo
+#?
+#?     This is for debugging xsh libraries.
+#?     For general debugging purpose, see `xsh debug`.
+#?
+#? Dev Mode:
+#?     Enable dev mode by setting environment varaible: XSH_DEV
+#?
+#?     With dev mode enabled, able to call the utilities from development library.
+#?
+#?     Values for XSH_DEV:
+#?         1:      Call current called xsh utility from dev library.
+#?         <LPUR>: Call matched xsh utilities from dev library.
+#?
+#?     Example:
+#?         $ XSH_DEV=1 xsh /string/upper foo
+#?
+#?     The development library path is set by environment variable: XSH_DEV_HOME.
+#?     In the XSH_DEV_HOME, the symbol links pointing to the repos must exist.
+#?
+#?     The dev mode is for developers to developing xsh libraries.
 #?
 function xsh () {
 
@@ -1154,13 +1158,76 @@ function xsh () {
 
         local lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
 
-        if ! type -t ${lpuc} >/dev/null 2>&1; then
+        if [[ -n ${XSH_DEV} ]]; then
+            if [[ -z ${XSH_DEV_HOME} ]]; then
+                __xsh_log error "XSH_DEV_HOME is not set properly."
+                return 255
+            fi
+
+            local xsh_dev
+            case ${XSH_DEV} in
+                1)
+                    xsh_dev=${lpuc}
+                    ;;
+                *)
+                    xsh_dev=$(
+                        # set xsh_lib_home within sub shell
+                        xsh_lib_home=${XSH_DEV_HOME}
+                        __xsh_get_lpuc_by_lpur "${XSH_DEV}")
+                    ;;
+            esac
+
+            if grep -q "^${lpuc}$" <(echo "${xsh_dev}"); then
+                # force to import and unimport dev util
+                xsh_lib_home=${XSH_DEV_HOME} __xsh_exec -i -u "${lpue}" "${@:2}"
+                return
+            fi
+        fi
+
+        __xsh_exec "${lpue}" "${@:2}"
+    }
+
+    # Call a function or a script by LPUE
+    # Usage:
+    #   __xsh_exec [-i] [-u] <LPUE>
+    function __xsh_exec () {
+        local OPTIND OPTARG opt
+
+        local import=0 unimport=0
+        while getopts iu opt; do
+            case ${opt} in
+                i)
+                    import=1
+                    ;;
+                u)
+                    unimport=1
+                    ;;
+                *)
+                    return 255
+                    ;;
+            esac
+        done
+        shift $((OPTIND - 1))
+        local lpue=$1
+
+        if [[ -z ${lpue} ]]; then
+            __xsh_log error "LPUE is null or not set."
+            return 255
+        fi
+
+        local lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
+
+        if [[ ${import} -eq 1 ]]; then
+            __xsh_import "${lpue}"
+        elif ! type -t ${lpuc} >/dev/null 2>&1; then
             __xsh_import "${lpue}"
         fi
 
-        local xsh_debug
+        local ret=0
 
         if [[ -n ${XSH_DEBUG} ]]; then
+            local xsh_debug
+
             case ${XSH_DEBUG} in
                 1)
                     xsh_debug=${lpuc}
@@ -1171,35 +1238,19 @@ function xsh () {
             esac
 
             if grep -q "^${lpuc}$" <(echo "${xsh_debug}"); then
-                __xsh_call_with_shell_option -vx "${lpuc}" "${@:2}"
+                __xsh_call_with_shell_option -vx "${lpuc}" "${@:2}" || ret=$?
             else
-                ${lpuc} "${@:2}"
+                ${lpuc} "${@:2}" || ret=$?
             fi
         else
-            ${lpuc} "${@:2}"
-        fi
-    }
-
-    # @private
-    # Call util in the dev lib rather than the normal lib.
-    function __xsh_dev () {
-        if [[ -n ${XSH_DEV_HOME} ]]; then
-            xsh_lib_home=${XSH_DEV_HOME}
-        else
-            __xsh_log error "XSH_DEV_HOME is not set properly."
-            return 255
+            ${lpuc} "${@:2}" || ret=$?
         fi
 
-        # always import the dev util to get latest version
-        __xsh_import "$1"
+        if [[ ${unimport} -eq 1 ]]; then
+            __xsh_unimport "${lpue}"
+        fi
 
-        __xsh_call "$@"
-        local ret=$?
-
-        # always unimport the dev util after the call
-        __xsh_unimport "$1"
-
-        return $ret
+        return ${ret}
     }
 
     # @private
