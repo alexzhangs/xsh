@@ -3,7 +3,7 @@
 #?
 #? Usage:
 #?     xsh <LPUE> [UTIL_OPTIONS]
-#?     xsh call <LPUE> [...]
+#?     xsh calls <LPUE> [...]
 #?     xsh import <LPUR> [...]
 #?     xsh unimport <LPUR> [...]
 #?     xsh list [LPUR]
@@ -17,6 +17,8 @@
 #?     xsh versions
 #?     xsh help [-t] [-c] [-d] [-s SECTION] [LPUR]
 #?
+#?     xsh log [debug|info|warning|error|fail|fatal] <MESSAGE>
+#?
 #? Options:
 #?     <LPUE>               Call an individual utility.
 #?         [UTIL_OPTIONS]   Will be passed to utility.
@@ -29,7 +31,7 @@
 #?                              <lib>/<pkg>/<util>, /<pkg>/<util>
 #?                              <lib>/<util>, /<util>
 #?
-#?     call                 Call utilities in a batch. No options can be passed.
+#?     calls                Call utilities in a batch. No options can be passed.
 #?         <LPUE> [...]     Utilities to call.
 #?
 #?     import               Import utilities.
@@ -272,7 +274,7 @@ function xsh () {
     # Log message to stdout/stderr.
     #
     # Usage:
-    #   __xsh_log [debug|info|wanning|error|fail|fatal] <MESSAGE>
+    #   __xsh_log [debug|info|warning|error|fail|fatal] <MESSAGE>
     function __xsh_log () {
         local level="$(echo "$1" | tr [[:lower:]] [[:upper:]])"
 
@@ -1410,12 +1412,8 @@ function xsh () {
     # Main
     case $1 in
         # xsh command
-        list|upgrade|import|unimport|dev|debug|version|versions|help)
+        list|upgrade|import|unimport|calls|dev|debug|version|versions|help|log)
             __xsh_$1 "${@:2}"
-            ;;
-        # xsh command
-        call)
-            __xsh_${1}s "${@:2}"
             ;;
         # xsh library command
         load|unload|update)
