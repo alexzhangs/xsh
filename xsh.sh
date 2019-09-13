@@ -972,8 +972,8 @@ function xsh () {
     }
 
     # @private
-    # Source a function by LPUR.
-    # Link a script by LPUR.
+    # Source functions by LPUR.
+    # Link scripts by LPUR.
     function __xsh_import () {
         # legal input:
         #   '*'
