@@ -1,152 +1,67 @@
 #? Description:
-#?     xsh is an extension of Bash. It works as a Bash library framework.
+#?   xsh is an extension of Bash. It works as a Bash library framework.
 #?
 #? Usage:
-#?     xsh <LPUE> [UTIL_OPTIONS]
-#?     xsh calls <LPUE> [...]
-#?     xsh import <LPUR> [...]
-#?     xsh unimport <LPUR> [...]
-#?     xsh list [LPUR]
-#?     xsh load [-s GIT_SERVER] [-b BRANCH | -t TAG] REPO
-#?     xsh unload REPO
-#?     xsh update [-b BRANCH | -t TAG] REPO
-#?     xsh upgrade [-b BRANCH | -t TAG]
-#?     xsh debug [-enuvx] <FUNCTION | SCRIPT>
-#?     xsh version
-#?     xsh versions
-#?     xsh help [-t] [-c] [-d] [-s SECTION] [BUILTIN | LPUR]
-#?
-#?     xsh log [debug|info|warning|error|fail|fatal] <MESSAGE>
+#?   xsh <LPUE> [UTIL_OPTIONS]
 #?
 #? Options:
-#?     <LPUE>               Call an individual utility.
-#?         [UTIL_OPTIONS]   Will be passed to utility.
+#?   <LPUE>           Call an individual utility.
+#?   [UTIL_OPTIONS]   Will be passed to utility.
 #?
-#?                          The library of the utility must be loaded first.
+#?   The library of the utility must be loaded first.
 #?
-#?                          LPUE stands for `Lib/Package/Util Expression`.
-#?                          The LPUE syntax is: `[LIB][/PACKAGE]/UTIL`.
-#?                          Example:
-#?                              <lib>/<pkg>/<util>, /<pkg>/<util>
-#?                              <lib>/<util>, /<util>
+#? Convention:
+#?   LPUE             LPUE stands for `Lib/Package/Util Expression`.
+#?                    The LPUE syntax is: `[LIB][/PACKAGE]/UTIL`.
 #?
-#?     calls                Call utilities in a batch. No options can be passed.
-#?         <LPUE> [...]     Utilities to call.
+#?                    Example:
 #?
-#?     import               Import utilities.
-#?         <LPUR>           Utilities to import.
+#?                    <lib>/<pkg>/<util>, /<pkg>/<util>
+#?                    <lib>/<util>, /<util>
 #?
-#?                          The imported utilities can be called directly without
-#?                          leading `xsh` as syntax: 'LIB-PACKAGE-UTIL'.
+#?   LPUR             LPUR stands for `Lib/Package/Util Regex`.
+#?                    The LPUR syntax is: `[LIB][/PACKAGE][/UTIL]`.
 #?
-#?                          LPUR stands for `Lib/Package/Util Regex`.
-#?                          The LPUR syntax is: `[LIB][/PACKAGE][/UTIL]`.
-#?                          Example:
-#?                              '*'
-#?                              /, <lib>
-#?                              <lib>/<pkg>, /<pkg>
-#?                              <lib>/<pkg>/<util>, /<pkg>/<util>
-#?                              <lib>/<util>, /<util>
+#?                    Example:
 #?
-#?     unimport             Unimport utilities that have been sourced or linked
-#?                          as syntax: 'LIB-PACKAGE-UTIL'.
-#?
-#?         <LPUR>           The syntax is the same with import.
-#?
-#?     list                 List loaded libraries if no options passed.
-#?         [LPUR]           List matched libraries, packages and utilities.
-#?                          The syntax is the same with import.
-#?
-#?     load                 Load library from Git repo.
-#?                          Without '-b' or '-t', it will load the latest tagged
-#?                          version, if there's no any tagged version, returns error.
-#?
-#?         [-s GIT_SERVER]  Git server URL.
-#?                          E.g. `https://github.com`
-#?         [-b BRANCH]      Load the BRANCH's latest state.
-#?                          This option is for developers.
-#?         [-t TAG]         Load a specific TAG version.
-#?         REPO             Git repo in syntax: `USERNAME/REPO`.
-#?                          E.g. `username/xsh-lib-foo`
-#?
-#?     unload               Unload the loaded library.
-#?         REPO             Git repo in syntax: `USERNAME/REPO`.
-#?
-#?     update               Update the loaded library.
-#?                          Without '-b' or '-t', it will update to the latest tagged
-#?                          version, if there's no any tagged version, returns error.
-#?         [-b BRANCH]      Update to the BRANCH's latest state.
-#?                          This option is for developers.
-#?         [-t TAG]         Load a specific TAG version.
-#?         REPO             Git repo in syntax: `USERNAME/REPO`.
-#?                          E.g. `username/xsh-lib-foo`
-#?
-#?     upgrade              Update xsh itself.
-#?                          Without '-b' or '-t', it will update to the latest tagged
-#?                          version, if there's no any tagged version, returns error.
-#?         [-b BRANCH]      Update to the BRANCH's latest state.
-#?                          This option is for developers.
-#?         [-t TAG]         Load a specific TAG version.
-#?
-#?     debug                Debug the called function or script.
-#?         [-enuvx]         The same with shell options.
-#?                          See `help set`.
-#?                          Default is `-x`.
-#?
-#?     version              Show current xsh version.
-#?
-#?     versions             Show available xsh versions.
-#?
-#?     help                 Show help for xsh builtin functions or utilities.
-#?         [-t]             Show the title.
-#?                          This option can't be used with BUILTIN.
-#?         [-c]             Show code.
-#?                          The shown code is formatted by shell with BUILTIN.
-#?         [-d]             Show entire document.
-#?         [-s SECTION]     Show specific section of the document.
-#?                          The section name is case sensitive.
-#?                          This option can be used multi times.
-#?         [BUILTIN]        xsh builtin function name without leading `__xsh_`.
-#?                          Show help for xsh builtin functions.
-#?         [LPUR]           LPUR.
-#?                          Show help for matched utilities.
-#?                          If unset, show help for xsh itself.
-#?
-#?         If both BUILTIN and LPUR unset, then show help for xsh itself.
-#?         The options order matters to the output.
+#?                    '*'
+#?                    /, <lib>
+#?                    <lib>/<pkg>, /<pkg>
+#?                    <lib>/<pkg>/<util>, /<pkg>/<util>
+#?                    <lib>/<util>, /<util>
 #?
 #? Debug Mode:
-#?     Enable debug mode by setting environment varaible: XSH_DEBUG
+#?   Enable debug mode by setting environment varaible: XSH_DEBUG
 #?
-#?     With debug mode enabled, set shell options: `-vx`.
-#?     Debug mode is available only for the command started with `xsh`.
+#?   With debug mode enabled, set shell options: `-vx`.
+#?   Debug mode is available only for the command started with `xsh`.
 #?
-#?     Values for XSH_DEBUG:
-#?         1:      Debug current called xsh utility.
-#?         <LPUR>: Debug matched xsh utilities.
+#?   Values for XSH_DEBUG:
+#?       1:      Debug current called xsh utility.
+#?       <LPUR>: Debug matched xsh utilities.
 #?
-#?     Example:
-#?         $ XSH_DEBUG=1 xsh /string/upper foo
+#?   Example:
+#?       $ XSH_DEBUG=1 xsh /string/upper foo
 #?
-#?     This is for debugging xsh libraries.
-#?     For general debugging purpose, see `xsh debug`.
+#?   This is for debugging xsh libraries.
+#?   For general debugging purpose, see `xsh debug`.
 #?
 #? Dev Mode:
-#?     Enable dev mode by setting environment varaible: XSH_DEV
+#?   Enable dev mode by setting environment varaible: XSH_DEV
 #?
-#?     With dev mode enabled, able to call the utilities from development library.
+#?   With dev mode enabled, able to call the utilities from development library.
 #?
-#?     Values for XSH_DEV:
-#?         1:      Call current called xsh utility from dev library.
-#?         <LPUR>: Call matched xsh utilities from dev library.
+#?   Values for XSH_DEV:
+#?       1:      Call current called xsh utility from dev library.
+#?       <LPUR>: Call matched xsh utilities from dev library.
 #?
-#?     Example:
-#?         $ XSH_DEV=1 xsh /string/upper foo
+#?   Example:
+#?       $ XSH_DEV=1 xsh /string/upper foo
 #?
-#?     The development library path is set by environment variable: XSH_DEV_HOME.
-#?     In the XSH_DEV_HOME, the symbol links pointing to the repos must exist.
+#?   The development library path is set by environment variable: XSH_DEV_HOME.
+#?   In the XSH_DEV_HOME, the symbol links pointing to the repos must exist.
 #?
-#?     The dev mode is for developers to developing xsh libraries.
+#?   The dev mode is for developers to developing xsh libraries.
 #?
 function xsh () {
 
@@ -255,6 +170,7 @@ function xsh () {
     #?
     function __xsh_debug () {
         if [[ ${1:0:1} != - ]]; then
+            # prepend -x to $@
             set -- -x "$@"
         fi
 
@@ -592,14 +508,19 @@ function xsh () {
     #? Options:
     #?   [-t]             Show title.
     #?                    This option can't be used with BUILTIN.
+    #?
     #?   [-c]             Show code.
     #?                    The shown code is formatted by shell with BUILTIN.
+    #?
     #?   [-d]             Show entire document.
+    #?
     #?   [-s SECTION]     Show specific section of the document.
     #?                    The section name is case sensitive.
     #?                    This option can be used multi times.
+    #?
     #?   [BUILTIN]        xsh builtin function name without leading `__xsh_`.
     #?                    Show help for xsh builtin functions.
+    #?
     #?   [LPUR]           LPUR.
     #?                    Show help for matched utilities.
     #?
@@ -607,52 +528,92 @@ function xsh () {
     #?   The options order matters to the output.
     #?
     function __xsh_help () {
-        local OPTIND OPTARG opt
+        # get last parameter
+        local topic=${@:(-1)}
 
-        declare -a options
-        while getopts tcds: opt; do
-            case ${opt} in
-                t|c|d)
-                    options[${#options[@]}]=-${opt}
-                    ;;
-                s)
-                    options[${#options[@]}]=-${opt}
-                    options[${#options[@]}]=${OPTARG}
-                    ;;
-                *)
-                    return 255
-                    ;;
-            esac
-        done
-        shift $((OPTIND - 1))
-
-        if [[ ${#options[@]} -eq 0 ]]; then
-            options=-d
+        if [[ ${topic:0:1} == - ]]; then
+            unset topic
+        else
+            # remove last parameter from $@
+            set -- "${@:1:$(($# - 1))}"
         fi
 
-        local topic=$1
+        if [[ $# -eq 0 ]]; then
+            # add -d to $@
+            set -- -d
+        fi
+
         if [[ -z ${topic} ]]; then
-            __xsh_info "${options[@]}" "${xsh_home}/xsh/xsh.sh"
-            return
+            __xsh_help_self
+        elif [[ $(type -t "__xsh_${topic}") == function ]]; then
+            __xsh_help_builtin "$@" "__xsh_${topic}"
+        else
+            __xsh_help_lib "$@" "${topic}"
         fi
+    }
 
-        if [[ $(type -t "__xsh_${topic}") == function ]]; then
-            __xsh_info -f "__xsh_${topic}" "${options[@]}" "${xsh_home}/xsh/xsh.sh"
-        fi
+    #? Description:
+    #?   Generate docucment.
+    #?
+    #? Usage:
+    #?   __xsh_help_self
+    #?
+    function __xsh_help_self () {
+        local name
 
+        __xsh_info -f xsh -s Description -s Usage "${xsh_home}/xsh/xsh.sh"
+
+        declare -a options=()
+        for name in calls imports unimports list load unload update upgrade debug version versions help doc log; do
+            options=("${options[@]}" -f "__xsh_${name}" -S Usage)
+        done
+
+        __xsh_info "${options[@]}" "${xsh_home}/xsh/xsh.sh" \
+            | sed -e '/^$/d' -e 's/__xsh_/xsh /g'
+
+        declare -a options=()
+        for name in calls imports unimports list load unload update upgrade debug version versions help doc log; do
+            options=("${options[@]}" -i "${name}\n" -f "__xsh_${name}" -S Description -S Option)
+        done
+
+        printf "\nCommands:\n\n"
+        __xsh_info "${options[@]}" "${xsh_home}/xsh/xsh.sh" \
+            | sed 's/^/  /'
+
+        __xsh_info -f xsh -s Convention -s 'Debug Mode' -s 'Dev Mode' \
+                   "${xsh_home}/xsh/xsh.sh"
+    }
+
+    #? Description:
+    #?   Generate docucment.
+    #?
+    #? Usage:
+    #?   __xsh_help_builtin [OPTIONS] <BUILTIN>
+    #?
+    function __xsh_help_builtin () {
+        __xsh_info -f "${@:(-1)}" "${@:1:$(($# - 1))}" "${xsh_home}/xsh/xsh.sh"
+    }
+
+    #? Description:
+    #?   Generate docucment.
+    #?
+    #? Usage:
+    #?   __xsh_help_lib [OPTIONS] <LPUR>
+    #?
+    function __xsh_help_lib () {
         local ln
         while read ln; do
             if [[ -n ${ln} ]]; then
-                __xsh_info "${options[@]}" "${ln}"
+                __xsh_info "${@:1:$(($# - 1))}" "${ln}"
             fi
-        done <<< "$(__xsh_get_path_by_lpur "${topic}")"
+        done <<< "$(__xsh_get_path_by_lpur "${@:(-1)}")"
     }
 
     #? Description:
     #?   Show specific info for xsh builtin functions or utilities.
     #?
     #? Usage:
-    #?   __xsh_info [-f NAME] [-t] [-c] [-d] [-s SECTION [...]] PATH
+    #?   __xsh_info [-f NAME] [-t] [-c] [-d] [-sS SECTION] [-i STRING] [...] PATH
     #?
     #? Options:
     #?   [-f NAME]        Get info for this function name rather than the one in path.
@@ -662,14 +623,17 @@ function xsh () {
     #?   [-c]             Show code.
     #?                    The shown code is formatted by shell if `-f` used.
     #?   [-d]             Show entire document.
-    #?   [-s SECTION]     Show specific section of the document.
+    #?   [-sS SECTION]    Show specific section of the document.
     #?                    The section name is case sensitive.
-    #?                    This option can be used multi times.
+    #?                    `-s` turns the section name on.
+    #?                    `-S` turns the section name off.
+    #?   [-i STRING]      Insert the STRING as a line.
     #?   PATH             Path to the scripts file.
     #?
     #?   The util name appearing in the doc in syntax `@<UTIL>` will be replaced
     #?   as the full util name.
     #?   The options order matters to the output.
+    #?   These options can be used multi times.
     #?
     function __xsh_info () {
         local OPTIND OPTARG opt
@@ -697,7 +661,7 @@ function xsh () {
 
         local funcname
 
-        while getopts f:tcds: opt; do
+        while getopts f:tcds:S:i: opt; do
             case ${opt} in
                 f)
                     funcname=${OPTARG}
@@ -743,6 +707,13 @@ function xsh () {
                         | sed -n "/^${OPTARG}/,/^[^ ]/p" \
                         | sed '$d'
                     ;;
+                S)
+                    __xsh_info -f "${funcname}" -s "${OPTARG}" "${path}" \
+                        | sed '1d'
+                    ;;
+                i)
+                    printf "${OPTARG}"
+                    ;;
                 *)
                     return 255
                     ;;
@@ -751,7 +722,7 @@ function xsh () {
     }
 
     #? Description:
-    #?   Show a list of xsh versions.
+    #?   Show available versions of xsh.
     #?
     #? Usage:
     #?   __xsh_versions
@@ -763,7 +734,7 @@ function xsh () {
     }
 
     #? Description:
-    #?   Show current version of xsh.
+    #?   Show installed version of xsh.
     #?
     #? Usage:
     #?   __xsh_version
@@ -775,11 +746,14 @@ function xsh () {
     }
 
     #? Description:
-    #?   Show a list of xsh libraries.
+    #?   Show a list of loaded xsh libraries.
     #?   If the LPUR is given, show a list of matching utils.
     #?
     #? Usage:
     #?   __xsh_list [LPUR]
+    #?
+    #? Options:
+    #?   [LPUR]   List matched libraries, packages and utilities.
     #?
     function __xsh_list () {
         local lpur=$1
@@ -966,7 +940,7 @@ function xsh () {
     }
 
     #? Description:
-    #?   Unload a xsh library.
+    #?   Unload the loaded library.
     #?
     #? Usage:
     #?   __xsh_unload REPO
@@ -982,7 +956,9 @@ function xsh () {
     }
 
     #? Description:
-    #?   Update a loaded library.
+    #?   Update the loaded library.
+    #?   Without '-b' or '-t', it will update to the latest tagged
+    #?   version, if there's no any tagged version, returns error.
     #?
     #? Usage:
     #?   __xsh_update [-b BRANCH | -t TAG] REPO
@@ -1015,6 +991,8 @@ function xsh () {
 
     #? Description:
     #?   Update xsh itself.
+    #?   Without '-b' or '-t', it will update to the latest tagged
+    #?   version, if there's no any tagged version, returns error.
     #?
     #? Usage:
     #?   __xsh_upgrade [-b BRANCH | -t TAG]
@@ -1112,6 +1090,9 @@ function xsh () {
     #?   Import the matching utilities for LPUR.
     #?   The functions are sourced, and the scripts are linked at /usr/local/bin.
     #?
+    #?   The imported utilities can be called directly without
+    #?   leading `xsh` as syntax: 'LIB-PACKAGE-UTIL'.
+    #?
     #? Usage:
     #?   __xsh_import <LPUR>
     #?
@@ -1196,10 +1177,15 @@ function xsh () {
     }
 
     #? Description:
+    #?   Unimport utilities that have been sourced or linked as syntax:
+    #?   `LIB-PACKAGE-UTIL`.
     #?   Un-import the matching utilities by a list of LPUR.
     #?
     #? Usage:
     #?   __xsh_unimports [LPUR] [...]
+    #?
+    #? Options:
+    #?   <LPUR>   The syntax is the same with import.
     #?
     function __xsh_unimports () {
         local lpur
