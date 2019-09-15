@@ -548,11 +548,28 @@ function xsh () {
         fi
 
         if [[ -z ${topic} ]]; then
-            __xsh_help_self
+            __xsh_help_self_cache
         elif [[ $(type -t "__xsh_${topic}") == function ]]; then
             __xsh_help_builtin "$@" "__xsh_${topic}"
         else
             __xsh_help_lib "$@" "${topic}"
+        fi
+    }
+
+    #? Description:
+    #?   Show cachable help for xsh itself.
+    #?
+    #? Usage:
+    #?   __xsh_help_self_cache
+    #?
+    function __xsh_help_self_cache () {
+        local hash=$(shasum "${xsh_home}/xsh/xsh.sh" 2>/dev/null | cut -d' ' -f1)
+        local cached_help=/tmp/.${FUNCNAME}_${hash}
+
+        if [[ -f ${cached_help} ]]; then
+            cat "${cached_help}"
+        else
+            (umask 0000 && __xsh_help_self | tee "${cached_help}")
         fi
     }
 
