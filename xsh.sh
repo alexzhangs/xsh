@@ -1408,7 +1408,7 @@ function xsh () {
                     ;;
             esac
 
-            if grep -q "^${lpuc}$" <(echo "${xsh_dev}"); then
+            if grep -q "^${lpuc}$" <<< "$(echo "${xsh_dev}")"; then
                 # force to import and unimport dev util
                 xsh_lib_home=${XSH_DEV_HOME} __xsh_exec -i -u "${lpue}" "${@:2}"
                 return
@@ -1476,7 +1476,7 @@ function xsh () {
                     ;;
             esac
 
-            if grep -q "^${lpuc}$" <(echo "${xsh_debug}"); then
+            if grep -q "^${lpuc}$" <<< "$(echo "${xsh_debug}")"; then
                 __xsh_call_with_shell_option -vx "${lpuc}" "${@:2}" || ret=$?
             else
                 ${lpuc} "${@:2}" || ret=$?
