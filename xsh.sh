@@ -4,7 +4,7 @@
 #? Usage:
 #?   xsh <LPUE> [UTIL_OPTIONS]
 #?
-#? Options:
+#? Option:
 #?   <LPUE>           Call an individual utility.
 #?   [UTIL_OPTIONS]   Will be passed to utility.
 #?
@@ -109,7 +109,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_call_with_shell_option <OPTION> [...] <FUNCTION | SCRIPT>
     #?
-    #? Options:
+    #? Option:
     #?   <OPTION>   The same with shell options.
     #?              See `help set`.
     #?
@@ -162,9 +162,9 @@ function xsh () {
     #? Usage:
     #?   __xsh_debug [-enuvx] <FUNCTION | SCRIPT>
     #?
-    #? Options:
-    #?   [-enuvx]   The same with shell options.
-    #?              See `help set`.
+    #? Option:
+    #?   [-enuvx]         The same with shell options.
+    #?                    See `help set`.
     #?
     #?   If no option given, `-x` is set as default.
     #?
@@ -360,7 +360,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_git_clone [-s GIT_SERVER] [-b BRANCH | -t TAG] REPO
     #?
-    #? Options:
+    #? Option:
     #?   [-s GIT_SERVER]  Git server URL.
     #?                    E.g. `https://github.com`
     #?   [-b BRANCH]      Clone the BRANCH's latest state.
@@ -437,7 +437,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_git_force_update [-b BRANCH | -t TAG]
     #?
-    #? Options:
+    #? Option:
     #?   [-b BRANCH]      Update to the BRANCH's latest state.
     #?                    This option is for developers.
     #?   [-t TAG]         Update to a specific TAG version.
@@ -503,20 +503,23 @@ function xsh () {
     #?   Show help for xsh builtin functions or utilities.
     #?
     #? Usage:
-    #?   __xsh_help [-t] [-c] [-d] [-s SECTION [...]] [BUILTIN | LPUR]
+    #?   __xsh_help [-t] [-c] [-d] [-sS SECTION,...] [BUILTIN | LPUR]
     #?
-    #? Options:
+    #? Option:
     #?   [-t]             Show title.
-    #?                    This option can't be used with BUILTIN.
     #?
     #?   [-c]             Show code.
     #?                    The shown code is formatted by shell with BUILTIN.
     #?
     #?   [-d]             Show entire document.
     #?
-    #?   [-s SECTION]     Show specific section of the document.
+    #?   [-sS SECTION]    Show specific section of the document.
+    #?                    `-s` turns the section name on.
+    #?                    `-S` turns the section name off.
     #?                    The section name is case sensitive.
-    #?                    This option can be used multi times.
+    #?                    The section list can be delimited with comma `,`.
+    #?                    The output order of section is determined by the document order
+    #?                    rather than the list order.
     #?
     #?   [BUILTIN]        xsh builtin function name without leading `__xsh_`.
     #?                    Show help for xsh builtin functions.
@@ -526,6 +529,7 @@ function xsh () {
     #?
     #?   If both BUILTIN and LPUR unset, then show help for xsh itself.
     #?   The options order matters to the output.
+    #?   All options can be used multi times.
     #?
     function __xsh_help () {
         # get last parameter
@@ -553,87 +557,118 @@ function xsh () {
     }
 
     #? Description:
-    #?   Generate docucment.
+    #?   Show help for xsh itself.
     #?
     #? Usage:
     #?   __xsh_help_self
     #?
     function __xsh_help_self () {
+        # show sections of Description and Usage of xsh itself
+        __xsh_help_builtin -s Description,Usage xsh
+
+        local names=(
+            calls imports unimports list load unload update
+            upgrade version versions debug help log
+        )
+
         local name
 
-        __xsh_info -f xsh -s Description -s Usage "${xsh_home}/xsh/xsh.sh"
-
-        declare -a options=()
-        for name in calls imports unimports list load unload update upgrade debug version versions help doc log; do
-            options=("${options[@]}" -f "__xsh_${name}" -S Usage)
+        # show sections of Usage of xsh builtin functions
+        for name in "${names[@]}"; do
+            __xsh_help_builtin -S Usage "__xsh_${name}" \
+                | sed -e '/^$/d' -e 's/__xsh_/xsh /g'
         done
 
-        __xsh_info "${options[@]}" "${xsh_home}/xsh/xsh.sh" \
-            | sed -e '/^$/d' -e 's/__xsh_/xsh /g'
+        printf '\nCommands:\n'
 
-        declare -a options=()
-        for name in calls imports unimports list load unload update upgrade debug version versions help doc log; do
-            options=("${options[@]}" -i "${name}\n" -f "__xsh_${name}" -S Description -S Option)
+        # show sections of Description and Option of xsh builtin functions
+        for name in "${names[@]}"; do
+            __xsh_help_builtin -i "${name}\n" -S Description,Option "__xsh_${name}" \
+                | sed '/^$/! s/^/  /'
         done
 
-        printf "\nCommands:\n\n"
-        __xsh_info "${options[@]}" "${xsh_home}/xsh/xsh.sh" \
-            | sed 's/^/  /'
-
-        __xsh_info -f xsh -s Convention -s 'Debug Mode' -s 'Dev Mode' \
-                   "${xsh_home}/xsh/xsh.sh"
+        # show rest sections of xsh itself
+        __xsh_help_builtin -s 'Convention,Debug Mode,Dev Mode' xsh
     }
 
     #? Description:
-    #?   Generate docucment.
+    #?   Show help for xsh builtin functions.
     #?
     #? Usage:
-    #?   __xsh_help_builtin [OPTIONS] <BUILTIN>
+    #?   __xsh_help_builtin [-t] [-c] [-d] [-sS SECTION,...] <BUILTIN>
+    #?
+    #? Option:
+    #?   <BUILTIN>        xsh builtin function name.
+    #?
+    #?   See `xsh help help` for the rest options.
     #?
     function __xsh_help_builtin () {
-        __xsh_info -f "${@:(-1)}" "${@:1:$(($# - 1))}" "${xsh_home}/xsh/xsh.sh"
+        # get the last argument
+        local builtin=${@:(-1)}
+        # remoe the last argument from argument list
+        local options=( "${@:1:$(($# - 1))}" )
+
+        __xsh_info -f "${builtin}" "${options[@]}" "${xsh_home}/xsh/xsh.sh"
     }
 
     #? Description:
-    #?   Generate docucment.
+    #?   Show help for xsh utilities.
+    #?
+    #?   The util name appearing in the doc in syntax `@<UTIL>` will be replaced
+    #?   as the full util name.
     #?
     #? Usage:
-    #?   __xsh_help_lib [OPTIONS] <LPUR>
+    #?   __xsh_help_lib [-t] [-c] [-d] [-sS SECTION,...] <LPUR>
+    #?
+    #? Option:
+    #?   See `xsh help help`.
     #?
     function __xsh_help_lib () {
+        # get the last argument
+        local lpur=${@:(-1)}
+        # remove the last argument from argument list
+        local options=( "${@:1:$(($# - 1))}" )
+
         local ln
         while read ln; do
             if [[ -n ${ln} ]]; then
-                __xsh_info "${@:1:$(($# - 1))}" "${ln}"
+                local util=$(__xsh_get_util_by_path "${ln}")
+                local lpue=$(__xsh_get_lpue_by_path "${ln}")
+
+                if [[ -z ${util} ]]; then
+                    __xsh_log error "util is null: %s." "${path}"
+                    return 255
+                fi
+
+                if [[ -z ${lpue} ]]; then
+                    __xsh_log error "lpue is null: %s." "${path}"
+                    return 255
+                fi
+
+                __xsh_info "${options[@]}" "${ln}" \
+                    | sed "s|@${util}|xsh ${lpue}|g"
             fi
-        done <<< "$(__xsh_get_path_by_lpur "${@:(-1)}")"
+        done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
     }
 
     #? Description:
     #?   Show specific info for xsh builtin functions or utilities.
     #?
     #? Usage:
-    #?   __xsh_info [-f NAME] [-t] [-c] [-d] [-sS SECTION] [-i STRING] [...] PATH
+    #?   __xsh_info [-f NAME,...] [-t] [-c] [-d] [-sS SECTION,...] [-i STRING] [...] <PATH>
     #?
-    #? Options:
-    #?   [-f NAME]        Get info for this function name rather than the one in path.
-    #?                    This option can't be used with `-t`.
-    #?   [-t]             Show title.
-    #?                    This option can't be used with `-f`.
-    #?   [-c]             Show code.
-    #?                    The shown code is formatted by shell if `-f` used.
-    #?   [-d]             Show entire document.
-    #?   [-sS SECTION]    Show specific section of the document.
-    #?                    The section name is case sensitive.
-    #?                    `-s` turns the section name on.
-    #?                    `-S` turns the section name off.
-    #?   [-i STRING]      Insert the STRING as a line.
-    #?   PATH             Path to the scripts file.
+    #? Option:
+    #?   [-f NAME]        Show info for the function only.
+    #?                    The name list can be delimited with comma `,`.
+    #?                    The output order of function is determined by the coding order
+    #?                    rather than the list order.
     #?
-    #?   The util name appearing in the doc in syntax `@<UTIL>` will be replaced
-    #?   as the full util name.
-    #?   The options order matters to the output.
-    #?   These options can be used multi times.
+    #?   [-i STRING]      Insert STRING.
+    #?                    The string is inserted without newline, use `\n` if needs.
+    #?
+    #?   <PATH>           Path to the scripts file.
+    #?
+    #?   See `xsh help help` for the rest options.
     #?
     function __xsh_info () {
         local OPTIND OPTARG opt
@@ -645,20 +680,6 @@ function xsh () {
             return 255
         fi
 
-        local util lpue
-        util=$(__xsh_get_util_by_path "${path}")
-        lpue=$(__xsh_get_lpue_by_path "${path}")
-
-        if [[ -z ${util} ]]; then
-            __xsh_log error "util is null: %s." "${path}"
-            return 255
-        fi
-
-        if [[ -z ${lpue} ]]; then
-            __xsh_log error "lpue is null: %s." "${path}"
-            return 255
-        fi
-
         local funcname
 
         while getopts f:tcds:S:i: opt; do
@@ -667,52 +688,75 @@ function xsh () {
                     funcname=${OPTARG}
                     ;;
                 t)
-                    local type=$(__xsh_get_type_by_path "${path}")
-
-                    if [[ -z ${type} ]]; then
-                        __xsh_log error "type is null: %s." "${path}"
-                        return 255
+                    if [[ -n ${funcname} ]]; then
+                        awk -v nameregex="^(${funcname//,/|})$" \
+                            '{
+                                if ($1 == "function" && $2 ~ nameregex)
+                                   print "[functions]" FS $2
+                             }' "${path}"
+                    else
+                        echo "$(__xsh_get_title_by_path "${path}")"
                     fi
-
-                    printf "[%s] %s\n" "${type}" "${lpue}"
                     ;;
                 d)
-                    awk -v util=${util} -v fname=${funcname} \
-                        '{
-                            if (flag == 1 && $1 == "function" && $2 == (fname?fname:util)) {
-                                for (j=0;j<=i;j++) print a[j]
-                                exit
-                            }
-                            if ($1 == "#?") {
-                                a[i++] = $0
-                                flag = 1
-                            } else {
-                                i = flag = 0
-                                delete a
-                            }
-                        }' "${path}" \
-                            | sed -e 's/[ ]*#? //' \
-                                  -e 's/[ ]*#?//' \
-                                  -e "s|@${util}|xsh ${lpue}|g"
+                    if [[ -n ${funcname} ]]; then
+                        awk -v nameregex="^(${funcname//,/|})$" \
+                            '{
+                                if (str && $1 == "function" && $2 ~ nameregex) {
+                                   gsub("[ ]*#\\?[ ]?", "", str)
+                                   print str
+                                   str = ""
+                                }
+                                if ($1 == "#?") {
+                                   str = str (str ? RS : "") $0
+                                } else {
+                                   str = ""
+                                }
+                             }' "${path}"
+                    else
+                        awk '/^#\?/ {sub("^[ ]*#\\?[ ]?", ""); print}' "${path}"
+                    fi
                     ;;
                 c)
                     if [[ -n ${funcname} ]]; then
-                        declare -f "${funcname}"
+                        declare -f ${funcname//,/ }
                     else
                         sed '/^#?/d' "${path}"
                     fi
                     ;;
                 s)
                     __xsh_info -f "${funcname}" -d "${path}" \
-                        | sed -n "/^${OPTARG}/,/^[^ ]/p" \
-                        | sed '$d'
+                        | awk -v sectionregex="^(${OPTARG//,/|}):" \
+                              '{
+                                    if (str && substr($0, 1, 1) ~ "[[:alnum:]]") {
+                                       print str
+                                       str = ""
+                                    }
+                                    if ($0 ~ sectionregex) str = $0
+                                    else if (str) str = str RS $0
+                               } END {if (str) print str}'
                     ;;
                 S)
-                    __xsh_info -f "${funcname}" -s "${OPTARG}" "${path}" \
-                        | sed '1d'
+                    __xsh_info -f "${funcname}" -d "${path}" \
+                        | awk -v sectionregex="^(${OPTARG//,/|}):" \
+                              '{
+                                    if (flag && substr($0, 1, 1) ~ "[[:alnum:]]") {
+                                       print str
+                                       flag = str = ""
+                                    }
+                                    if ($0 ~ sectionregex) flag = 1
+                                    else if (flag) str = str (str ? RS : "") $0
+                               } END {if (str) print str}'
                     ;;
                 i)
-                    printf "${OPTARG}"
+                    if [[ -n ${funcname} ]]; then
+                        local name
+                        for name in ${funcname//,/ }; do
+                            printf "${OPTARG}"
+                        done
+                    else
+                        printf "${OPTARG}"
+                    fi
                     ;;
                 *)
                     return 255
@@ -752,8 +796,8 @@ function xsh () {
     #? Usage:
     #?   __xsh_list [LPUR]
     #?
-    #? Options:
-    #?   [LPUR]   List matched libraries, packages and utilities.
+    #? Option:
+    #?   [LPUR]           List matched libraries, packages and utilities.
     #?
     function __xsh_list () {
         local lpur=$1
@@ -843,7 +887,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_lib_manager REPO [unimport] [link] [unlink] [delete]
     #?
-    #? Options:
+    #? Option:
     #?   REPO             Git repo in syntax: `USERNAME/REPO`.
     #?                    E.g. `username/xsh-lib-foo`
     #?
@@ -916,7 +960,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_load [-s GIT_SERVER] [-b BRANCH | -t TAG] REPO
     #?
-    #? Options:
+    #? Option:
     #?   [-s GIT_SERVER]  Git server URL.
     #?                    E.g. `https://github.com`
     #?   [-b BRANCH]      Load the BRANCH's latest state.
@@ -945,7 +989,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_unload REPO
     #?
-    #? Options:
+    #? Option:
     #?   REPO             Git repo in syntax: `USERNAME/REPO`.
     #?                    E.g. `username/xsh-lib-foo`
     #?
@@ -963,7 +1007,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_update [-b BRANCH | -t TAG] REPO
     #?
-    #? Options:
+    #? Option:
     #?   [-b BRANCH]      Update to the BRANCH's latest state.
     #?                    This option is for developers.
     #?   [-t TAG]         Update to a specific TAG version.
@@ -997,7 +1041,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_upgrade [-b BRANCH | -t TAG]
     #?
-    #? Options:
+    #? Option:
     #?   [-b BRANCH]      Update to the BRANCH's latest state.
     #?                    This option is for developers.
     #?   [-t TAG]         Update to a specific TAG version.
@@ -1071,9 +1115,23 @@ function xsh () {
 
     #? Description:
     #?   Import the matching utilities by a list of LPUR.
+    #?   The functions are sourced, and the scripts are linked at /usr/local/bin.
+    #?
+    #?   The imported utilities can be called directly without
+    #?   leading `xsh` as syntax: 'LIB-PACKAGE-UTIL'.
+    #?
+    #?   Legal input:
+    #?     '*'
+    #?     /, <lib>
+    #?     <lib>/<pkg>, /<pkg>
+    #?     <lib>/<pkg>/<util>, /<pkg>/<util>
+    #?     <lib>/<util>, /<util>
     #?
     #? Usage:
-    #?   __xsh_imports [LPUR] [...]
+    #?   __xsh_imports <LPUR> [...]
+    #?
+    #? Option:
+    #?   <LPUR> [...]     See the section of Convention.
     #?
     function __xsh_imports () {
         local lpur
@@ -1088,21 +1146,11 @@ function xsh () {
 
     #? Description:
     #?   Import the matching utilities for LPUR.
-    #?   The functions are sourced, and the scripts are linked at /usr/local/bin.
-    #?
-    #?   The imported utilities can be called directly without
-    #?   leading `xsh` as syntax: 'LIB-PACKAGE-UTIL'.
     #?
     #? Usage:
     #?   __xsh_import <LPUR>
     #?
     function __xsh_import () {
-        # legal input:
-        #   '*'
-        #   /, <lib>
-        #   <lib>/<pkg>, /<pkg>
-        #   <lib>/<pkg>/<util>, /<pkg>/<util>
-        #   <lib>/<util>, /<util>
         local lpur=$1
         local ln type
 
@@ -1177,15 +1225,14 @@ function xsh () {
     }
 
     #? Description:
-    #?   Unimport utilities that have been sourced or linked as syntax:
-    #?   `LIB-PACKAGE-UTIL`.
-    #?   Un-import the matching utilities by a list of LPUR.
+    #?   Un-import the matching utilities that have been sourced or linked.
+    #?   The sourced functions are unset, and the linked scripts are unlinked.
     #?
     #? Usage:
-    #?   __xsh_unimports [LPUR] [...]
+    #?   __xsh_unimports <LPUR> [...]
     #?
-    #? Options:
-    #?   <LPUR>   The syntax is the same with import.
+    #? Option:
+    #?   <LPUR> [...]     See the section of Convention.
     #?
     function __xsh_unimports () {
         local lpur
@@ -1200,7 +1247,6 @@ function xsh () {
 
     #? Description:
     #?   Un-import the matching utilities for LPUR.
-    #?   The sourced functions are unset, and the linked scripts are unlinked.
     #?
     #? Usage:
     #?   __xsh_unimport <LPUR>
@@ -1289,6 +1335,9 @@ function xsh () {
     #? Usage:
     #?   __xsh_calls <LPUE> [...]
     #?
+    #? Option:
+    #?   <LPUE> [...]     LPUE. See the section of Convention.
+    #?
     function __xsh_calls () {
         local lpue
         local ret=0
@@ -1306,6 +1355,9 @@ function xsh () {
     #?
     #? Usage:
     #?   __xsh_call <LPUE> [OPTIONS]
+    #?
+    #?   <LPUE>           Call an individual utility.
+    #?   [OPTIONS]        Will be passed to utility.
     #?
     function __xsh_call () {
         # legal input:
@@ -1356,9 +1408,9 @@ function xsh () {
     #? Usage:
     #?   __xsh_exec [-i] [-u] <LPUE>
     #?
-    #? Options:
-    #?   [-i]   Import the util before the execution no matter if it's available.
-    #?   [-u]   Unimport the util after the execution.
+    #? Option:
+    #?   [-i]             Import the util before the execution no matter if it's available.
+    #?   [-u]             Unimport the util after the execution.
     #?
     function __xsh_exec () {
         local OPTIND OPTARG opt
@@ -1552,6 +1604,26 @@ function xsh () {
 
         lpue=$(__xsh_complete_lpur "${lpue}")
         echo "${lpue//\//-}"  # replace each / with -
+    }
+
+    #? Description:
+    #?   TODO
+    #?
+    #? Usage:
+    #?   __xsh_get_title_by_path <PATH>
+    #?
+    function __xsh_get_title_by_path () {
+        local path=$1
+
+        if [[ -z ${path} ]]; then
+            __xsh_log error "LPU path is null or not set."
+            return 255
+        fi
+
+        local type=$(__xsh_get_type_by_path "${path}")
+        local lpue=$(__xsh_get_lpue_by_path "${path}")
+
+        printf '[%s] %s' "${type}" "${lpue}"
     }
 
     #? Description:
