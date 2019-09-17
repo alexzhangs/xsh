@@ -1412,6 +1412,7 @@ function xsh () {
             local xsh_dev
             case ${XSH_DEV} in
                 1)
+                    XSH_DEV=${lpuc}
                     xsh_dev=${lpuc}
                     ;;
                 *)
@@ -1483,6 +1484,7 @@ function xsh () {
 
             case ${XSH_DEBUG} in
                 1)
+                    XSH_DEBUG=${lpuc}
                     xsh_debug=${lpuc}
                     ;;
                 *)
@@ -1493,7 +1495,7 @@ function xsh () {
             if grep -q "^${lpuc}$" <<< "$(echo "${xsh_debug}")"; then
                 __xsh_call_with_shell_option -1 vx "${lpuc}" "${@:2}" || ret=$?
             else
-                ${lpuc} "${@:2}" || ret=$?
+                __xsh_call_with_shell_option -0 vx "${lpuc}" "${@:2}" || ret=$?
             fi
         else
             ${lpuc} "${@:2}" || ret=$?
