@@ -1133,7 +1133,7 @@ function xsh () {
                 # replace all `/` to `-`
                 local init_expr=${init_subdir//\//-}
 
-                if [[ -z $(xsh /array/search __XSH_INIT__ "${init_expr}") ]]; then
+                if ! printf '%s\n' "${__XSH_INIT__[@]}" | grep -q "^${init_expr}$"; then
                     # apply the init file
                     source "${init_file}"
 
