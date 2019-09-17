@@ -85,17 +85,23 @@ function xsh () {
     #?   Output the given shell options state.
     #?
     #? Usage:
-    #?   __xsh_shell_option [OPTION_NAME][...]
+    #?   __xsh_shell_option [OPTION][ ][...]
+    #?
+    #? Option:
+    #?   [OPTION]   The syntax is `[+-]NAME`.
+    #?              See the allowed names in `help set`.
     #?
     #? Example:
-    #?   $ __xsh_shell_option vxhimBH
+    #?   $ __xsh_shell_option himBH +v -x
     #?   -himBH +vx
     #?
     function __xsh_shell_option () {
-        local on=${-//[^$1]/}
+        local prune=$(printf '%s' "${*//[[:blank:]+-]/}")
+
+        local on=${-//[^${prune}]/}
         [[ -n $on ]] && on=-$on || :
 
-        local off=${1//[$-]/}
+        local off=${prune//[$-]/}
         [[ -n $off ]] && off=+$off || :
 
         echo $on $off
@@ -103,28 +109,33 @@ function xsh () {
 
 
     #? Description:
-    #?   Call a function or a script with specific shell options turning on.
+    #?   Call a function or a script with specific shell options.
     #?   The shell options will be restored afterwards.
     #?
     #? Usage:
-    #?   __xsh_call_with_shell_option <OPTION> [...] <FUNCTION | SCRIPT>
+    #?   __xsh_call_with_shell_option [-1 OPTION] [-0 OPTION] [...] <FUNCTION | SCRIPT>
     #?
     #? Option:
-    #?   <OPTION>   The same with shell options.
-    #?              See `help set`.
+    #?   [-1 OPTION]  Turn on followed options.
+    #?   [-0 OPTION]  Turn off followed options.
+    #?
+    #?   OPTION       The same with shell options.
+    #?                See `help set`.
     #?
     #? Example:
-    #?   $ __xsh_call_with_shell_option -v -x echo $HOME
+    #?   $ __xsh_call_with_shell_option -1 vx echo $HOME
     #?
     function __xsh_call_with_shell_option () {
         local OPTIND OPTARG opt
+        declare -a options
 
-        local options
-
-        while getopts abefhkmnptuvxBCHP opt; do
+        while getopts 1:0: opt; do
             case ${opt} in
-                [abefhkmnptuvxBCHP])
-                    options=${options}${opt}
+                1)
+                    options+=(-${OPTARG})
+                    ;;
+                0)
+                    options+=(+${OPTARG})
                     ;;
                 *)
                     return 255
@@ -133,25 +144,25 @@ function xsh () {
         done
         shift $((OPTIND - 1))
 
-        # save former state of options
-        local exopts=$(__xsh_shell_option "${options}")
         local ret=0
 
         if [[ $(type -t "$1") == file &&
                   $(__xsh_mime_type "$(which "$1")" | cut -d/ -f1) == text ]]; then
             # call script with shell options enabled
-            bash -${options} "$(which "$1")" "${@:2}" || ret=$?
-            return ${ret}
+            bash "${options[@]}" "$(which "$1")" "${@:2}" || ret=$?
+        else
+            # save former state of options
+            local exopts=$(__xsh_shell_option "${options[@]}")
+
+            # enable shell options
+            set "${options[@]}"
+
+            # call function
+            "$@" || ret=$?
+
+            # restore state of shell options
+            set ${exopts}  # do not double quote the parameter
         fi
-
-        # enable shell options
-        set -${options}
-
-        # call function
-        "$@" || ret=$?
-
-        # restore state of shell options
-        set ${exopts}  # do not double quote the parameter
 
         return ${ret}
     }
@@ -160,18 +171,21 @@ function xsh () {
     #?   Enable debug mode for the called function or script.
     #?
     #? Usage:
-    #?   __xsh_debug [-enuvx] <FUNCTION | SCRIPT>
+    #?   __xsh_debug [-1 OPTION] [-0 OPTION] [...] <FUNCTION | SCRIPT>
     #?
     #? Option:
-    #?   [-enuvx]         The same with shell options.
-    #?                    See `help set`.
+    #?   [-1 OPTION]  Turn on followed options.
+    #?   [-0 OPTION]  Turn off followed options.
     #?
-    #?   If no option given, `-x` is set as default.
+    #?   OPTION       The same with shell options.
+    #?                See `help set`.
+    #?
+    #?   If no option given, `-1 x` is set as default.
     #?
     function __xsh_debug () {
         if [[ ${1:0:1} != - ]]; then
-            # prepend -x to $@
-            set -- -x "$@"
+            # prepend `-1 x` to $@
+            set -- -1 x "$@"
         fi
 
         __xsh_call_with_shell_option "$@"
@@ -1477,7 +1491,7 @@ function xsh () {
             esac
 
             if grep -q "^${lpuc}$" <<< "$(echo "${xsh_debug}")"; then
-                __xsh_call_with_shell_option -vx "${lpuc}" "${@:2}" || ret=$?
+                __xsh_call_with_shell_option -1 vx "${lpuc}" "${@:2}" || ret=$?
             else
                 ${lpuc} "${@:2}" || ret=$?
             fi
