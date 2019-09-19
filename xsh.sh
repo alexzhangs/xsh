@@ -1141,7 +1141,7 @@ function xsh () {
                     __XSH_INIT__[${#__XSH_INIT__[@]}]=${init_expr}
                 fi
             fi
-        done <<< "$(echo "${scope//\//$'\n'}")"  # replace all `/` to newline
+        done <<< "${scope//\//$'\n'}"  # replace all `/` to newline
     }
 
     #? Description:
@@ -1423,7 +1423,7 @@ function xsh () {
                     ;;
             esac
 
-            if grep -q "^${lpuc}$" <<< "$(echo "${xsh_dev}")"; then
+            if grep -q "^${lpuc}$" <<< "${xsh_dev}"; then
                 # force to import and unimport dev util
                 xsh_lib_home=${XSH_DEV_HOME} __xsh_exec -i -u "${lpue}" "${@:2}"
                 return
@@ -1492,7 +1492,7 @@ function xsh () {
                     ;;
             esac
 
-            if grep -q "^${lpuc}$" <<< "$(echo "${xsh_debug}")"; then
+            if grep -q "^${lpuc}$" <<< "${xsh_debug}"; then
                 __xsh_call_with_shell_option -1 vx "${lpuc}" "${@:2}" || ret=$?
             else
                 __xsh_call_with_shell_option -0 vx "${lpuc}" "${@:2}" || ret=$?
