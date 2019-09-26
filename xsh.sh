@@ -492,7 +492,8 @@ function xsh () {
             fi
         fi
 
-        local current=$(__xsh_git_get_current_tag)
+        local current
+        current=$(__xsh_git_get_current_tag)
         if [[ ${current} == ${target} ]]; then
             __xsh_log info "Already at the latest version: ${current}."
             return
@@ -1473,7 +1474,8 @@ function xsh () {
             return 255
         fi
 
-        local lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
+        local lpuc
+        lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
 
         if [[ ${import} -eq 1 ]]; then
             __xsh_import "${lpue}"
