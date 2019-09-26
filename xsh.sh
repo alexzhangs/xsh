@@ -96,7 +96,8 @@ function xsh () {
     #?   -himBH +vx
     #?
     function __xsh_shell_option () {
-        local prune=$(printf '%s' "${*//[[:blank:]+-]/}")
+        local prune
+        prune=$(printf '%s' "${*//[[:blank:]+-]/}")
 
         local on=${-//[^${prune}]/}
         [[ -n $on ]] && on=-$on || :
@@ -104,7 +105,7 @@ function xsh () {
         local off=${prune//[$-]/}
         [[ -n $off ]] && off=+$off || :
 
-        echo $on $off
+        echo $on $off  # do not double quote the parameter
     }
 
 
@@ -147,12 +148,13 @@ function xsh () {
         local ret=0
 
         if [[ $(type -t "$1") == file &&
-                  $(__xsh_mime_type "$(which "$1")" | cut -d/ -f1) == text ]]; then
+                  $(__xsh_mime_type "$(command -v "$1")" | cut -d/ -f1) == text ]]; then
             # call script with shell options enabled
-            bash "${options[@]}" "$(which "$1")" "${@:2}" || ret=$?
+            bash "${options[@]}" "$(command -v "$1")" "${@:2}" || ret=$?
         else
             # save former state of options
-            local exopts=$(__xsh_shell_option "${options[@]}")
+            local exopts
+            exopts=$(__xsh_shell_option "${options[@]}")
 
             # enable shell options
             set "${options[@]}"
@@ -232,7 +234,8 @@ function xsh () {
     #?   __xsh_log [debug|info|warning|error|fail|fatal] <MESSAGE>
     #?
     function __xsh_log () {
-        local level="$(echo "$1" | tr [[:lower:]] [[:upper:]])"
+        local level
+        level="$(echo "$1" | tr [[:lower:]] [[:upper:]])"
 
         case ${level} in
             WARNING|ERROR|FAIL|FATAL)
@@ -459,23 +462,18 @@ function xsh () {
     function __xsh_git_force_update () {
         local OPTIND OPTARG opt
 
-        declare -a git_options
+        local target
 
         while getopts b:t: opt; do
             case ${opt} in
                 b|t)
-                    git_options[${#git_options[@]}]="${OPTARG}"
+                    target=$OPTARG
                     ;;
                 *)
                     return 255
                     ;;
             esac
         done
-
-        if [[ ${#git_options[@]} -gt 1 ]]; then
-            __xsh_log error "-b and -t can't be used together."
-            return 255
-        fi
 
         if __xsh_git_is_workdir_dirty; then
             # discard all local changes and untracked files
@@ -485,31 +483,32 @@ function xsh () {
         # fetch remote tags to local
         __xsh_git_fetch_remote_tags
 
-        if [[ -z ${git_options} ]]; then
-            local git_options=$(__xsh_git_get_latest_tag)
+        if [[ -z $target ]]; then
+            target=$(__xsh_git_get_latest_tag)
 
-            if [[ -z ${git_options} ]]; then
+            if [[ -z $target ]]; then
                 __xsh_log error "No any available tagged version found."
                 return 255
             fi
         fi
 
         local current=$(__xsh_git_get_current_tag)
-        if [[ ${current} == ${git_options} ]]; then
+        if [[ ${current} == ${target} ]]; then
             __xsh_log info "Already at the latest version: ${current}."
             return
         fi
 
-        __xsh_log info "Updating repo to ${git_options}."
-        git checkout "${git_options}"
-
-        if [[ $(__xsh_git_get_current_branch) != 'HEAD' ]]; then
-           git pull
+        __xsh_log info "Updating repo to ${target}."
+        if ! git checkout "${target}"; then
+            __xsh_log error "Failed to checkout repo."
+            return 255
         fi
 
-        if [[ $? -ne 0 ]]; then
-            __xsh_log error "Failed to update repo."
-            return 255
+        if [[ $(__xsh_git_get_current_branch) != 'HEAD' ]]; then
+           if ! git pull; then
+               __xsh_log error "Failed to pull repo."
+               return 255
+           fi
         fi
     }
 
@@ -577,8 +576,10 @@ function xsh () {
     #?   __xsh_help_self_cache
     #?
     function __xsh_help_self_cache () {
-        local hash=$(shasum "${xsh_home}/xsh/xsh.sh" 2>/dev/null | cut -d' ' -f1)
-        local cached_help=/tmp/.${FUNCNAME}_${hash}
+        local hash cached_help
+
+        hash=$(shasum "${xsh_home}/xsh/xsh.sh" 2>/dev/null | cut -d' ' -f1)
+        cached_help=/tmp/.${FUNCNAME[0]}_${hash}
 
         if [[ -f ${cached_help} ]]; then
             cat "${cached_help}"
@@ -661,10 +662,11 @@ function xsh () {
         local options=( "${@:1:$(($# - 1))}" )
 
         local ln
-        while read ln; do
+        while read -r ln; do
             if [[ -n ${ln} ]]; then
-                local util=$(__xsh_get_util_by_path "${ln}")
-                local lpue=$(__xsh_get_lpue_by_path "${ln}")
+                local util lpue
+                util=$(__xsh_get_util_by_path "${ln}")
+                lpue=$(__xsh_get_lpue_by_path "${ln}")
 
                 if [[ -z ${util} ]]; then
                     __xsh_log error "util is null: %s." "${path}"
@@ -726,7 +728,7 @@ function xsh () {
                                    print "[functions]" FS $2
                              }' "${path}"
                     else
-                        echo "$(__xsh_get_title_by_path "${path}")"
+                        __xsh_get_title_by_path "${path}"
                     fi
                     ;;
                 d)
@@ -750,7 +752,7 @@ function xsh () {
                     ;;
                 c)
                     if [[ -n ${funcname} ]]; then
-                        declare -f ${funcname//,/ }
+                        declare -f ${funcname//,/ }  # do not double quote the parameter
                     else
                         sed '/^#?/d' "${path}"
                     fi
@@ -783,10 +785,10 @@ function xsh () {
                     if [[ -n ${funcname} ]]; then
                         local name
                         for name in ${funcname//,/ }; do
-                            printf "${OPTARG}"
+                            printf "${OPTARG}"  # do not use `printf '%s'`
                         done
                     else
-                        printf "${OPTARG}"
+                        printf "${OPTARG}"  # do not use `printf '%s'`
                     fi
                     ;;
                 *)
@@ -902,7 +904,7 @@ function xsh () {
     function __xsh_lib_list () {
         local lib lib_path repo version
 
-        while read lib_path; do
+        while read -r lib_path; do
             lib=${lib_path##*/}
             version=$(cd "${lib_path}" && __xsh_git_get_current_tag)
             repo=$(readlink "${lib_path}" \
@@ -945,7 +947,8 @@ function xsh () {
             return 255
         fi
 
-        local lib=$(__xsh_get_lib_by_repo "${repo}")
+        local lib
+        lib=$(__xsh_get_lib_by_repo "${repo}")
         if [[ -z ${lib} ]]; then
             __xsh_log error "library name is null for the repo ${repo}."
             return 255
@@ -1008,8 +1011,8 @@ function xsh () {
         __xsh_lib_manager "${repo}" link
         local ret=$?
         if [[ ${ret} -ne 0 ]]; then
-            __xsh_log warning "Deleting repo ${repo_path}."
-            rm -rf "${xsh_repo_home}/${repo}"
+            __xsh_log warning "Deleting repo ${xsh_repo_home:?}/${repo:?}."
+            rm -rf "${xsh_repo_home:?}/${repo:?}"
             return ${ret}
         fi
     }
@@ -1120,7 +1123,7 @@ function xsh () {
         fi
 
         local ln init_subdir
-        while read ln; do
+        while read -r ln; do
             if [[ -z ${init_subdir} ]]; then
                 init_subdir=${ln}
             else
@@ -1190,7 +1193,7 @@ function xsh () {
             return 255
         fi
 
-        while read ln; do
+        while read -r ln; do
             if [[ -n ${ln} ]]; then
                 type=$(__xsh_get_type_by_path "${ln}")
 
@@ -1297,7 +1300,7 @@ function xsh () {
             return 255
         fi
 
-        while read ln; do
+        while read -r ln; do
             if [[ -n ${ln} ]]; then
                 type=$(__xsh_get_type_by_path "${ln}")
 
@@ -1401,7 +1404,8 @@ function xsh () {
             return 255
         fi
 
-        local lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
+        local lpuc
+        lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
 
         if [[ -n ${XSH_DEV} ]]; then
             if [[ -z ${XSH_DEV_HOME} ]]; then
@@ -1614,7 +1618,7 @@ function xsh () {
             return 255
         fi
 
-        while read ln; do
+        while read -r ln; do
             if [[ -n ${ln} ]]; then
                 __xsh_get_lpuc_by_path "${ln}"
             fi
@@ -1653,10 +1657,11 @@ function xsh () {
             return 255
         fi
 
-        local type=$(__xsh_get_type_by_path "${path}")
-        local lpue=$(__xsh_get_lpue_by_path "${path}")
+        local type lpue
+        type=$(__xsh_get_type_by_path "${path}")
+        lpue=$(__xsh_get_lpue_by_path "${path}")
 
-        printf '[%s] %s' "${type}" "${lpue}"
+        printf '[%s] %s\n' "${type}" "${lpue}"
     }
 
     #? Description:
