@@ -150,7 +150,8 @@ function xsh () {
         if [[ $(type -t "$1") == file &&
                   $(__xsh_mime_type "$(command -v "$1")" | cut -d/ -f1) == text ]]; then
             # call script with shell options enabled
-            bash "${options[@]}" "$(command -v "$1")" "${@:2}" || ret=$?
+            bash "${options[@]}" "$(command -v "$1")" "${@:2}"
+            ret=$?
         else
             # save former state of options
             local exopts
@@ -160,7 +161,8 @@ function xsh () {
             set "${options[@]}"
 
             # call function
-            "$@" || ret=$?
+            "$@"
+            ret=$?
 
             # restore state of shell options
             set ${exopts}  # do not double quote the parameter
@@ -1499,13 +1501,14 @@ function xsh () {
             esac
 
             if grep -q "^${lpuc}$" <<< "${xsh_debug}"; then
-                __xsh_call_with_shell_option -1 vx "${lpuc}" "${@:2}" || ret=$?
+                __xsh_call_with_shell_option -1 vx "${lpuc}" "${@:2}"
             else
-                __xsh_call_with_shell_option -0 vx "${lpuc}" "${@:2}" || ret=$?
+                __xsh_call_with_shell_option -0 vx "${lpuc}" "${@:2}"
             fi
         else
-            ${lpuc} "${@:2}" || ret=$?
+            ${lpuc} "${@:2}"
         fi
+        ret=$?
 
         if [[ ${unimport} -eq 1 ]]; then
             __xsh_unimport "${lpue}"
