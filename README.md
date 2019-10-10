@@ -4,7 +4,7 @@ xsh is an e<span style="color:red">__x__</span>tension of ba<span style="color:r
 
 xsh is aimed to provide a uniform and easy way to reuse bash code, like what a library does.
 
-xsh - this repository, in a narrow sense, is not a library itself, it's just a framework, in a broad sense, xsh along with other repositories, such as xsh-lib-core, as a whole, is a bash library with a framework.
+xsh - this repository, in a narrow sense, is not a library itself, it's just a framework, in a broad sense, xsh along with other repositories, such as `xsh-lib/core`, as a whole, is a bash library with a framework.
 
 
 
@@ -56,7 +56,6 @@ Currently this project is at version 0.x, and still in "heavy" development.
 ### 2.1. What does xsh Framework Do?
 
 * Handle the extraction of help and usage information
-
 * Handle library update
 
 
@@ -74,13 +73,9 @@ The xsh framework supports both public and private libraries.
 ### 2.3 What do xsh Utilities Do?
 
 * Provide fundamental function
-
 * Provide help and usage information
-
 * Handle temporary files
-
 * Handle logs
-
 * Handle output
 
 Of cause, some of above topics could be built as libraries, packages or utilities too.
@@ -108,12 +103,12 @@ Before you can really do something useful with xsh, you must load some libraries
 
 Use `xsh load` command to load a library.
 
-Loading the latest tagged version of library [alexzhangs/xsh-lib-core](https://github.com/alexzhangs/xsh-lib-core), you should issue:
+Loading the latest tagged version of library [xsh-lib/core](https://github.com/xsh-lib/core), you should issue:
 
 ```bash
-xsh load alexzhangs/xsh-lib-core
+xsh load xsh-lib/core
 
-Cloning into '/Users/alex/.xsh/repo/alexzhangs/xsh-lib-core'...
+Cloning into '/Users/alex/.xsh/repo/xsh-lib/core'...
 remote: Enumerating objects: 401, done.
 remote: Counting objects: 100% (401/401), done.
 remote: Compressing objects: 100% (237/237), done.
@@ -121,15 +116,15 @@ remote: Total 1276 (delta 149), reused 367 (delta 133), pack-reused 875
 Receiving objects: 100% (1276/1276), 165.74 KiB | 18.00 KiB/s, done.
 Resolving deltas: 100% (516/516), done.
 Deleted tag '0.1.0' (was 5e7dcfb)
-From https://github.com/alexzhangs/xsh-lib-core
+From https://github.com/xsh-lib/core
  * [new tag]         0.1.0      -> 0.1.0
 __xsh_git_force_update: INFO: Already at the latest version: 0.1.0.
 ```
 
-Loading the latest development state of library [alexzhangs/xsh-lib-core](https://github.com/alexzhangs/xsh-lib-core) on default branch `master`, you should issue:
+Loading the latest development state of library [xsh-lib/core](https://github.com/xsh-lib/core) on default branch `master`, you should issue:
 
 ```bash
-xsh load -b master alexzhangs/xsh-lib-core
+xsh load -b master xsh-lib/core
 ```
 
 After the lib is loaded, you can use `xsh list` command to list all loaded libraries.
@@ -137,7 +132,7 @@ After the lib is loaded, you can use `xsh list` command to list all loaded libra
 ```bash
 xsh list
 
-x (0.1.0) => alexzhangs/xsh-lib-core
+x (0.1.0) => xsh-lib/core
 ```
 
 To list all the utilities of the library `x`, use:
@@ -155,17 +150,17 @@ xsh list x
 
 
 
-#### 4.1.1. Updade the Loaded xsh Libraries
+#### 4.1.1. Update the Loaded xsh Libraries
 
 Use `xsh update` command to update loaded libraries.
 
-To update the previously loaded library `alexzhangs/xsh-lib-core`, simply issue:
+To update the previously loaded library `xsh-lib/core`, simply issue:
 
 ```
-xsh update alexzhangs/xsh-lib-core
+xsh update xsh-lib/core
 
 Deleted tag '0.1.0' (was 5e7dcfb)
-From https://github.com/alexzhangs/xsh-lib-core
+From https://github.com/xsh-lib/core
  * [new tag]         0.1.0      -> 0.1.0
 __xsh_git_force_update: INFO: Already at the latest version: 0.1.0.
 ```
@@ -176,10 +171,10 @@ __xsh_git_force_update: INFO: Already at the latest version: 0.1.0.
 
 Use `xsh unload` command to unload loaded libraries.
 
-To unload the previously loaded library `alexzhangs/xsh-lib-core`, simply issue:
+To unload the previously loaded library `xsh-lib/core`, simply issue:
 
 ```bash
-xsh unload alexzhangs/xsh-lib-core
+xsh unload xsh-lib/core
 ```
 
 
@@ -190,11 +185,11 @@ There are 3 methods to invoke xsh utilities.
 
 Before to talk about that, lets get familiar with the glossary `LPUE`, `LPUR` and `LPUC`.
 
-* LPUE stands for `Lib/Package/Util Expression`,  a LPUE example for the library xsh-lib-core is `x/string/upper`.
+* LPUE stands for `Lib/Package/Util Expression`,  a LPUE example for the library `xsh-lib/core` is `x/string/upper`.
 
-* LPUR stands for `Lib/Package/Util Regex`,  a LPUR example for the library xsh-lib-core is `x/string` which is matching all the utilities under the package string.
+* LPUR stands for `Lib/Package/Util Regex`,  a LPUR example for the library `xsh-lib/core` is `x/string` which is matching all the utilities under the package string.
 
-* LPUC stands for `Lib/Package/Util Callable`, a LPUC example for the library xsh-lib-core is `x-string-upper`.
+* LPUC stands for `Lib/Package/Util Callable`, a LPUC example for the library `xsh-lib/core` is `x-string-upper`.
 
 Now lets get back the 3 methods:
 
@@ -312,7 +307,7 @@ List all loaded libraries:
 ```bash
 xsh list
 
-x (0.1.0) => alexzhangs/xsh-lib-core
+x (0.1.0) => xsh-lib/core
 ```
 
 List utilities by LPUR:
@@ -458,12 +453,6 @@ xsh load yourusername/xsh-lib-sample
 
 ### 5.2. Debugging
 
-Debug the `xsh` itself:
-
-```bash
-XSH_DEBUG=xsh xsh
-```
-
 Debug the called utility:
 
 ```bash
@@ -478,7 +467,15 @@ XSH_DEBUG='/string' xsh /string/upper foo
 
 
 
-## 6. TODO
+## 6. Where to find xsh Libraries
+
+1. Check out the repositories under [official xsh library site](https://github.com/xsh-lib).
+
+1. Search Github repositories with keyword `xsh-lib-`.
+
+
+
+## 7. TODO
 
 * Dependency
 
