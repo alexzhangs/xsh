@@ -222,13 +222,6 @@ function xsh () {
         trap "$command" RETURN
     }
 
-    # call __xsh_clean() while xsh() returns
-    # clean env if reaching the final exit point of xsh
-    __xsh_trap_return '
-            if [[ $(__xsh_count_in_funcstack xsh) -eq 1 ]]; then
-                __xsh_clean >/dev/null 2>&1
-            fi;'
-
     #? Description:
     #?   Log message to stdout/stderr.
     #?
@@ -251,26 +244,6 @@ function xsh () {
                 ;;
         esac
     }
-
-    local xsh_home
-
-    # check environment variable
-    if [[ -n ${XSH_HOME%/} ]]; then
-        # remove tailing '/'
-        xsh_home=${XSH_HOME%/}
-    else
-        __xsh_log error "XSH_HOME is not set properly."
-        return 255
-    fi
-
-    local xsh_repo_home="${xsh_home}/repo"
-    local xsh_lib_home="${xsh_home}/lib"
-    local xsh_git_server='https://github.com'
-
-    if [[ ! -e ${xsh_lib_home} ]]; then
-        mkdir -p "${xsh_lib_home}"
-    fi
-
 
     #? Description:
     #?   chmod +x all .sh regular files under the given dir.
@@ -1807,13 +1780,41 @@ function xsh () {
         unset -f $(__xsh_get_internal_functions)
     }
 
-    # Check input
+
+    # main
+
+    # call __xsh_clean() while xsh() returns
+    # clean env if reaching the final exit point of xsh
+    __xsh_trap_return '
+            if [[ $(__xsh_count_in_funcstack xsh) -eq 1 ]]; then
+                __xsh_clean >/dev/null 2>&1
+            fi;'
+
+    local xsh_home
+
+    # check environment variable
+    if [[ -n ${XSH_HOME%/} ]]; then
+        # remove tailing '/'
+        xsh_home=${XSH_HOME%/}
+    else
+        __xsh_log error "XSH_HOME is not set properly."
+        return 255
+    fi
+
+    local xsh_repo_home="${xsh_home}/repo"
+    local xsh_lib_home="${xsh_home}/lib"
+    local xsh_git_server='https://github.com'
+
+    if [[ ! -e ${xsh_lib_home} ]]; then
+        mkdir -p "${xsh_lib_home}"
+    fi
+
+    # check input
     if [[ -z $1 ]]; then
         __xsh_help >&2
         return 255
     fi
 
-    # Main
     if [[ $(type -t "__xsh_$1") == function ]]; then
         # xsh command and builtin function
         __xsh_$1 "${@:2}"
