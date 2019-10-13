@@ -373,8 +373,8 @@ function xsh () {
                     git_server=${OPTARG%/}  # remove tailing '/'
                     ;;
                 b|t)
-                    git_options[${#git_options[@]}]=-${opt}
-                    git_options[${#git_options[@]}]=${OPTARG}
+                    git_options+=(-${opt})
+                    git_options+=("${OPTARG}")
                     ;;
                 *)
                     return 255
@@ -1114,7 +1114,7 @@ function xsh () {
 
                 if ! printf '%s\n' "${__XSH_INIT__[@]}" | grep -q "^${init_expr}$"; then
                     # remember the applied init file
-                    __XSH_INIT__[${#__XSH_INIT__[@]}]=${init_expr}
+                    __XSH_INIT__+=("${init_expr}")
 
                     # apply the init file
                     source "${init_file}"
