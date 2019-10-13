@@ -1113,11 +1113,11 @@ function xsh () {
                 local init_expr=${init_subdir//\//-}
 
                 if ! printf '%s\n' "${__XSH_INIT__[@]}" | grep -q "^${init_expr}$"; then
-                    # apply the init file
-                    source "${init_file}"
-
                     # remember the applied init file
                     __XSH_INIT__[${#__XSH_INIT__[@]}]=${init_expr}
+
+                    # apply the init file
+                    source "${init_file}"
                 fi
             fi
         done <<< "${scope//\//$'\n'}"  # replace all `/` to newline
@@ -1569,15 +1569,20 @@ function xsh () {
         pur=$(__xsh_get_pur_by_lpur "${lpur}")
 
         find -L "${xsh_lib_home}" \
+             \( \
              -path "${xsh_lib_home}/${lib}/functions/${pur}.sh" \
-             -o \
+             -or \
              -path "${xsh_lib_home}/${lib}/functions/${pur}/*" \
              -name "*.sh" \
-             -o \
+             -or \
              -path "${xsh_lib_home}/${lib}/scripts/${pur}.sh" \
-             -o \
+             -or \
              -path "${xsh_lib_home}/${lib}/scripts/${pur}/*" \
              -name "*.sh" \
+             \) \
+             -and \
+             -not \
+             -name __init__.sh \
              2>/dev/null
     }
 
