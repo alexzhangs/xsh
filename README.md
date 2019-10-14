@@ -214,13 +214,13 @@ Now lets get back the 3 methods:
    The syntax:
 
    ```bash
-   xsh call <LPUE> ...
+   xsh calls <LPUE> ...
    ```
 
    A sample:
 
    ```bash
-   xsh call x/string/random x/string/uuid
+   xsh calls x/string/random x/string/uuid
 
    e30e865ed22f3ef9
    4be36c77-e507-4eee-9075-1aa259c1613e
@@ -236,12 +236,12 @@ Now lets get back the 3 methods:
 
    In order to call a LPUC directly, you must import the LPUE first.
 
-   Use command `xsh import` to import LPUEs, then you can call them directly as the syntax: `<lib>-<package>-<util>`.
+   Use command `xsh imports` to import LPUEs, then you can call them directly as the syntax: `<lib>-<package>-<util>`.
 
    A sample:
 
    ```bash
-   xsh import x/string
+   xsh imports x/string
 
    x-string-upper 'hello world'
    HELLO WORLD
@@ -453,16 +453,71 @@ xsh load yourusername/xsh-lib-sample
 
 ### 5.2. Debugging
 
-Debug the called utility:
+#### 5.2.1 Debugging Utilities
+
+Enable debug mode by setting environment variable: `XSH_DEBUG`.
+
+Debug the called utility with `set -vx`:
 
 ```bash
 XSH_DEBUG=1 xsh /string/upper foo
 ```
 
-Debug the matching utilities:
+Debug the matching utilities with `set -vx`:
 
-```
+```bash
 XSH_DEBUG='/string' xsh /string/upper foo
+```
+
+#### 5.2.2 Debugging other Programs
+
+Debug a function or script with `set -x`:
+
+```bash
+xsh debug foo
+xsh debug foo.sh
+```
+
+Debug a function or script with `set -n`:
+
+```bash
+xsh debug -1 n foo
+xsh debug -1 n foo.sh
+```
+
+
+
+### 5.3 Local Development (Dev Mode)
+
+Enable dev mode by setting environment variable: `XSH_DEV_HOME`.
+
+```bash
+echo $XSH_DEV_HOME
+/Users/alex/.xsh/dev-lib
+```
+
+With dev mode enabled, able to call the utilities from development library.
+
+```bash
+ls -l ~/.xsh/dev-lib
+total 0
+lrwxr-xr-x  1 alex  staff  32 Sep  4 16:36 aws -> /Users/alex/projects/xsh-lib/aws
+lrwxr-xr-x  1 alex  staff  33 Sep  4 16:36 x -> /Users/alex/projects/xsh-lib/core
+```
+
+Rather than he normal loaded library.
+
+```bash
+ls -l ~/.xsh/lib
+total 0
+lrwxr-xr-x  1 alex  staff  33 Oct 14 11:57 aws -> /Users/alex/.xsh/repo/xsh-lib/aws
+lrwxr-xr-x  1 alex  staff  34 Oct 10 15:07 x -> /Users/alex/.xsh/repo/xsh-lib/core
+```
+
+Example:
+
+```bash
+XSH_DEV=1 xsh /string/upper foo
 ```
 
 
@@ -486,5 +541,3 @@ XSH_DEBUG='/string' xsh /string/upper foo
 * Test Case framework
 
 * Adopting CI - GoCD
-
-
