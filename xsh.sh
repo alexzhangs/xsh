@@ -31,7 +31,7 @@
 #?                    <lib>/<util>, /<util>
 #?
 #? Debug Mode:
-#?   Enable debug mode by setting environment varaible: XSH_DEBUG
+#?   Enable debug mode by setting environment variable: XSH_DEBUG
 #?
 #?   With debug mode enabled, set shell options: `-vx`.
 #?   Debug mode is available only for the command started with `xsh`.
@@ -47,7 +47,7 @@
 #?   For general debugging purpose, see `xsh debug`.
 #?
 #? Dev Mode:
-#?   Enable dev mode by setting environment varaible: XSH_DEV
+#?   Enable dev mode by setting environment variable: XSH_DEV_HOME
 #?
 #?   With dev mode enabled, able to call the utilities from development library.
 #?
