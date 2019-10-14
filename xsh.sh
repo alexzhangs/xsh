@@ -1197,21 +1197,112 @@ function xsh () {
     #?
     function __xsh_import_function () {
         local path=$1
-        local util lpuc
 
         if [[ -z ${path} ]]; then
             __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
-        util=$(__xsh_get_util_by_path "${path}")
-        lpuc=$(__xsh_get_lpuc_by_path "${path}")
-
         # apply init files
         __xsh_init "${path%/*}"
 
         # source the function
-        source /dev/stdin <<< "$(sed "s/function ${util} ()/function ${lpuc} ()/g" "${path}")"
+        source /dev/stdin <<< "$(__xsh_make_function "${path}")"
+    }
+
+    #? Descriptions:
+    #?   Make the function code ready.
+    #?     * Applying decorators
+    #?     * Renaming function name
+    #?
+    #? Usage:
+    #?   __xsh_make_function <FILE>
+    #?
+    function __xsh_make_function () {
+        local path=${1:?}
+
+        local code util lpuc
+        code=$(cat "${path}")
+        util=$(__xsh_get_util_by_path "${path}")
+        lpuc=$(__xsh_get_lpuc_by_path "${path}")
+
+        local ln  # decorator line
+
+        # applying decorators
+        while read ln; do
+            [[ -z ${ln} ]] && continue
+
+            local name=${ln%% *}
+            local options=${ln#* }
+
+            if [[ $(type -t "__xsh_decorator_${name:?}") == function ]]; then
+                # applying the decorator
+                code=$(__xsh_decorator_${name} <(printf '%s' "${code}") \
+                                       "${util}" "${lpuc}" "${options}")
+            else
+                __xsh_log error "$name: decorator is invalid."
+                return 255
+            fi
+        done <<< "$(__xsh_get_decorator "${path}")"
+
+        # renaming function name
+        sed "s/^function ${util} ()/function ${lpuc} ()/g" <<< "${code}" \
+            | sed "s/@${util} /${lpuc} /g"
+    }
+
+    #? Description:
+    #?   Get decorators.
+    #?
+    #? Usage:
+    #?   __xsh_get_decorator <FILE>
+    #?
+    function __xsh_get_decorator () {
+        local path=${1:?}
+
+        # filter the pattern `#? @foo bar` and output the part `foo bar`
+        awk '/^#\? @/ {sub(/^#\? @/, ""); print $0}' "${path}"
+    }
+
+    #? Description:
+    #?   Apply decorator `xsh`.
+    #?
+    #? Usage:
+    #?   __xsh_decorator_xsh <FILE> <UTIL> <LPUC> <OPTIONS>
+    #?
+    #? Output:
+    #?   Code after applied decorator.
+    #?
+    function __xsh_decorator_xsh () {
+        local path=${1:?}
+        local util=${2:?}
+        local lpuc=${3:?}
+        local options=${4:?}
+
+        # insert the decorator code at the first line of the function
+        sed "/^function ${util} () {/ r /dev/stdin" "${path}" <<< "xsh ${options}"
+    }
+
+    #? Description:
+    #?   Apply decorator `subshell`.
+    #?
+    #? Usage:
+    #?   __xsh_decorator_subshell <FILE> <UTIL> <LPUC> <OPTIONS>
+    #?
+    #? Output:
+    #?   Code after applied decorator.
+    #?
+    function __xsh_decorator_subshell () {
+        local path=${1:?}
+        local util=${2:?}
+        local lpuc=${3:?}
+        local options=${4:?}  # unused by now
+
+        # wrap the function:
+        # `function foo () { bar; }`
+        # as new function:
+        # `function foo () { ( function __foo__ () { bar; }; __foo__ "$@" ); }`
+        printf "function ${util} () {\n(\n%s\n__${lpuc}__ \"\$@\"\n)\n}\n" \
+               "$(sed "s/^function ${util} ()/function __${lpuc}__ ()/g" "${path}")"
     }
 
     #? Description:
