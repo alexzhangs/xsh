@@ -1572,7 +1572,14 @@ function xsh () {
                 __xsh_call_with_shell_option -0 vx "${lpuc}" "${@:2}"
             fi
         else
-            ${lpuc} "${@:2}"
+            if [[ $(type -t "${lpuc}") == file &&
+                      $(__xsh_mime_type "$(command -v "${lpuc}")" | cut -d/ -f1) == text ]]; then
+                # call script
+                bash "$(command -v "${lpuc}")" "${@:2}"
+            else
+                # call function
+                ${lpuc} "${@:2}"
+            fi
         fi
         ret=$?
 
