@@ -82,7 +82,8 @@ function xsh () {
     }
 
     #? Description:
-    #?   Output the given shell options state.
+    #?   Output the current state of given shell options.
+    #?   Any options setter `[+-]` before the option is ignored.
     #?
     #? Usage:
     #?   __xsh_shell_option [OPTION][ ][...]
