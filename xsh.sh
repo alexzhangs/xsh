@@ -148,7 +148,7 @@ function xsh () {
 
         local ret=0
 
-        if [[ $(type -t "$1") == file &&
+        if [[ $(type -t "$1" || :) == file &&
                   $(__xsh_mime_type "$(command -v "$1")" | cut -d/ -f1) == text ]]; then
             # call script with shell options enabled
             bash "${options[@]}" "$(command -v "$1")" "${@:2}"
@@ -540,7 +540,7 @@ function xsh () {
 
         if [[ -z ${topic} ]]; then
             __xsh_help_self_cache
-        elif [[ $(type -t "__xsh_${topic}") == function ]]; then
+        elif [[ $(type -t "__xsh_${topic}" || :) == function ]]; then
             __xsh_help_builtin "$@" "__xsh_${topic}"
         else
             __xsh_help_lib "$@" "${topic}"
@@ -1239,7 +1239,7 @@ function xsh () {
             local name=${ln%% *}
             local options=${ln#* }
 
-            if [[ $(type -t "__xsh_decorator_${name:?}") == function ]]; then
+            if [[ $(type -t "__xsh_decorator_${name:?}" || :) == function ]]; then
                 # applying the decorator
                 code=$(__xsh_decorator_${name} <(printf '%s' "${code}") \
                                        "${util}" "${lpuc}" "${options}")
@@ -1574,7 +1574,7 @@ function xsh () {
                 __xsh_call_with_shell_option -0 vx "${lpuc}" "${@:2}"
             fi
         else
-            if [[ $(type -t "${lpuc}") == file &&
+            if [[ $(type -t "${lpuc}" || :) == file &&
                       $(__xsh_mime_type "$(command -v "${lpuc}")" | cut -d/ -f1) == text ]]; then
                 # call script
                 bash "$(command -v "${lpuc}")" "${@:2}"
@@ -1922,7 +1922,7 @@ function xsh () {
         return 255
     fi
 
-    if [[ $(type -t "__xsh_$1") == function ]]; then
+    if [[ $(type -t "__xsh_$1" || :) == function ]]; then
         # xsh command and builtin function
         __xsh_$1 "${@:2}"
     else
