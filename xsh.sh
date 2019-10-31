@@ -576,7 +576,7 @@ function xsh () {
         # show sections of Description and Usage of xsh itself
         __xsh_help_builtin -s Description,Usage xsh
 
-        declare names=(
+        declare -a names=(
             calls imports unimports list load unload update
             upgrade version versions debug help log
         )
@@ -637,7 +637,7 @@ function xsh () {
         # get the last argument
         declare lpur=${@:(-1)}
         # remove the last argument from argument list
-        declare options=( "${@:1:$(($# - 1))}" )
+        declare -a options=( "${@:1:$(($# - 1))}" )
 
         declare ln
         while read -r ln; do
