@@ -476,16 +476,17 @@ function xsh () {
         fi
 
         __xsh_log info "Updating repo to ${target}."
-        if ! git checkout "${target}"; then
+        if ! git checkout -f "${target}"; then
             __xsh_log error "Failed to checkout repo."
             return 255
         fi
 
         if [[ $(__xsh_git_get_current_branch) != 'HEAD' ]]; then
-           if ! git pull; then
-               __xsh_log error "Failed to pull repo."
-               return 255
-           fi
+            git reset --hard origin/${target}
+            if ! git pull; then
+                __xsh_log error "Failed to pull repo."
+                return 255
+            fi
         fi
     }
 
