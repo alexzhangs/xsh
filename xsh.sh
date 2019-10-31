@@ -231,7 +231,7 @@ function xsh () {
     #?
     function __xsh_log () {
         declare level
-        level="$(echo "$1" | tr [[:lower:]] [[:upper:]])"
+        level=$(echo "$1" | tr [[:lower:]] [[:upper:]])
 
         declare caller
         if [[ ${FUNCNAME[1]} == xsh && ${#FUNCNAME[@]} -gt 2 ]]; then
@@ -402,7 +402,7 @@ function xsh () {
             return 255
         fi
 
-        declare repo_path="${xsh_repo_home}/${repo}"
+        declare repo_path=${xsh_repo_home}/${repo}
         if [[ -e ${repo_path} ]]; then
             __xsh_log error "Repo already exists at ${repo_path}."
             return 255
@@ -850,9 +850,9 @@ function xsh () {
         declare cfg
 
         if [[ -z ${name##*/*} ]]; then
-            cfg="${xsh_repo_home}/${name}/xsh.lib"
+            cfg=${xsh_repo_home}/${name}/xsh.lib
         else
-            cfg="${xsh_lib_home}/${name}/xsh.lib"
+            cfg=${xsh_lib_home}/${name}/xsh.lib
         fi
 
         if [[ ! -f ${cfg} ]]; then
@@ -926,7 +926,7 @@ function xsh () {
             return 255
         fi
 
-        declare repo_path="${xsh_repo_home}/${repo}"
+        declare repo_path=${xsh_repo_home}/${repo}
         if [[ ! -d ${repo_path} ]]; then
             __xsh_log error "Repo doesn't exist at ${repo_path}."
             return 255
@@ -939,7 +939,7 @@ function xsh () {
             return 255
         fi
 
-        declare lib_path="${xsh_lib_home}/${lib}"
+        declare lib_path=${xsh_lib_home}/${lib}
 
         declare ret
         while [[ $# -gt 0 ]]; do
@@ -1066,7 +1066,7 @@ function xsh () {
     #?   [-t TAG]         Update to a specific TAG version.
     #?
     function __xsh_upgrade () {
-        declare repo_path="${xsh_home}/xsh"
+        declare repo_path=${xsh_home}/xsh
 
         (cd "${repo_path}" \
              && __xsh_git_force_update "$@" \
@@ -1112,10 +1112,10 @@ function xsh () {
             if [[ -z ${init_subdir} ]]; then
                 init_subdir=${ln}
             else
-                init_subdir="${init_subdir}/${ln}"
+                init_subdir=${init_subdir}/${ln}
             fi
 
-            declare init_file="${xsh_lib_home}/${init_subdir}/__init__.sh"
+            declare init_file=${xsh_lib_home}/${init_subdir}/__init__.sh
 
             if [[ -f ${init_file} ]]; then
                 # replace all `/` to `-`
@@ -1617,7 +1617,7 @@ function xsh () {
         lpur=${lpur/#\//x\/}  # set default lib `x` if lpur is started with /
         lpur=${lpur/%\//\/*}  # set default pur `*` if lpur is ended with /
         if [[ -n ${lpur##*\/*} ]]; then
-            lpur="${lpur}/*"
+            lpur=${lpur}/\*
         else
             :
         fi
@@ -1916,8 +1916,8 @@ function xsh () {
         return 255
     fi
 
-    declare xsh_repo_home="${xsh_home}/repo"
-    declare xsh_lib_home="${xsh_home}/lib"
+    declare xsh_repo_home=${xsh_home}/repo
+    declare xsh_lib_home=${xsh_home}/lib
     declare xsh_git_server='https://github.com'
 
     if [[ ! -e ${xsh_lib_home} ]]; then
