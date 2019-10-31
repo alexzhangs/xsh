@@ -97,13 +97,13 @@ function xsh () {
     #?   -himBH +vx
     #?
     function __xsh_shell_option () {
-        local prune
+        declare prune
         prune=$(printf '%s' "${*//[[:blank:]+-]/}")
 
-        local on=${-//[^${prune}]/}
+        declare on=${-//[^${prune}]/}
         [[ -n $on ]] && on=-$on || :
 
-        local off=${prune//[$-]/}
+        declare off=${prune//[$-]/}
         [[ -n $off ]] && off=+$off || :
 
         echo $on $off  # do not double quote the parameter
@@ -128,7 +128,7 @@ function xsh () {
     #?   $ __xsh_call_with_shell_option -1 vx echo $HOME
     #?
     function __xsh_call_with_shell_option () {
-        local OPTIND OPTARG opt
+        declare OPTIND OPTARG opt
         declare -a options
 
         while getopts 1:0: opt; do
@@ -146,7 +146,7 @@ function xsh () {
         done
         shift $((OPTIND - 1))
 
-        local ret=0
+        declare ret=0
 
         if [[ $(type -t "$1" || :) == file &&
                   $(__xsh_mime_type "$(command -v "$1")" | cut -d/ -f1) == text ]]; then
@@ -155,7 +155,7 @@ function xsh () {
             ret=$?
         else
             # save former state of options
-            local exopts
+            declare exopts
             exopts=$(__xsh_shell_option "${options[@]}")
 
             # enable shell options
@@ -215,7 +215,7 @@ function xsh () {
     #?   __xsh_trap_return [COMMAND]
     #?
     function __xsh_trap_return () {
-        local command="
+        declare command="
         if [[ \$FUNCNAME == xsh ]]; then
             trap - RETURN
             ${1:?}
@@ -230,7 +230,7 @@ function xsh () {
     #?   __xsh_log [debug|info|warning|error|fail|fatal] <MESSAGE>
     #?
     function __xsh_log () {
-        local level
+        declare level
         level="$(echo "$1" | tr [[:lower:]] [[:upper:]])"
 
         case ${level} in
@@ -253,7 +253,7 @@ function xsh () {
     #?   __xsh_chmod_x_by_dir <PATH>
     #?
     function __xsh_chmod_x_by_dir () {
-        local path=$1
+        declare path=$1
 
         find "${path}" \
              -type f \
@@ -362,8 +362,8 @@ function xsh () {
     #?   REPO             Git repo in syntax: `USERNAME/REPO`.
     #?                    E.g. `username/xsh-lib-foo`
     function __xsh_git_clone () {
-        local OPTARG OPTIND opt
-        local git_server repo
+        declare OPTARG OPTIND opt
+        declare git_server repo
 
         declare -a git_options
         git_server=${xsh_git_server}
@@ -395,7 +395,7 @@ function xsh () {
             return 255
         fi
 
-        local repo_path="${xsh_repo_home}/${repo}"
+        declare repo_path="${xsh_repo_home}/${repo}"
         if [[ -e ${repo_path} ]]; then
             __xsh_log error "Repo already exists at ${repo_path}."
             return 255
@@ -414,7 +414,7 @@ function xsh () {
              && __xsh_git_chmod_x
         )
 
-        local ret=$?
+        declare ret=$?
         if [[ ${ret} -ne 0 ]]; then
             __xsh_log warning "Deleting repo ${repo_path}."
             /bin/rm -rf "${repo_path}"
@@ -436,9 +436,9 @@ function xsh () {
     #?   [-t TAG]         Update to a specific TAG version.
     #?
     function __xsh_git_force_update () {
-        local OPTIND OPTARG opt
+        declare OPTIND OPTARG opt
 
-        local target
+        declare target
 
         while getopts b:t: opt; do
             case ${opt} in
@@ -468,7 +468,7 @@ function xsh () {
             fi
         fi
 
-        local current
+        declare current
         current=$(__xsh_git_get_current_tag)
         if [[ ${current} == ${target} ]]; then
             __xsh_log info "Already at the latest version: ${current}."
@@ -524,7 +524,7 @@ function xsh () {
     #?
     function __xsh_help () {
         # get last parameter
-        local topic=${@:(-1)}
+        declare topic=${@:(-1)}
 
         if [[ ${topic:0:1} == - ]]; then
             unset topic
@@ -554,7 +554,7 @@ function xsh () {
     #?   __xsh_help_self_cache
     #?
     function __xsh_help_self_cache () {
-        local hash cached_help
+        declare hash cached_help
 
         hash=$(shasum "${xsh_home}/xsh/xsh.sh" 2>/dev/null | cut -d' ' -f1)
         cached_help=/tmp/.${FUNCNAME[0]}_${hash}
@@ -576,12 +576,12 @@ function xsh () {
         # show sections of Description and Usage of xsh itself
         __xsh_help_builtin -s Description,Usage xsh
 
-        local names=(
+        declare names=(
             calls imports unimports list load unload update
             upgrade version versions debug help log
         )
 
-        local name
+        declare name
 
         # show sections of Usage of xsh builtin functions
         for name in "${names[@]}"; do
@@ -614,9 +614,9 @@ function xsh () {
     #?
     function __xsh_help_builtin () {
         # get the last argument
-        local builtin=${@:(-1)}
+        declare builtin=${@:(-1)}
         # remoe the last argument from argument list
-        local options=( "${@:1:$(($# - 1))}" )
+        declare options=( "${@:1:$(($# - 1))}" )
 
         __xsh_info -f "${builtin}" "${options[@]}" "${xsh_home}/xsh/xsh.sh"
     }
@@ -635,14 +635,14 @@ function xsh () {
     #?
     function __xsh_help_lib () {
         # get the last argument
-        local lpur=${@:(-1)}
+        declare lpur=${@:(-1)}
         # remove the last argument from argument list
-        local options=( "${@:1:$(($# - 1))}" )
+        declare options=( "${@:1:$(($# - 1))}" )
 
-        local ln
+        declare ln
         while read -r ln; do
             if [[ -n ${ln} ]]; then
-                local util lpue
+                declare util lpue
                 util=$(__xsh_get_util_by_path "${ln}")
                 lpue=$(__xsh_get_lpue_by_path "${ln}")
 
@@ -682,16 +682,16 @@ function xsh () {
     #?   See `xsh help help` for the rest options.
     #?
     function __xsh_info () {
-        local OPTIND OPTARG opt
+        declare OPTIND OPTARG opt
 
-        local path=${@:(-1)}
+        declare path=${@:(-1)}
 
         if [[ -z ${path} || ${path:1:1} == - ]]; then
             __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
-        local funcname
+        declare funcname
 
         while getopts f:tcds:S:i: opt; do
             case ${opt} in
@@ -761,7 +761,7 @@ function xsh () {
                     ;;
                 i)
                     if [[ -n ${funcname} ]]; then
-                        local name
+                        declare name
                         for name in ${funcname//,/ }; do
                             printf "${OPTARG}"  # do not use `printf '%s'`
                         done
@@ -811,7 +811,7 @@ function xsh () {
     #?   [LPUR]           List matched libraries, packages and utilities.
     #?
     function __xsh_list () {
-        local lpur=$1
+        declare lpur=$1
 
         if [[ -z ${lpur} ]]; then
             __xsh_lib_list
@@ -827,8 +827,8 @@ function xsh () {
     #?   __xsh_get_cfg_property <LIB | REPO> <PROPERTY>
     #?
     function __xsh_get_cfg_property () {
-        local name=$1
-        local property=$2
+        declare name=$1
+        declare property=$2
 
         if [[ -z ${name} ]]; then
             __xsh_log error "Lib or repo name is null or not set."
@@ -840,7 +840,7 @@ function xsh () {
             return 255
         fi
 
-        local cfg
+        declare cfg
 
         if [[ -z ${name##*/*} ]]; then
             cfg="${xsh_repo_home}/${name}/xsh.lib"
@@ -863,7 +863,7 @@ function xsh () {
     #?
     #?
     function __xsh_get_lib_by_repo () {
-        local repo=$1
+        declare repo=$1
 
         if [[ -z ${repo} ]]; then
             __xsh_log error "Repo is null or not set."
@@ -880,7 +880,7 @@ function xsh () {
     #?   __xsh_lib_list
     #?
     function __xsh_lib_list () {
-        local lib lib_path repo version
+        declare lib lib_path repo version
 
         while read -r lib_path; do
             lib=${lib_path##*/}
@@ -911,7 +911,7 @@ function xsh () {
     #?   The order of the commands matters.
     #?
     function __xsh_lib_manager () {
-        local repo=$1
+        declare repo=$1
         shift
 
         if [[ -z ${repo} ]]; then
@@ -919,22 +919,22 @@ function xsh () {
             return 255
         fi
 
-        local repo_path="${xsh_repo_home}/${repo}"
+        declare repo_path="${xsh_repo_home}/${repo}"
         if [[ ! -d ${repo_path} ]]; then
             __xsh_log error "Repo doesn't exist at ${repo_path}."
             return 255
         fi
 
-        local lib
+        declare lib
         lib=$(__xsh_get_lib_by_repo "${repo}")
         if [[ -z ${lib} ]]; then
             __xsh_log error "library name is null for the repo ${repo}."
             return 255
         fi
 
-        local lib_path="${xsh_lib_home}/${lib}"
+        declare lib_path="${xsh_lib_home}/${lib}"
 
-        local ret
+        declare ret
         while [[ $# -gt 0 ]]; do
             case $1 in
                 unimport)
@@ -983,11 +983,11 @@ function xsh () {
     #?
     function __xsh_load () {
         # get repo from last parameter
-        local repo=${@:(-1)}
+        declare repo=${@:(-1)}
 
         __xsh_git_clone "$@" || return
         __xsh_lib_manager "${repo}" link
-        local ret=$?
+        declare ret=$?
         if [[ ${ret} -ne 0 ]]; then
             __xsh_log warning "Deleting repo ${xsh_repo_home:?}/${repo:?}."
             rm -rf "${xsh_repo_home:?}/${repo:?}"
@@ -1006,7 +1006,7 @@ function xsh () {
     #?                    E.g. `username/xsh-lib-foo`
     #?
     function __xsh_unload () {
-        local repo=$1
+        declare repo=$1
 
         __xsh_lib_manager "${repo}" unimport unlink delete
     }
@@ -1028,7 +1028,7 @@ function xsh () {
     #?
     function __xsh_update () {
         # get repo from last parameter
-        local repo=${@:(-1)}
+        declare repo=${@:(-1)}
 
         if [[ -z ${repo} ]]; then
             __xsh_log error "Repo name is null or not set."
@@ -1059,7 +1059,7 @@ function xsh () {
     #?   [-t TAG]         Update to a specific TAG version.
     #?
     function __xsh_upgrade () {
-        local repo_path="${xsh_home}/xsh"
+        declare repo_path="${xsh_home}/xsh"
 
         (cd "${repo_path}" \
              && __xsh_git_force_update "$@" \
@@ -1086,9 +1086,9 @@ function xsh () {
     #?   __xsh_init <DIR>
     #?
     function __xsh_init () {
-        local dir=$1
+        declare dir=$1
 
-        local scope=${dir#${xsh_lib_home}}  # remove xsh_lib_home path from beginning
+        declare scope=${dir#${xsh_lib_home}}  # remove xsh_lib_home path from beginning
 
         # remove the leading `/`
         scope=${scope%/}
@@ -1100,7 +1100,7 @@ function xsh () {
             return 255
         fi
 
-        local ln init_subdir
+        declare ln init_subdir
         while read -r ln; do
             if [[ -z ${init_subdir} ]]; then
                 init_subdir=${ln}
@@ -1108,11 +1108,11 @@ function xsh () {
                 init_subdir="${init_subdir}/${ln}"
             fi
 
-            local init_file="${xsh_lib_home}/${init_subdir}/__init__.sh"
+            declare init_file="${xsh_lib_home}/${init_subdir}/__init__.sh"
 
             if [[ -f ${init_file} ]]; then
                 # replace all `/` to `-`
-                local init_expr=${init_subdir//\//-}
+                declare init_expr=${init_subdir//\//-}
 
                 if ! printf '%s\n' "${__XSH_INIT__[@]}" | grep -q "^${init_expr}$"; then
                     # remember the applied init file
@@ -1148,8 +1148,8 @@ function xsh () {
     #?   <LPUR> [...]     See the section of Convention.
     #?
     function __xsh_imports () {
-        local lpur
-        local ret=0
+        declare lpur
+        declare ret=0
 
         for lpur in "$@"; do
             __xsh_import "${lpur}"
@@ -1165,8 +1165,8 @@ function xsh () {
     #?   __xsh_import <LPUR>
     #?
     function __xsh_import () {
-        local lpur=$1
-        local ln type
+        declare lpur=$1
+        declare ln type
 
         if [[ -z ${lpur} ]]; then
             __xsh_log error "LPUR is null or not set."
@@ -1200,7 +1200,7 @@ function xsh () {
     #?   __xsh_import_function <FILE>
     #?
     function __xsh_import_function () {
-        local path=$1
+        declare path=$1
 
         if [[ -z ${path} ]]; then
             __xsh_log error "LPU path is null or not set."
@@ -1223,21 +1223,21 @@ function xsh () {
     #?   __xsh_make_function <FILE>
     #?
     function __xsh_make_function () {
-        local path=${1:?}
+        declare path=${1:?}
 
-        local code util lpuc
+        declare code util lpuc
         code=$(cat "${path}")
         util=$(__xsh_get_util_by_path "${path}")
         lpuc=$(__xsh_get_lpuc_by_path "${path}")
 
-        local ln  # decorator line
+        declare ln  # decorator line
 
         # applying decorators
         while read ln; do
             [[ -z ${ln} ]] && continue
 
-            local name=${ln%% *}
-            local options=${ln#* }
+            declare name=${ln%% *}
+            declare options=${ln#* }
 
             if [[ $(type -t "__xsh_decorator_${name:?}" || :) == function ]]; then
                 # applying the decorator
@@ -1261,7 +1261,7 @@ function xsh () {
     #?   __xsh_get_decorator <FILE>
     #?
     function __xsh_get_decorator () {
-        local path=${1:?}
+        declare path=${1:?}
 
         # filter the pattern `#? @foo bar` and output the part `foo bar`
         awk '/^#\? @/ {sub(/^#\? @/, ""); print $0}' "${path}"
@@ -1277,10 +1277,10 @@ function xsh () {
     #?   Code after applied decorator.
     #?
     function __xsh_decorator_xsh () {
-        local path=${1:?}
-        local util=${2:?}
-        local lpuc=${3:?}
-        local options=${4:?}
+        declare path=${1:?}
+        declare util=${2:?}
+        declare lpuc=${3:?}
+        declare options=${4:?}
 
         # insert the decorator code at the first line of the function
         sed "/^function ${util} () {/ r /dev/stdin" "${path}" <<< "xsh ${options}"
@@ -1296,10 +1296,10 @@ function xsh () {
     #?   Code after applied decorator.
     #?
     function __xsh_decorator_subshell () {
-        local path=${1:?}
-        local util=${2:?}
-        local lpuc=${3:?}
-        local options=${4:?}  # unused by now
+        declare path=${1:?}
+        declare util=${2:?}
+        declare lpuc=${3:?}
+        declare options=${4:?}  # unused by now
 
         # wrap the function:
         # `function foo () { bar; }`
@@ -1317,8 +1317,8 @@ function xsh () {
     #?   __xsh_import_script <FILE>
     #?
     function __xsh_import_script () {
-        local path=$1
-        local lpuc
+        declare path=$1
+        declare lpuc
 
         if [[ -z ${path} ]]; then
             __xsh_log error "LPU path is null or not set."
@@ -1340,8 +1340,8 @@ function xsh () {
     #?   <LPUR> [...]     See the section of Convention.
     #?
     function __xsh_unimports () {
-        local lpur
-        local ret=0
+        declare lpur
+        declare ret=0
 
         for lpur in "$@"; do
             __xsh_unimport "${lpur}"
@@ -1363,8 +1363,8 @@ function xsh () {
         #   <lib>/<pkg>, /<pkg>
         #   <lib>/<pkg>/<util>, /<pkg>/<util>
         #   <lib>/<util>, /<util>
-        local lpur=$1
-        local ln type
+        declare lpur=$1
+        declare ln type
 
         if [[ -z ${lpur} ]]; then
             __xsh_log error "LPUR is null or not set."
@@ -1398,8 +1398,8 @@ function xsh () {
     #?   __xsh_unimport_function <FILE>
     #?
     function __xsh_unimport_function () {
-        local path=$1
-        local util lpuc
+        declare path=$1
+        declare util lpuc
 
         if [[ -z ${path} ]]; then
             __xsh_log error "LPU path is null or not set."
@@ -1419,8 +1419,8 @@ function xsh () {
     #?   __xsh_unimport_script <FILE>
     #?
     function __xsh_unimport_script () {
-        local path=$1
-        local lpuc
+        declare path=$1
+        declare lpuc
 
         if [[ -z ${path} ]]; then
             __xsh_log error "LPU path is null or not set."
@@ -1444,8 +1444,8 @@ function xsh () {
     #?   <LPUE> [...]     LPUE. See the section of Convention.
     #?
     function __xsh_calls () {
-        local lpue
-        local ret=0
+        declare lpue
+        declare ret=0
 
         for lpue in "$@"; do
             __xsh_call "${lpue}"
@@ -1468,14 +1468,14 @@ function xsh () {
         # legal input:
         #   <lib>/<pkg>/<util>, /<pkg>/<util>
         #   <lib>/<util>, /<util>
-        local lpue=$1
+        declare lpue=$1
 
         if [[ -z ${lpue} ]]; then
             __xsh_log error "LPUE is null or not set."
             return 255
         fi
 
-        local lpuc
+        declare lpuc
         lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
 
         if [[ -n ${XSH_DEV} ]]; then
@@ -1484,7 +1484,7 @@ function xsh () {
                 return 255
             fi
 
-            local xsh_dev
+            declare xsh_dev
             case ${XSH_DEV} in
                 1)
                     XSH_DEV=${lpuc}
@@ -1520,9 +1520,9 @@ function xsh () {
     #?   [-u]             Unimport the util after the execution.
     #?
     function __xsh_exec () {
-        local OPTIND OPTARG opt
+        declare OPTIND OPTARG opt
 
-        local import=0 unimport=0
+        declare import=0 unimport=0
         while getopts iu opt; do
             case ${opt} in
                 i)
@@ -1537,14 +1537,14 @@ function xsh () {
             esac
         done
         shift $((OPTIND - 1))
-        local lpue=$1
+        declare lpue=$1
 
         if [[ -z ${lpue} ]]; then
             __xsh_log error "LPUE is null or not set."
             return 255
         fi
 
-        local lpuc
+        declare lpuc
         lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
 
         if [[ ${import} -eq 1 ]]; then
@@ -1553,10 +1553,10 @@ function xsh () {
             __xsh_import "${lpue}"
         fi
 
-        local ret=0
+        declare ret=0
 
         if [[ -n ${XSH_DEBUG} ]]; then
-            local xsh_debug
+            declare xsh_debug
 
             case ${XSH_DEBUG} in
                 1)
@@ -1599,7 +1599,7 @@ function xsh () {
     #?   __xsh_complete_lpur <LPUR>
     #?
     function __xsh_complete_lpur () {
-        local lpur=$1
+        declare lpur=$1
 
         if [[ -z ${lpur} ]]; then
             __xsh_log error "LPUR is null or not set."
@@ -1623,7 +1623,7 @@ function xsh () {
     #?   __xsh_get_lib_by_lpur <LPUR>
     #?
     function __xsh_get_lib_by_lpur () {
-        local lpur=$1
+        declare lpur=$1
 
         if [[ -z ${lpur} ]]; then
             __xsh_log error "LPUR is null or not set."
@@ -1641,7 +1641,7 @@ function xsh () {
     #?   __xsh_get_pur_by_lpur <LPUR>
     #?
     function __xsh_get_pur_by_lpur () {
-        local lpur=$1
+        declare lpur=$1
 
         if [[ -z ${lpur} ]]; then
             __xsh_log error "LPUR is null or not set."
@@ -1659,8 +1659,8 @@ function xsh () {
     #?   __xsh_get_path_by_lpur <LPUR>
     #?
     function __xsh_get_path_by_lpur () {
-        local lpur=$1
-        local lib pur
+        declare lpur=$1
+        declare lib pur
 
         if [[ -z ${lpur} ]]; then
             __xsh_log error "LPUR is null or not set."
@@ -1695,8 +1695,8 @@ function xsh () {
     #?   __xsh_get_lpuc_by_lpur <LPUR>
     #?
     function __xsh_get_lpuc_by_lpur () {
-        local lpur=$1
-        local ln
+        declare lpur=$1
+        declare ln
 
         if [[ -z ${lpur} ]]; then
             __xsh_log error "LPUR is null or not set."
@@ -1717,7 +1717,7 @@ function xsh () {
     #?   __xsh_get_lpuc_by_lpue <LPUE>
     #?
     function __xsh_get_lpuc_by_lpue () {
-        local lpue=$1
+        declare lpue=$1
 
         if [[ -z ${lpue} ]]; then
             __xsh_log error "LPUE is null or not set."
@@ -1735,14 +1735,14 @@ function xsh () {
     #?   __xsh_get_title_by_path <PATH>
     #?
     function __xsh_get_title_by_path () {
-        local path=$1
+        declare path=$1
 
         if [[ -z ${path} ]]; then
             __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
-        local type lpue
+        declare type lpue
         type=$(__xsh_get_type_by_path "${path}")
         lpue=$(__xsh_get_lpue_by_path "${path}")
 
@@ -1756,8 +1756,8 @@ function xsh () {
     #?   __xsh_get_type_by_path <PATH>
     #?
     function __xsh_get_type_by_path () {
-        local path=$1
-        local type
+        declare path=$1
+        declare type
 
         if [[ -z ${path} ]]; then
             __xsh_log error "LPU path is null or not set."
@@ -1775,8 +1775,8 @@ function xsh () {
     #?   __xsh_get_lib_by_path <PATH>
     #?
     function __xsh_get_lib_by_path () {
-        local path=$1
-        local lib
+        declare path=$1
+        declare lib
 
         if [[ -z ${path} ]]; then
             __xsh_log error "LPU path is null or not set."
@@ -1794,8 +1794,8 @@ function xsh () {
     #?   __xsh_get_util_by_path <PATH>
     #?
     function __xsh_get_util_by_path () {
-        local path=$1
-        local util
+        declare path=$1
+        declare util
 
         if [[ -z ${path} ]]; then
             __xsh_log error "LPU path is null or not set."
@@ -1815,8 +1815,8 @@ function xsh () {
     #?   __xsh_get_pue_by_path <PATH>
     #?
     function __xsh_get_pue_by_path () {
-        local path=${1:?}
-        local pue
+        declare path=${1:?}
+        declare pue
 
         if [[ -z ${path} ]]; then
             __xsh_log error "LPU path is null or not set."
@@ -1834,8 +1834,8 @@ function xsh () {
     #?   __xsh_get_lpue_by_path <PATH>
     #?
     function __xsh_get_lpue_by_path () {
-        local path=${1:?}
-        local lib pue
+        declare path=${1:?}
+        declare lib pue
 
         if [[ -z ${path} ]]; then
             __xsh_log error "LPU path is null or not set."
@@ -1854,8 +1854,8 @@ function xsh () {
     #?   __xsh_get_lpuc_by_path <PATH>
     #?
     function __xsh_get_lpuc_by_path () {
-        local path=$1
-        local lpue
+        declare path=$1
+        declare lpue
 
         if [[ -z ${path} ]]; then
             __xsh_log error "LPU path is null or not set."
@@ -1897,7 +1897,7 @@ function xsh () {
                 __xsh_clean >/dev/null 2>&1
             fi;'
 
-    local xsh_home
+    declare xsh_home
 
     # check environment variable
     if [[ -n ${XSH_HOME%/} ]]; then
@@ -1908,9 +1908,9 @@ function xsh () {
         return 255
     fi
 
-    local xsh_repo_home="${xsh_home}/repo"
-    local xsh_lib_home="${xsh_home}/lib"
-    local xsh_git_server='https://github.com'
+    declare xsh_repo_home="${xsh_home}/repo"
+    declare xsh_lib_home="${xsh_home}/lib"
+    declare xsh_git_server='https://github.com'
 
     if [[ ! -e ${xsh_lib_home} ]]; then
         mkdir -p "${xsh_lib_home}"
