@@ -233,15 +233,22 @@ function xsh () {
         declare level
         level="$(echo "$1" | tr [[:lower:]] [[:upper:]])"
 
+        declare caller
+        if [[ ${FUNCNAME[1]} == xsh && ${#FUNCNAME[@]} -gt 2 ]]; then
+            caller=${FUNCNAME[2]}
+        else
+            caller=${FUNCNAME[1]}
+        fi
+
         case ${level} in
             WARNING|ERROR|FAIL|FATAL)
-                printf "${FUNCNAME[1]}: ${level}: %s\n" "${*:2}" >&2
+                printf "${caller}: ${level}: %s\n" "${*:2}" >&2
                 ;;
             DEBUG|INFO)
-                printf "${FUNCNAME[1]}: ${level}: %s\n" "${*:2}"
+                printf "${caller}: ${level}: %s\n" "${*:2}"
                 ;;
             *)
-                printf "${FUNCNAME[1]}: %s\n" "$*"
+                printf "${caller}: %s\n" "$*"
                 ;;
         esac
     }
