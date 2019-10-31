@@ -545,13 +545,15 @@ function xsh () {
             set -- -d
         fi
 
-        if [[ -z ${topic} ]]; then
-            __xsh_help_self_cache
-        elif [[ $(type -t "__xsh_${topic}" || :) == function ]]; then
-            __xsh_help_builtin "$@" "__xsh_${topic}"
-        else
-            __xsh_help_lib "$@" "${topic}"
-        fi
+        {
+            if [[ -z ${topic} ]]; then
+                __xsh_help_self_cache
+            elif [[ $(type -t "__xsh_${topic}" || :) == function ]]; then
+                __xsh_help_builtin "$@" "__xsh_${topic}"
+            else
+                __xsh_help_lib "$@" "${topic}"
+            fi
+        } | awk '{gsub(/^[^ ]+.*/, "\033[1m&\033[0m"); print}'
     }
 
     #? Description:
