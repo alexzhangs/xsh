@@ -1116,6 +1116,7 @@ function xsh () {
 
                 if ! printf '%s\n' "${__XSH_INIT__[@]}" | grep -q "^${init_expr}$"; then
                     # remember the applied init file
+                    # do not declare it, make it global
                     __XSH_INIT__+=("${init_expr}")
 
                     # apply the init file
@@ -1456,7 +1457,7 @@ function xsh () {
 
     #? Description:
     #?   Call a function or a script by LPUE.
-    #?   `XSH_DEV` and `XSH_DEBUG` are being handled.
+    #?   global variable `XSH_DEV` and `XSH_DEV_HOME` are being handled.
     #?
     #? Usage:
     #?   __xsh_call <LPUE> [OPTIONS]
@@ -1510,7 +1511,7 @@ function xsh () {
 
     #? Description:
     #?   Call a function or a script by LPUE.
-    #?   `XSH_DEBUG` is being handled.
+    #?   Global variable `XSH_DEBUG` is being handled.
     #?
     #? Usage:
     #?   __xsh_exec [-i] [-u] <LPUE>
