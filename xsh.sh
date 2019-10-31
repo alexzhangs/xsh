@@ -545,15 +545,13 @@ function xsh () {
             set -- -d
         fi
 
-        {
-            if [[ -z ${topic} ]]; then
-                __xsh_help_self_cache
-            elif [[ $(type -t "__xsh_${topic}" || :) == function ]]; then
-                __xsh_help_builtin "$@" "__xsh_${topic}"
-            else
-                __xsh_help_lib "$@" "${topic}"
-            fi
-        } | xsh /file/mark -p '^[^ ]+'
+        if [[ -z ${topic} ]]; then
+            __xsh_help_self_cache
+        elif [[ $(type -t "__xsh_${topic}" || :) == function ]]; then
+            __xsh_help_builtin "$@" "__xsh_${topic}"
+        else
+            __xsh_help_lib "$@" "${topic}"
+        fi
     }
 
     #? Description:
