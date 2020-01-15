@@ -8,13 +8,15 @@ xsh - this repository, in a narrow sense, is not a library itself, it's just a f
 
 
 
-## 1. Status
+## 1. Requirements
 
-Currently this project is at version 0.x, and still in "heavy" development.
+Tested with `base 3.2` on macOS High Sierra, but should be working on Linux.
+
+This project is still at version 0.x, and should be considered immature.
 
 
 
-## 2. Philosophy
+## 2. Design Philosophy
 
 * Reuse the shell code previously written, provide a uniform way to organize the code, document the code, format the code, execute the code, even the way you write the code. As a result, some of well organized bash code libraries will born.
 
@@ -55,8 +57,11 @@ Currently this project is at version 0.x, and still in "heavy" development.
 
 ### 2.1. What does xsh Framework Do?
 
-* Handle the extraction of help and usage information
-* Handle library update
+* Provide an easy way to document and represent help and usage info
+* Support basic logging
+* Support debugging
+* Support library versioning
+* Handle the load/unload/update of libraries
 
 
 
@@ -64,7 +69,6 @@ Currently this project is at version 0.x, and still in "heavy" development.
 
 * Provide container for utilities
 * Provide rules for organizing utilities by packages
-* Handle versioning
 
 The xsh framework supports both public and private libraries.
 
@@ -290,16 +294,28 @@ xsh upgrade -t <tag>
 
 ### 4.4. Get Help
 
-See the usage info of xsh itself:
+See the help info of xsh itself:
 
 ```bash
 xsh help
 ```
 
-See the usage info of xsh utilities by LPUR:
+See the help info of xsh utilities by LPUR:
 
 ```bash
 xsh help <LPUR>
+```
+
+See the specific section of help info of xsh utilities by LPUR:
+
+```bash
+xsh help -s <SECTION> <LPUR>
+```
+
+See the code of xsh utilities by LPUR:
+
+```bash
+xsh help -c <LPUR>
 ```
 
 List all loaded libraries:
