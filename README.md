@@ -18,11 +18,11 @@ This project is still at version 0.x, and should be considered immature.
 
 ## 2. Design Philosophy
 
-* Reuse the shell code previously written, provide a uniform way to organize the code, document the code, format the code, execute the code, even the way you write the code. As a result, some of well organized bash code libraries will born.
+* Reuse the shell code previously written, provide a uniform way to organize the code, document the code, format the code, execute the code, even the way you write the code. As a result, some well-organized bash code libraries will be born.
 
 * Easy to bootstrap(install).
 
-  Only thing you need is bash and Git client.
+  The only thing you need is a bash and Git client.
 
   ```bash
   git clone https://github.com/alexzhangs/xsh
@@ -47,11 +47,11 @@ This project is still at version 0.x, and should be considered immature.
 
   __xsh libraries__, are some Git repositories, hosted online, contain some .sh files, called utilities, present as functions and scripts, organized with certain simple rules.
 
-  You are able to build your own libraries with your own Git repositories.
+  You can build your libraries with your Git repositories.
 
 * Easy to make your existing code a library.
 
-  A xsh library is actually just a Git repo following some simple rules. The rules will be talked about later in the development section. Any repos following that rules could be loaded as xsh libraries.
+  An xsh library is just a Git repo following some simple rules. The rules will be talked about later in the development section. Any repos following that rules could be loaded as xsh libraries.
 
 
 
@@ -67,7 +67,7 @@ This project is still at version 0.x, and should be considered immature.
 
 ### 2.2. What do xsh Libraries Do?
 
-* Provide container for utilities
+* Provide a container for utilities
 * Provide rules for organizing utilities by packages
 
 The xsh framework supports both public and private libraries.
@@ -76,19 +76,19 @@ The xsh framework supports both public and private libraries.
 
 ### 2.3 What do xsh Utilities Do?
 
-* Provide fundamental function
+* Provide the fundamental function
 * Provide help and usage information
 * Handle temporary files
 * Handle logs
 * Handle output
 
-Of cause, some of above topics could be built as libraries, packages or utilities too.
+Of cause, some of the above topics could be built as libraries, packages or utilities too.
 
 
 
 ## 3. xsh Bootstrap/Installation
 
-Only thing you need is bash and Git client.
+The only thing you need is a bash and Git client.
 
 ```bash
 git clone https://github.com/alexzhangs/xsh
@@ -99,7 +99,7 @@ bash xsh/install.sh
 
 ## 4. xsh Usage
 
-Before you can really do something useful with xsh, you must load some libraries.
+Before you can do something useful with xsh, you must load some libraries.
 
 
 
@@ -107,7 +107,7 @@ Before you can really do something useful with xsh, you must load some libraries
 
 Use `xsh load` command to load a library.
 
-Loading the latest tagged version of library [xsh-lib/core](https://github.com/xsh-lib/core), you should issue:
+Loading the latest tagged version of the library [xsh-lib/core](https://github.com/xsh-lib/core), you should issue:
 
 ```bash
 xsh load xsh-lib/core
@@ -125,7 +125,7 @@ From https://github.com/xsh-lib/core
 __xsh_git_force_update: INFO: Already at the latest version: 0.1.0.
 ```
 
-Loading the latest development state of library [xsh-lib/core](https://github.com/xsh-lib/core) on default branch `master`, you should issue:
+Loading the latest development state of the library [xsh-lib/core](https://github.com/xsh-lib/core) on default branch `master`, you should issue:
 
 ```bash
 xsh load -b master xsh-lib/core
@@ -187,7 +187,7 @@ xsh unload xsh-lib/core
 
 There are 3 methods to invoke xsh utilities.
 
-Before to talk about that, lets get familiar with the glossary `LPUE`, `LPUR` and `LPUC`.
+Before to talk about that, let's get familiar with the glossary `LPUE`, `LPUR` and `LPUC`.
 
 * LPUE stands for `Lib/Package/Util Expression`,  a LPUE example for the library `xsh-lib/core` is `x/string/upper`.
 
@@ -195,7 +195,7 @@ Before to talk about that, lets get familiar with the glossary `LPUE`, `LPUR` an
 
 * LPUC stands for `Lib/Package/Util Callable`, a LPUC example for the library `xsh-lib/core` is `x-string-upper`.
 
-Now lets get back the 3 methods:
+Now let's get back the 3 methods:
 
 1. Call an individual LPUE.
 
@@ -346,7 +346,7 @@ xsh list '*'
 
 ### 5.1. How to Make Your Own xsh Libraries?
 
-The directory structure and files of a sample library looks like this:
+The directory structure and files of a sample library look like this:
 
 ```
 xsh-lib-sample/
@@ -362,7 +362,7 @@ xsh-lib-sample/
 └── xsh.lib
 ```
 
-Let each of your functions be a single `.sh` file, named as the same as the function name, put them under the directory `functions`, you are free to organize the sub directories, the sub directory in this sample is `string` and `log`, they are called `packages`.
+Let each of your functions be a single `.sh` file, named as the same as the function name, put them under the directory `functions`, you are free to organize the subdirectories, the subdirectory in this sample is `string` and `log`, they are called `packages`.
 
 
 
@@ -405,7 +405,7 @@ function upper () {
 }
 ```
 
-You will need to follow the comment style in order to let xsh generate help info.
+You will need to follow the comment style to let xsh generate help info.
 
 The function should be started with the exact syntax:
 
@@ -419,11 +419,11 @@ It's pretty the same with scripts files except that you don't have to define fun
 
 #### 5.1.3. Commit the code and test it
 
-Push the code to a Git repo, for example Github, on branch `master`, then the library is ready for test.
+Push the code to a Git repo, for example, Github, on branch `master`, then the library is ready for test.
 
 Load the sample library `xsh-lib-sample` on Github:
 
-Note: Option `-b master` is neccessary to tell that you are loading the latest untagged version for testing purpose.
+Note: Option `-b master` is necessary to tell that you are loading the latest untagged version for testing purposes.
 
 ```bash
 xsh load -b master yourusername/xsh-lib-sample
@@ -435,7 +435,7 @@ Or if the Git repo isn't on Github, issue:
 xsh load -s http://yourgitserver.com -b master yourusername/xsh-lib-sample
 ```
 
-Then they are able to be called as:
+Then they can be called as:
 
 ```bash
 xsh smpl/string/lower
@@ -447,7 +447,7 @@ xsh smpl/log/filter
 
 #### 5.1.4. Publish the library
 
-In order to tell world that the library is ready, you have to make at least one Git tag to publish the library.
+To tell the world that the library is ready, you have to make at least one Git tag to publish the library.
 
 To use [Semantic Versioning](https://semver.org) for the tag name is recommended.
 
@@ -471,7 +471,7 @@ xsh load yourusername/xsh-lib-sample
 
 #### 5.2.1 Debugging Utilities
 
-Enable debug mode by setting environment variable: `XSH_DEBUG`.
+Enable debug mode by setting an environment variable: `XSH_DEBUG`.
 
 Debug the called utility with `set -vx`:
 
@@ -505,14 +505,14 @@ xsh debug -1 n foo.sh
 
 ### 5.3 Local Development (Dev Mode)
 
-Enable dev mode by setting environment variable: `XSH_DEV_HOME`.
+Enable dev mode by setting an environment variable: `XSH_DEV_HOME`.
 
 ```bash
 echo $XSH_DEV_HOME
 /Users/alex/.xsh/dev-lib
 ```
 
-With dev mode enabled, able to call the utilities from development library.
+With dev mode enabled, able to call the utilities from the development library.
 
 ```bash
 ls -l ~/.xsh/dev-lib
@@ -521,7 +521,7 @@ lrwxr-xr-x  1 alex  staff  32 Sep  4 16:36 aws -> /Users/alex/projects/xsh-lib/a
 lrwxr-xr-x  1 alex  staff  33 Sep  4 16:36 x -> /Users/alex/projects/xsh-lib/core
 ```
 
-Rather than he normal loaded library.
+Rather than the normal loaded library.
 
 ```bash
 ls -l ~/.xsh/lib
