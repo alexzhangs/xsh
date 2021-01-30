@@ -31,37 +31,40 @@
 #?                    <lib>/<util>, /<util>
 #?
 #? Debug Mode:
-#?   Enable debug mode by setting environment variable: XSH_DEBUG
+#?   With debug mode enabled, the shell options: `-vx` is set for the debugging
+#?   utilities. Debug mode is available only for the commands started with `xsh`.
 #?
-#?   With debug mode enabled, set shell options: `-vx`.
-#?   Debug mode is available only for the command started with `xsh`.
+#?   Enable debug mode by setting an environment variable: `XSH_DEBUG`.
 #?
 #?   Values for XSH_DEBUG:
-#?       1:      Debug current called xsh utility.
-#?       <LPUR>: Debug matched xsh utilities.
+#?       1     : Debugging current called xsh utility.
+#?       <LPUR>: Debugging the matching xsh utilities.
 #?
 #?   Example:
 #?       $ XSH_DEBUG=1 xsh /string/upper foo
 #?
-#?   This is for debugging xsh libraries.
-#?   For general debugging purpose, see `xsh debug`.
+#?   The above is for debugging xsh libraries.
+#?   For the general debugging purpose, see `xsh help debug`. 
 #?
 #? Dev Mode:
-#?   Enable dev mode by setting environment variable: XSH_DEV_HOME
+#?   The dev mode is for developers to develop xsh libraries.
+#?   With the dev mode enabled, the utilities from the development library will
+#?   be called rather than those from the normal library.
 #?
-#?   With dev mode enabled, able to call the utilities from development library.
+#?   Before using the dev mode, two steps need to take:
+#?   1. Setting an environment variable: `XSH_DEV_HOME` to be somewhere.
+#?   2. Create symbol links in the `XSH_DEV_HOME` for the libraries that need to
+#?      use dev mode, and pointing them to your development workspaces.
+#?
+#?   Then the dev mode is ready to use.
+#?   Enable dev mode by setting an environment variable: `XSH_DEV`.
 #?
 #?   Values for XSH_DEV:
-#?       1:      Call current called xsh utility from dev library.
-#?       <LPUR>: Call matched xsh utilities from dev library.
+#?       1:      Call current called xsh utility from the development library.
+#?       <LPUR>: Call the matching xsh utilities from the development library.
 #?
 #?   Example:
 #?       $ XSH_DEV=1 xsh /string/upper foo
-#?
-#?   The development library path is set by environment variable: XSH_DEV_HOME.
-#?   In the XSH_DEV_HOME, the symbol links pointing to the repos must exist.
-#?
-#?   The dev mode is for developers to developing xsh libraries.
 #?
 function xsh () {
 
@@ -187,6 +190,10 @@ function xsh () {
     #?
     #?   If no option given, `-1 x` is set as default.
     #?
+    #? Usage:
+    #?   __xsh_debug foo_func
+    #?   __xsh_debug bar_script.sh
+    #?
     function __xsh_debug () {
         if [[ ${1:0:1} != - ]]; then
             # prepend `-1 x` to $@
@@ -200,7 +207,7 @@ function xsh () {
     #?   Count the number of given function name in ${FUNCNAME[@]}
     #?
     #? Usage:
-    #?   __xsH_count_in_funcstack <FUNCNAME>
+    #?   __xsh_count_in_funcstack <FUNCNAME>
     #?
     function __xsh_count_in_funcstack () {
         printf '%s\n' "${FUNCNAME[@]}" \
