@@ -538,7 +538,7 @@ function xsh () {
     #?
     function __xsh_help () {
         # get the last argument
-        declare topic=${@:(-1)}
+        declare topic=${!#}
 
         if [[ ${topic:0:1} == - ]]; then
             unset topic
@@ -630,7 +630,7 @@ function xsh () {
     #?
     function __xsh_help_builtin () {
         # get the last argument
-        declare builtin=${@:(-1)}
+        declare builtin=${!#}
         # remove the last argument from argument list
         declare options=( "${@:1:$(($# - 1))}" )
 
@@ -651,7 +651,7 @@ function xsh () {
     #?
     function __xsh_help_lib () {
         # get the last argument
-        declare lpur=${@:(-1)}
+        declare lpur=${!#}
         # remove the last argument from argument list
         declare -a options=( "${@:1:$(($# - 1))}" )
 
@@ -700,7 +700,8 @@ function xsh () {
     function __xsh_info () {
         declare OPTIND OPTARG opt
 
-        declare path=${@:(-1)}
+        # get the last argument
+        declare path=${!#}
 
         if [[ -z ${path} || ${path:1:1} == - ]]; then
             __xsh_log error "LPU path is null or not set."
@@ -999,7 +1000,7 @@ function xsh () {
     #?
     function __xsh_load () {
         # get the last argument
-        declare repo=${@:(-1)}
+        declare repo=${!#}
 
         __xsh_git_clone "$@" || return
         __xsh_lib_manager "${repo}" link
@@ -1044,7 +1045,7 @@ function xsh () {
     #?
     function __xsh_update () {
         # get the last argument
-        declare repo=${@:(-1)}
+        declare repo=${!#}
 
         if [[ -z ${repo} ]]; then
             __xsh_log error "Repo name is null or not set."
