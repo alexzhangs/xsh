@@ -544,7 +544,7 @@ function xsh () {
             unset topic
         else
             # remove the last argument from argument list
-            set -- "${@:1:$(($# - 1))}"
+            set -- "${@:1:$#-1}"
         fi
 
         if [[ $# -eq 0 ]]; then
@@ -632,7 +632,7 @@ function xsh () {
         # get the last argument
         declare builtin=${!#}
         # remove the last argument from argument list
-        declare options=( "${@:1:$(($# - 1))}" )
+        declare options=( "${@:1:$#-1}" )
 
         __xsh_info -f "${builtin}" "${options[@]}" "${xsh_home}/xsh/xsh.sh"
     }
@@ -653,7 +653,7 @@ function xsh () {
         # get the last argument
         declare lpur=${!#}
         # remove the last argument from argument list
-        declare -a options=( "${@:1:$(($# - 1))}" )
+        declare -a options=( "${@:1:$#-1}" )
 
         declare ln
         while read -r ln; do
