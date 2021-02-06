@@ -537,13 +537,13 @@ function xsh () {
     #?   All options can be used multi times.
     #?
     function __xsh_help () {
-        # get last parameter
+        # get the last argument
         declare topic=${@:(-1)}
 
         if [[ ${topic:0:1} == - ]]; then
             unset topic
         else
-            # remove last parameter from $@
+            # remove the last argument from argument list
             set -- "${@:1:$(($# - 1))}"
         fi
 
@@ -631,7 +631,7 @@ function xsh () {
     function __xsh_help_builtin () {
         # get the last argument
         declare builtin=${@:(-1)}
-        # remoe the last argument from argument list
+        # remove the last argument from argument list
         declare options=( "${@:1:$(($# - 1))}" )
 
         __xsh_info -f "${builtin}" "${options[@]}" "${xsh_home}/xsh/xsh.sh"
@@ -998,7 +998,7 @@ function xsh () {
     #?                    E.g. `username/xsh-lib-foo`
     #?
     function __xsh_load () {
-        # get repo from last parameter
+        # get the last argument
         declare repo=${@:(-1)}
 
         __xsh_git_clone "$@" || return
@@ -1043,7 +1043,7 @@ function xsh () {
     #?                    E.g. `username/xsh-lib-foo`
     #?
     function __xsh_update () {
-        # get repo from last parameter
+        # get the last argument
         declare repo=${@:(-1)}
 
         if [[ -z ${repo} ]]; then
