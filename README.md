@@ -9,6 +9,9 @@ xsh - this repository, in a narrow sense, is not a library itself. It's just a f
 Why started this?
 It is the only way I can write nice shellcode for many different purposes so quickly, in the meanwhile, keep them well-organized as they grow, and be able to reuse them at the time they are needed again.
 
+![xsh usage](doc/xsh-usage.png)
+
+
 ## 1. Requirements
 
 Tested with `base 3.2` on macOS High Sierra, but should be working on Linux.
