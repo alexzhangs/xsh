@@ -905,7 +905,7 @@ function xsh () {
                        | awk -F/ '{print $(NF-1) FS $NF}')
 
             printf '%s (%s) => %s\n' "${lib}" "${version:-latest}" "${repo}"
-        done <<< "$(find "${xsh_lib_home}" -type l -maxdepth 1)"
+        done <<< "$(find "${xsh_lib_home}" -maxdepth 1 -type l)"
     }
 
     #? Description:
