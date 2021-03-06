@@ -537,12 +537,11 @@ function xsh () {
     #?   All options can be used multi times.
     #?
     function __xsh_help () {
-        # get the last argument
-        declare topic=${!#}
+        declare topic
+        if [[ $# -gt 0 ]]; then
+            # get the last argument
+            topic=${!#}
 
-        if [[ ${topic:0:1} == - ]]; then
-            unset topic
-        else
             # remove the last argument from argument list
             set -- "${@:1:$#-1}"
         fi
