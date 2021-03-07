@@ -1,0 +1,6 @@
+language: bash
+install:
+  - bash install.sh
+script:
+  - source ~/.bash_profile
+  - bash test.sh
