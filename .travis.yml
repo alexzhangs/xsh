@@ -3,4 +3,5 @@ install:
   - bash install.sh
 script:
   - source ~/.bash_profile
+  - xsh version
   - bash test.sh

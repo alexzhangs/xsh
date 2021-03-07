@@ -1,10 +1,5 @@
 #!/bin/bash
 
-set -e
-
-xsh log info 'xsh log info xsh version'
-xsh log info xsh version
-
 xsh log info 'xsh versions'
 xsh versions
 
@@ -47,8 +42,8 @@ x-string-lower Hello World
 xsh log info 'xsh unimports /string/lower'
 xsh unimports /string/lower
 
-xsh log info 'x-string-lower Hello World 2>/dev/null || test $? -ne 0'
-x-string-lower Hello World 2>/dev/null || test $? -ne 0
+xsh log info '! x-string-lower Hello World >/dev/null 2>&1'
+! x-string-lower Hello World >/dev/null 2>&1
 
 xsh log info 'xsh unload xsh-lib/core'
 xsh unload xsh-lib/core
