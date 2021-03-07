@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
+
+set -e
 
 XSH_HOME=~/.xsh
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
@@ -17,7 +19,7 @@ function sed_regx () {
 
 function sed_inplace () {
     if is_mac; then
-       sed -i '' "$@"
+        sed -i '' "$@"
     else
         sed -i "$@"
     fi
