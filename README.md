@@ -24,7 +24,10 @@ It is the only way I can write nice shellcode for many different purposes so qui
 
 ## 1. Requirements
 
-Tested with `base 3.2` on macOS High Sierra, but should be working on Linux.
+Tested with:
+
+* 4.3.48(1)-release
+* 3.2.57(1)-release
 
 This project is still at version `0.x`, and should be considered immature.
 
