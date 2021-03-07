@@ -24,7 +24,7 @@ It is the only way I can write nice shellcode for many different purposes so qui
 
 ## 1. Requirements
 
-Tested with:
+Tested with bash:
 
 * 4.3.48(1)-release
 * 3.2.57(1)-release
