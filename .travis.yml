@@ -1,6 +1,7 @@
 language: bash
 install:
   - bash install.sh
+  - xsh upgrade -b "$TRAVIS_BRANCH"
 script:
   - source ~/.bash_profile
   - xsh version
