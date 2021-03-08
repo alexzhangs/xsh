@@ -299,13 +299,13 @@ function xsh () {
     }
 
     #? Description:
-    #?   Get all tags.
+    #?   Get all tags, in ascending order of commit date.
     #?
     #? Usage:
     #?   __xsh_git_get_all_tags
     #?
     function __xsh_git_get_all_tags () {
-        git tag --list
+        git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort | awk '{print $4}'
     }
 
     #? Description:
