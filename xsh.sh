@@ -563,6 +563,20 @@ function xsh () {
     }
 
     #? Description:
+    #?   A wrapper of sha1sum on Linux, and shasum on macOS.
+    #?
+    #? Usage:
+    #?   __xsh_sha1sum [OPTIONS]
+    #?
+    function __xsh_sha1sum () {
+        if type -t sha1sum; then
+            sha1sum "$@"
+        else
+            shasum "$@"
+        fi
+    }
+
+    #? Description:
     #?   Show cachable help for xsh itself.
     #?
     #? Usage:
@@ -571,7 +585,7 @@ function xsh () {
     function __xsh_help_self_cache () {
         declare hash cached_help
 
-        hash=$(shasum "${xsh_home}/xsh/xsh.sh" 2>/dev/null | cut -d' ' -f1)
+        hash=$(__xsh_sha1sum "${xsh_home}/xsh/xsh.sh" 2>/dev/null | cut -d' ' -f1)
         cached_help=/tmp/.${FUNCNAME[0]}_${hash}
 
         if [[ -f ${cached_help} ]]; then
