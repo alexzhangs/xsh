@@ -261,6 +261,37 @@ function xsh () {
     }
 
     #? Description:
+    #?   Compare two versions.
+    #?   The version format is like `X.Y.Z`.
+    #?
+    #? Usage:
+    #?   __xsh_version_comparator <VER1> <VER2>
+    #?
+    #? Output:
+    #?   0: VER1 == VER2
+    #?   1: VER1 > VER2
+    #?   2: VER1 < VER2
+    #?
+    function __xsh_version_comparator () {
+        if [[ $1 == $2 ]]; then
+            echo 0
+            return
+        fi
+        declare ver1=( ${1//./ } ) ver2=( ${2//./ } ) \
+                n1=${#ver1[@]} n2=${#ver2[@]} index
+        for index in $(seq 0 $((n1 > n2 ? n1 : n2))); do
+            if [[ ${ver1[index]} -gt ${ver2[index]} ]]; then
+                echo 1
+                return
+            elif [[ ${ver1[index]} -lt ${ver2[index]} ]]; then
+                echo 2
+                return
+            fi
+        done
+        echo 0
+    }
+
+    #? Description:
     #?   chmod +x all .sh regular files under the given dir.
     #?
     #? Usage:
@@ -299,6 +330,16 @@ function xsh () {
     }
 
     #? Description:
+    #?   Get git version.
+    #?
+    #? Usage:
+    #?   __xsh_git_version
+    #?
+    function __xsh_git_version () {
+        git version | awk '{print $3}'
+    }
+
+    #? Description:
     #?   Get all tags, in ascending order of commit date.
     #?
     #? Usage:
@@ -313,15 +354,19 @@ function xsh () {
     }
 
     #? Description:
-    #?   Fetch remote tags to local.
+    #?   Fetch remote tags to local, and remove local tags no longer on remote.
     #?
     #? Usage:
     #?   __xsh_git_fetch_remote_tags
     #?
     function __xsh_git_fetch_remote_tags () {
-        # remove local tags that don't exist on remote
-        __xsh_git_get_all_tags | xargs git tag --delete
-        git fetch --tags
+        if [[ $(__xsh_version_comparator 1.9.0 $(__xsh_git_version)) -eq 1 ]]; then
+            # git version < 1.9.0
+            git fetch --prune origin "+refs/tags/*:refs/tags/*"
+        else
+            # git version >= 1.9.0
+            git fetch --prune --prune-tags origin
+        fi
     }
 
     #? Description:
