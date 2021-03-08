@@ -1286,8 +1286,8 @@ function xsh () {
         done <<< "$(__xsh_get_decorator "${path}")"
 
         # renaming function name
-        sed "s/^function ${util} ()/function ${lpuc} ()/g" <<< "${code}" \
-            | sed "s/@${util} /${lpuc} /g"
+        sed -e "s/^function ${util} ()/function ${lpuc} ()/g" \
+            -e "s/@${util} /${lpuc} /g" <<< "${code}"
 
         printf "\n%s\n" "export -f ${lpuc}"
     }
