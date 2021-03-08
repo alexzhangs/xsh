@@ -346,11 +346,7 @@ function xsh () {
     #?   __xsh_git_get_all_tags
     #?
     function __xsh_git_get_all_tags () {
-        if [[ $(git version | awk '{print ($3 >= "2.8")}') -eq 1 ]]; then
-            git tag --sort=committerdate
-        else
-            git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort | awk '{print $4}'
-        fi
+        git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort | awk '{print $4}'
     }
 
     #? Description:
