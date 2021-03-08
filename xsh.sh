@@ -1201,9 +1201,9 @@ function xsh () {
                     source "${init_file}"
                 fi
             fi
-        done <<< "$(echo -e "${scope//\//\n}")"  # replace all `/` to newline
+        # done <<< "$(echo -e "${scope//\//\n}")" # replace all `/` to newline
         # following code is rewritten by bash as `done <<< $'"${scope//\\//\n}"'`
-        # done <<< "${scope//\//$'\n'}"
+        done <<< "${scope//\//$'\n'}"
     }
 
     #? Description:
