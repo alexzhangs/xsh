@@ -899,6 +899,9 @@ function xsh () {
         declare lib lib_path repo version
 
         while read -r lib_path; do
+            if [[ -z ${lib_path} ]]; then
+                break
+            fi
             lib=${lib_path##*/}
             version=$(cd "${lib_path}" && __xsh_git_get_current_tag)
             repo=$(readlink "${lib_path}" \
