@@ -1194,21 +1194,23 @@ function xsh () {
         fi
 
         while read -r ln; do
-            if [[ -n ${ln} ]]; then
-                type=$(__xsh_get_type_by_path "${ln}")
-
-                case ${type} in
-                    functions)
-                        __xsh_import_function "${ln}"
-                        ;;
-                    scripts)
-                        __xsh_import_script "${ln}"
-                        ;;
-                    *)
-                        return 255
-                        ;;
-                esac
+            if [[ -z ${ln} ]]; then
+                __xsh_log error "LPUC is not found for the LPUR."
+                return 255
             fi
+            type=$(__xsh_get_type_by_path "${ln}")
+
+            case ${type} in
+                functions)
+                    __xsh_import_function "${ln}"
+                    ;;
+                scripts)
+                    __xsh_import_script "${ln}"
+                    ;;
+                *)
+                    return 255
+                    ;;
+            esac
         done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
     }
 
