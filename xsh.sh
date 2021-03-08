@@ -1288,6 +1288,8 @@ function xsh () {
         # renaming function name
         sed "s/^function ${util} ()/function ${lpuc} ()/g" <<< "${code}" \
             | sed "s/@${util} /${lpuc} /g"
+
+        printf "\n%s\n" "export -f ${lpuc}"
     }
 
     #? Description:
