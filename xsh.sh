@@ -51,10 +51,9 @@
 #?   With the dev mode enabled, the utilities from the development library will
 #?   be called rather than those from the normal library.
 #?
-#?   Before using the dev mode, two steps need to take:
-#?   1. Setting an environment variable: `XSH_DEV_HOME` to be somewhere.
-#?   2. Create symbol links in the `XSH_DEV_HOME` for the libraries that need to
-#?      use dev mode, and pointing them to your development workspaces.
+#?   Before using the dev mode, you need to create symbol links for the
+#?   libraries that need to use dev mode, put the symbol links in the directory
+#?   `~/.xsh/lib-dev`, and point them to your development workspaces.
 #?
 #?   Then the dev mode is ready to use.
 #?   Enable dev mode by setting an environment variable: `XSH_DEV`.

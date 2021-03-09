@@ -44,6 +44,7 @@ This project is still at version `0.x`, and should be considered immature.
   ```bash
   $ git clone https://github.com/alexzhangs/xsh
   $ bash xsh/install.sh
+  $ . ~/.xshrc
   ```
 
 * Easy to invoke.
@@ -110,6 +111,7 @@ The only thing you need is a bash and Git client.
 ```bash
 $ git clone https://github.com/alexzhangs/xsh
 $ bash xsh/install.sh
+$ . ~/.xshrc
 ```
 
 
@@ -520,15 +522,7 @@ It provides a consistent way to debug functions and scripts without having to ma
 The dev mode is for developers to develop xsh libraries.
 With the dev mode enabled, the utilities from the development library will be called rather than those from the normal library.
 
-Before using the dev mode, two steps need to take:
-1. Setting an environment variable: `XSH_DEV_HOME` to be somewhere, for example: choosing `$XSH_HOME/dev-lib`.
-
-```bash
-$ echo $XSH_DEV_HOME
-/Users/alex/.xsh/dev-lib
-```
-
-2. Create symbol links in the `XSH_DEV_HOME` for the libraries that need to use dev mode, and pointing them to your development workspaces.
+Before using the dev mode, you need to create symbol links for the libraries that need to use dev mode, put the symbol links in the directory `~/.xsh/lib-dev`, and point them to your development workspaces.
 
 The normal libraries look like:
 
@@ -542,7 +536,7 @@ lrwxr-xr-x  1 alex  staff  34 Oct 10 15:07 x -> /Users/alex/.xsh/repo/xsh-lib/co
 The development libraries look like:
 
 ```bash
-$ ls -l ~/.xsh/dev-lib
+$ ls -l ~/.xsh/lib-dev
 total 0
 lrwxr-xr-x  1 alex  staff  32 Sep  4 16:36 aws -> /Users/alex/projects/xsh-lib/aws
 lrwxr-xr-x  1 alex  staff  33 Sep  4 16:36 x -> /Users/alex/projects/xsh-lib/core

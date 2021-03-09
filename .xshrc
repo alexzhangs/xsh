@@ -1,0 +1,10 @@
+#? Description:
+#?   This file is used by xsh - https://github.com/alexzhangs/xsh
+#?
+#? Usage:
+#?   . ~/.xshrc  # add this line to your ~/.bash_profile and ~/.bashrc
+#?
+
+export XSH_HOME=~/.xsh
+export XSH_DEV_HOME=${XSH_HOME}/lib-dev
+. ${XSH_HOME}/xsh/xsh.sh
