@@ -26,8 +26,8 @@ It is the only way I can write nice shellcode for many different purposes so qui
 
 Tested with bash:
 
-* 4.3.48(1)-release
-* 3.2.57(1)-release
+* 4.3.48 on Linux
+* 3.2.57 on macOS
 
 This project is still at version `0.x`, and should be considered immature.
 
