@@ -1,9 +1,10 @@
 language: bash
-os:
-  - linux
-    dist: xenial
-  - osx
-    osx_image: xcode12.2
+jobs:
+  include:
+    - os: linux
+      dist: xenial
+    - os: osx
+      osx_image: xcode12.2
 install:
   - bash install.sh
   - source ~/.xshrc
