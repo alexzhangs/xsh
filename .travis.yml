@@ -1,7 +1,12 @@
 language: bash
+os:
+  - linux
+    dist: xenial
+  - osx
+    osx_image: xcode12.2
 install:
   - bash install.sh
-  - source ~/.bash_profile
+  - source ~/.xshrc
   - xsh upgrade -b "$TRAVIS_BRANCH"
 script:
   - xsh version
