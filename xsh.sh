@@ -1172,6 +1172,8 @@ function xsh () {
         scope=${scope%/}
         # remove the tailing `/`
         scope=${scope#/}
+        # replace all `/` to newline
+        scope=${scope//\//$'\n'}
 
         if [[ -z ${scope} ]]; then
             __xsh_log ERROR "Found empty init scope for dir: ${dir}"
@@ -1201,7 +1203,7 @@ function xsh () {
                     source "${init_file}"
                 fi
             fi
-        done <<< "${scope//\//$'\n'}"
+        done <<< "${scope}"
     }
 
     #? Description:
