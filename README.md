@@ -8,6 +8,15 @@
 [![GitHub issues](https://img.shields.io/github/issues/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
 
+| Linux Ubuntu Xenial 16.04 - bash 4.3.48 | macOS 10.15.7 - bash 3.2.57 |
+|-----------------------------------------|-----------------------------|
+| [![Build1][1]][0]                       | [![Build2][2]][0]           |
+
+[0]: https://travis-ci.org/alexzhangs/xsh
+[1]: https://travis-matrix-badges.herokuapp.com/repos/alexzhangs/xsh/branches/master/1?use_travis_com=true
+[2]: https://travis-matrix-badges.herokuapp.com/repos/alexzhangs/xsh/branches/master/2?use_travis_com=true
+
+
 # e<span style="color:red">X</span>tension of ba<span style="color:red">SH</span>
 
 xsh is an e<span style="color:red">__x__</span>tension of ba<span style="color:red">__sh__</span>. It works as a bash library framework.
@@ -20,14 +29,6 @@ Why started this?
 It is the only way I can write nice shellcode for many different purposes so quickly, in the meanwhile, keep them well-organized as they grow, and be able to reuse them at the time they are needed again.
 
 ![xsh usage](doc/xsh-usage.png)
-
-
-## 1. Requirements
-
-Tested with bash:
-
-* 4.3.48 on Linux
-* 3.2.57 on macOS
 
 This project is still at version `0.x`, and should be considered immature.
 
