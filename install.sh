@@ -154,7 +154,7 @@ function install-xsh () {
     /bin/mkdir -p "${XSH_DEV_HOME}"
 
     printf "installing xsh repo to: ${XSH_HOME}\n"
-    /bin/cp -a "${SCRIPT_DIR}" "${XSH_HOME}/"
+    /bin/cp -a "${SCRIPT_DIR}" "${XSH_HOME}/xsh"
 
     printf "installing: %s\n" ~/.xshrc
     /bin/cp -a "${SCRIPT_DIR}/.xshrc" ~/
