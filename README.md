@@ -1,5 +1,3 @@
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors)
-
 [![GitHub tag](https://img.shields.io/github/tag/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
 [![GitHub](https://img.shields.io/github/license/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
 [![GitHub last commit](https://img.shields.io/github/last-commit/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
@@ -113,6 +111,12 @@ The only thing you need is a bash and Git client.
 $ git clone https://github.com/alexzhangs/xsh
 $ bash xsh/install.sh
 $ . ~/.xshrc
+```
+
+Or bootstrap xsh with a single line:
+
+```
+$ curl -s https://raw.githubusercontent.com/alexzhangs/xsh/master/boot | bash && . ~/.xshrc
 ```
 
 
