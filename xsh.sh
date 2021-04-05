@@ -1207,10 +1207,11 @@ function xsh () {
 
     #? Description:
     #?   Import the matching utilities by a list of LPUR.
-    #?   The functions are sourced, and the scripts are linked at /usr/local/bin.
+    #?   The functions are sourced, and exported to sub-processes.
+    #?   The scripts are linked at `/usr/local/bin`.
     #?
     #?   The imported utilities can be called directly without
-    #?   leading `xsh` as syntax: 'LIB-PACKAGE-UTIL'.
+    #?   leading `xsh` as syntax: `LIB-PACKAGE-UTIL`.
     #?
     #?   Legal input:
     #?     '*'
@@ -1333,6 +1334,7 @@ function xsh () {
         sed -e "s/^function ${util} ()/function ${lpuc} ()/g" \
             -e "s/@${util} /${lpuc} /g" <<< "${code}"
 
+        # export function to sub-processes
         printf "\n%s\n" "export -f ${lpuc}"
     }
 
@@ -2011,4 +2013,5 @@ function xsh () {
         __xsh_call "$1" "${@:2}"
     fi
 }
+# export function to sub-processes
 export -f xsh
