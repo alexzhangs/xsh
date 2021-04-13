@@ -4,15 +4,30 @@
 #?   Install xsh to your environment.
 #?
 #? Usage:
-#?   install.sh [-f | -u] [-h]
+#?   install.sh [-f] [-s] [-b BRANCH]
+#?   install.sh [-u]
+#?   install.sh [-h]
 #?
 #? Option:
-#?   [-f]  Force to uninstall xsh before to install it.
+#?   [-f]
+#?   Force to uninstall xsh before to install it.
 #?
-#?   [-u]  Uninstall xsh from your environment.
-#?         All the loaded libraries will be removed along with xsh.
+#?   [-s]
+#?   Skip the step to upgrade xsh to the latest stable version.
+#?   This lets the installation reflect the exact status of the installing files.
+#?   Use this option to test the project.
 #?
-#?   [-h]  This help.
+#?   [-b BRANCH]
+#?   Upgrade xsh to the BRANCH's latest state.
+#?   This option is ignored if `-s` presents.
+#?   Use this option to test the project on a specific branch.
+#?
+#?   [-u]
+#?   Uninstall xsh from your environment.
+#?   All the loaded libraries will be removed along with xsh.
+#?
+#?   [-h]
+#?   This help.
 #?
 #? Example:
 #?   $ bash install.sh
@@ -129,7 +144,7 @@ function clean-in-profile () {
 }
 
 function uninstall-xsh () {
-    printf "unsetting the xsh environments."
+    printf "unsetting the xsh environments.\n"
     unset xsh XSH_DEV XSH_DEBUG
 
     printf "cleaning in: %s\n" ~/.bash_profile
@@ -167,13 +182,20 @@ function install-xsh () {
 }
 
 function main () {
-    declare force=0 uninstall=0 \
+    declare force=0 upgrade=1 uninstall=0 \
             OPTIND OPTARG opt
+    declare -a branch_opts
 
-    while getopts fuh opt; do
+    while getopts fsb:uh opt; do
         case ${opt} in
             f)
                 force=1
+                ;;
+            s)
+                upgrade=0
+                ;;
+            b)
+                branch_opts=(-b ${OPTARG:?})
                 ;;
             u)
                 uninstall=1
@@ -207,8 +229,10 @@ function main () {
     printf "applying xsh for current Shell.\n"
     . ~/.xshrc
 
-    printf "updating xsh to the latest stable version.\n"
-    xsh upgrade
+    if [[ ${upgrade} -eq 1 ]]; then
+        printf "upgrading xsh.\n"
+        xsh upgrade "${branch_opts[@]}"
+    fi
 
     printf "DONE.\n"
     printf "##########################################################################\n"
