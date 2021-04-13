@@ -6,9 +6,8 @@ jobs:
     - os: osx
       osx_image: xcode12.2
 install:
-  - bash install.sh
+  - bash install.sh -b "$TRAVIS_BRANCH"
   - source ~/.xshrc
-  - xsh upgrade -b "$TRAVIS_BRANCH"
 script:
   - xsh version
   - bash test.sh
