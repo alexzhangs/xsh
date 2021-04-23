@@ -816,7 +816,7 @@ function xsh () {
                     ;;
                 c)
                     if [[ -n ${funcname} ]]; then
-                        declare -f ${funcname//,/ }  # do not double quote the parameter
+                        __xsh_get_funccode_from_file "${path}" "${funcname}"
                     else
                         sed '/^#?/d' "${path}"
                     fi
@@ -860,6 +860,39 @@ function xsh () {
                     ;;
             esac
         done
+    }
+
+    #? Description:
+    #?   Extract the function code from file.
+    #?
+    #? Usage:
+    #?   __xsh_get_funccode_from_file <FILE> [NAME,...]
+    #?
+    #? Option:
+    #?   <FILE>           File path.
+    #?
+    #?   [NAME]           Show info for the function only.
+    #?                    The name list can be delimited with comma `,`.
+    #?                    The output order of function is determined by the coding order
+    #?                    rather than the list order.
+    #?
+    function __xsh_get_funccode_from_file () {
+        declare path=${1:?} funcname=$2
+
+        awk -v nameregex="^(${funcname//,/|})$" -v indent=-1 '{
+            if ($1 == "function" && $2 ~ nameregex) {
+                indent = index($0, "function") - 1
+            }
+            if (indent >= 0) {
+                if (indent > 0) sub("^[ ]{" indent "}", "")
+                str = str (str ? RS : "") $0
+                if (substr($0, 1, 1) == "}") {
+                    print str
+                    str = ""
+                    indent = -1
+                }
+            }
+        }' "${path}"
     }
 
     #? Description:
