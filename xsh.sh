@@ -99,16 +99,22 @@ function xsh () {
     #?   -himBH +vx
     #?
     function __xsh_shell_option () {
-        declare prune
-        prune=$(printf '%s' "${*//[[:blank:]+-]/}")
+        # set IFS in local
+        declare IFS=$''
+        # squash all the arguments without whitespaces, `+`, and `-`
+        declare testing="${*//[ +-]}"
 
-        declare on=${-//[^${prune}]/}
-        [[ -n $on ]] && on=-$on || :
+        # remove all the shell options that are not in the testing list from the turned on shell options `$-`
+        # and prefix the `-`
+        declare on="-${-//[^${testing:-.}]}"
 
-        declare off=${prune//[$-]/}
-        [[ -n $off ]] && off=+$off || :
+        # remove all the shell options that are turned on from the testing list
+        # and prefix the `+`
+        declare off="+${testing//[$-]}"
 
-        echo $on $off  # do not double quote the parameter
+        # remove the `+` and `-` if there's no any shell option
+        # do not double quote the variables
+        echo ${on%-} ${off%+}
     }
 
 
