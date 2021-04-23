@@ -607,8 +607,8 @@ function xsh () {
         {
             if [[ -z ${topic} ]]; then
                 __xsh_help_self_cache
-            elif [[ $(type -t "__xsh_${topic}" || :) == function ]]; then
-                __xsh_help_builtin "$@" "__xsh_${topic}"
+            elif [[ $(type -t "__xsh_${topic//-/_}" || :) == function ]]; then
+                __xsh_help_builtin "$@" "__xsh_${topic//-/_}"
             else
                 __xsh_help_lib "$@" "${topic}"
             fi
@@ -2015,9 +2015,9 @@ function xsh () {
         return 255
     fi
 
-    if [[ $(type -t "__xsh_$1" || :) == function ]]; then
-        # xsh command and builtin function
-        __xsh_$1 "${@:2}"
+    if [[ $(type -t "__xsh_${1//-/_}" || :) == function ]]; then
+        # xsh command or builtin function
+        __xsh_${1//-/_} "${@:2}"
     else
         __xsh_call "$1" "${@:2}"
     fi
