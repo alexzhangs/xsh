@@ -539,6 +539,9 @@ function xsh () {
             return
         fi
 
+        # suppress the warning of 'detached HEAD' state
+        git config advice.detachedHead false
+
         __xsh_log info "Updating repo to ${target}."
         if ! git checkout -f "${target}"; then
             __xsh_log error "Failed to checkout repo."
