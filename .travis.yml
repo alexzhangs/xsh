@@ -6,8 +6,9 @@ jobs:
     - os: osx
       osx_image: xcode12.2
 install:
-  - bash install.sh -b "$TRAVIS_BRANCH"
+  - bash install.sh -s
   - source ~/.xshrc
+  - curl -fsSL https://git.io/shellspec | sh
 script:
   - xsh version
-  - bash test.sh
+  - /usr/local/lib/shellspec/shellspec -s bin/bash --no-warning-as-failure spec/xsh_spec.sh
