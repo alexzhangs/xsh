@@ -8,7 +8,7 @@ jobs:
 install:
   - bash install.sh -s
   - source ~/.xshrc
-  - curl -fsSL https://git.io/shellspec | sh
+  - curl -fsSL https://git.io/shellspec | sh -s -- -y
 script:
   - xsh version
-  - /usr/local/lib/shellspec/shellspec -s bin/bash --no-warning-as-failure spec/xsh_spec.sh
+  - ~/.local/bin/shellspec -s bin/bash --no-warning-as-failure spec/xsh_spec.sh
