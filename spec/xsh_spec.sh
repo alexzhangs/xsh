@@ -161,7 +161,7 @@ Describe 'xsh.sh'
     It 'call mime-type'
       When call xsh mime-type /bin/ls
       The status should be success
-      The output should equal 'application/x-mach-binary'
+      The output should start with 'application/'
     End
 
     It 'call shell-option h +v -x'
