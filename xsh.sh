@@ -2039,7 +2039,7 @@ function xsh () {
 
         if [[ ${import} -eq 1 ]]; then
             __xsh_import "${lpue}"
-        elif ! type -t "${lpuc}" >/dev/null 2>&1; then
+        elif ! type -t "${lpuc}" >/dev/null; then
             __xsh_import "${lpue}"
         fi
 

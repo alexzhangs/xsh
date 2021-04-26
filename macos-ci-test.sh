@@ -20,7 +20,7 @@ function usage () {
 }
 
 function insall-shellspec () {
-    if ! type -t ~/.local/bin/shellspec 2>/dev/null 2>&1; then
+    if ! type -t ~/.local/bin/shellspec >/dev/null; then
         curl -fsSL https://git.io/shellspec | sh -s -- -y
     fi
 
