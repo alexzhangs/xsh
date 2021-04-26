@@ -101,18 +101,38 @@ function xsh () {
 
     #? Description:
     #?   Get the mime type of a file.
+    #?   A wrapper of `file -b --mime-type`, with enhancements:
+    #?     * Only output the first line of the result.
+    #?       e.g: file /bin/ls (version file-5.39)
+    #?     * If the file does not exist, cannot be read, then send output to stderr.
     #?
     #? Usage:
     #?   __xsh_mime_type <FILE> [...]
     #?
+    #? Option:
+    #?   <FILE>          Path to the file.
+    #?
     #? Example:
-    #?   $ __xsh_mime_type /usr/bin/command /bin/ls ~
-    #?   text/x-shellscript
+    #?   $ __xsh_mime_type /dev/null /bin/ls ~
+    #?   inode/chardevice
     #?   application/x-mach-binary
     #?   inode/directory
     #?
     function __xsh_mime_type () {
-        /usr/bin/file -b --mime-type "$@"
+        declare mime_type f fd
+
+        for f in "$@"; do
+            fd=1 # set default fd to stdout
+            mime_type=$(/usr/bin/file -b --mime-type "${f}")
+
+            # get the first line
+            mime_type=${mime_type%%$'\n'*}
+            if [[ ${mime_type} =~ 'No such file or directory' ]]; then
+                # set fd to stderr
+                fd=2
+            fi
+            printf '%s\n' "${mime_type}" >&${fd}
+        done
     }
 
     #? Description:
@@ -188,7 +208,7 @@ function xsh () {
         shift $((OPTIND - 1))
 
         declare mime_type ret=0
-        mime_type=$(__xsh_mime_type "$(command -v "$1")")
+        mime_type=$(__xsh_mime_type "$(command -v "$1")" 2>/dev/null)
 
         if [[ $(type -t "$1" || :) == file && ${mime_type%%/*} == text ]]; then
             # call script with shell options enabled
@@ -2023,7 +2043,7 @@ function xsh () {
         fi
 
         declare mime_type
-        mime_type=$(__xsh_mime_type "$(command -v "$1")")
+        mime_type=$(__xsh_mime_type "$(command -v "$1")" 2>/dev/null)
 
         # shellcheck disable=SC2128
         if [[ -n ${XSH_DEBUG} ]]; then
