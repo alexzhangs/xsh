@@ -11,4 +11,4 @@ install:
   - curl -fsSL https://git.io/shellspec | sh -s -- -y
 script:
   - xsh version
-  - ~/.local/bin/shellspec -s bin/bash --no-warning-as-failure spec/xsh_spec.sh
+  - ~/.local/bin/shellspec -s /bin/bash --no-warning-as-failure spec/xsh_spec.sh
