@@ -528,6 +528,7 @@ function xsh () {
             return 255
         fi
 
+        # never use a shallow clone here
         git clone "${git_server}/${repo}" "${repo_path}"
 
         # update to latest tagged version
