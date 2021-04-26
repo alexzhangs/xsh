@@ -19,6 +19,13 @@ function usage () {
         | awk '{gsub(/^[^ ]+.*/, "\033[1m&\033[0m"); print}'
 }
 
+function insall-shellspec () {
+    if ! type -t ~/.local/bin/shellspec 2>/dev/null 2>&1; then
+        curl -fsSL https://git.io/shellspec | sh -s -- -y
+    fi
+
+}
+
 function main () {
     declare testuser=$1
 
@@ -32,13 +39,17 @@ function main () {
         sudo sysadminctl -addUser "${testuser}" -shell /bin/bash
     fi
 
+    # install shellspec for sandbox user if not exists yet
+    declare FUNC=$(declare -f insall-shellspec)
+    sudo -H -u "${testuser}" bash -c "${FUNC}; insall-shellspec"
+
     # install xsh
     #   -f: Force to uninstall xsh before to install it.
     #   -s: Skip the step to upgrade xsh to the latest stable version.
     sudo -H -u "${testuser}" bash "${SCRIPT_DIR}/install.sh" -f -s
 
     # run test cases with bash
-    sudo -H -u "${testuser}" bash -c ". ~/.xshrc && /usr/local/lib/shellspec/shellspec -C \"${SCRIPT_DIR}\" -s /bin/bash --no-warning-as-failure spec/xsh_spec.sh"
+    sudo -H -u "${testuser}" bash -c ". ~/.xshrc && ~/.local/bin/shellspec -C \"${SCRIPT_DIR}\" -s /bin/bash --no-warning-as-failure spec/xsh_spec.sh"
 }
 
 declare SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
