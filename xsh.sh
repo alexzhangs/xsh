@@ -341,7 +341,7 @@ function xsh () {
         # shellcheck disable=SC2206
         declare -a ver1=( ${1//./ } ) ver2=( ${2//./ } )
         declare n1=${#ver1[@]} n2=${#ver2[@]} index
-        for index in $(seq 0 $((n1 > n2 ? n1 : n2))); do
+        for (( index = 0; index <= $((n1 > n2 ? n1 : n2)); index++ )); do
             if [[ ${ver1[index]} -gt ${ver2[index]} ]]; then
                 echo 1
                 return
@@ -1368,7 +1368,7 @@ function xsh () {
         declare -a scopes=( ${scope//\// } )
 
         declare index init_file
-        for index in $(seq "${#scopes[@]}" 0); do
+        for (( index = "${#scopes[@]}"; index >= 0; index-- )); do
             scope=${scopes[*]:0:index}
             # replace all whitespace to slash `/`
             init_file=${XSH_LIB_HOME}/${scope// //}/__init__.sh
