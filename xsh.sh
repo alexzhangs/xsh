@@ -655,19 +655,16 @@ function xsh () {
 
     #? Description:
     #?   A wrapper of sha1sum on Linux, and shasum on macOS.
-    #?   The stderr is redirected to stdout.
     #?
     #? Usage:
     #?   __xsh_sha1sum [OPTIONS]
     #?
     function __xsh_sha1sum () {
-        {
-            if type -t sha1sum; then
-                sha1sum "$@"
-            else
-                shasum "$@"
-            fi
-        } 2>/dev/null
+        if type -t sha1sum >/dev/null; then
+            sha1sum "$@"
+        else
+            shasum "$@"
+        fi
     }
 
     #? Description:
