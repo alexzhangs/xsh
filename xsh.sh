@@ -10,9 +10,18 @@
 #?
 #?   The library of the utility must be loaded first.
 #?
+#? Builtin:
+#?   All xsh builtin functions are available without the prefix: `__xsh_`.
+#?   For example, the builtin function `__xsh_lib_dev_manager` can be called as
+#?   the syntax: `xsh lib_dev_manager` or `xsh lib-dev-manager`.
+#?
+#?   If there's naming conflict between the builtin functions and the library
+#?   utilities, The builtin functions take precedence over the library utilities.
+#?
 #? Convention:
 #?   LPUE             LPUE stands for `Lib/Package/Util Expression`.
 #?                    The LPUE syntax is: `[LIB][/PACKAGE]/UTIL`.
+#?                    An LPUE is also an special LPUR.
 #?
 #?                    Example:
 #?
@@ -31,56 +40,99 @@
 #?                    <lib>/<util>, /<util>
 #?
 #? Debug Mode:
-#?   With debug mode enabled, the shell options: `-vx` is set for the debugging
-#?   utilities. Debug mode is available only for the commands started with `xsh`.
+#?   With the debug mode enabled, the shell options: `-vx` is set for the
+#?   debugging utilities.
+#?   The debug mode is available only for the commands started with `xsh`.
 #?
-#?   Enable debug mode by setting an environment variable: `XSH_DEBUG`.
+#?   Enable the debug mode by setting an environment variable: `XSH_DEBUG` before
+#?   the command `xsh`.
 #?
 #?   Values for XSH_DEBUG:
-#?       1     : Debugging current called xsh utility.
-#?       <LPUR>: Debugging the matching xsh utilities.
+#?       1     : Enable the debug mode for whatever the LPUE input by `xsh`.
+#?               e.g: XSH_DEBUG=1 xsh /string/upper foo
 #?
-#?   Example:
-#?       $ XSH_DEBUG=1 xsh /string/upper foo
+#?       <LPUR>: Enabled the debug mode for the LPUE input by `xsh` if the
+#?               LPUE equals to or matches the <LPUR> set by XSH_DEBUG.
+#?               e.g: XSH_DEBUG=/string xsh /string/upper foo
+#?               e.g: XSH_DEBUG=/string/pipe/upper xsh /string/upper foo
 #?
-#?   The above is for debugging xsh libraries.
-#?   For the general debugging purpose, see `xsh help debug`. 
+#?   The debug mode applies to the following commands and internal functions:
+#?       * calls
+#?       * call, exec
+#?
+#?   The debug mode is for debugging xsh libraries.
+#?   For the general debugging purpose, use `xsh debug`, see `xsh help debug`.
 #?
 #? Dev Mode:
 #?   The dev mode is for developers to develop xsh libraries.
 #?   With the dev mode enabled, the utilities from the development library will
-#?   be called rather than those from the normal library.
+#?   be used rather than those from the normal library.
+#?   The dev mode is available only for the commands started with `xsh`.
 #?
 #?   Before using the dev mode, you need to create symbol links for the
 #?   libraries that need to use dev mode, put the symbol links in the directory
 #?   `~/.xsh/lib-dev`, and point them to your development workspaces.
+#?   This can be done with the command: `xsh lib-dev-manager link ...`, and be
+#?   undone with the command `xsh lib-dev-manager unlink ...`.
 #?
 #?   Then the dev mode is ready to use.
-#?   Enable dev mode by setting an environment variable: `XSH_DEV`.
+#?   Enable the dev mode by setting an environment variable: `XSH_DEV` before the
+#?   command `xsh`.
 #?
 #?   Values for XSH_DEV:
-#?       1:      Call current called xsh utility from the development library.
-#?       <LPUR>: Call the matching xsh utilities from the development library.
+#?       1     : Enable the dev mode for whatever the LPUE or LPUR input by `xsh`.
+#?               e.g: XSH_DEV=1 xsh /string/upper foo
+#?                    XSH_DEV=1 xsh import /string
+#?                    XSH_DEV=1 xsh list
 #?
-#?   Example:
-#?       $ XSH_DEV=1 xsh /string/upper foo
+#?       <LPUR>: Enabled the dev mode for the LPUE or LPUR input by `xsh` if the
+#?               LPUE/LPUR equals to or matches the <LPUR> set by XSH_DEV.
+#?               e.g: XSH_DEV=/string xsh import /string
+#?               e.g: XSH_DEV=/string xsh help /string/upper
+#?               e.g: XSH_DEV=/string/pipe/upper xsh /string/upper foo
+#?               Be noted, the following usage won't work as expected:
+#?               e.g: XSH_DEV=/string xsh import /
+#?
+#?   The dev mode applies to the following commands and internal functions:
+#?       * calls, imports, unimports, list, help
+#?       * call, import, unimport, lib_list, help_lib
 #?
 function xsh () {
 
     #? Description:
     #?   Get the mime type of a file.
+    #?   A wrapper of `file -b --mime-type`, with enhancements:
+    #?     * Only output the first line of the result.
+    #?       e.g: file /bin/ls (version file-5.39)
+    #?     * If the file does not exist, cannot be read, then send output to stderr.
     #?
     #? Usage:
     #?   __xsh_mime_type <FILE> [...]
     #?
+    #? Option:
+    #?   <FILE>          Path to the file.
+    #?
     #? Example:
-    #?   $ __xsh_mime_type /usr/bin/command /bin/ls ~
-    #?   text/x-shellscript
+    #?   $ __xsh_mime_type /dev/null /bin/ls ~
+    #?   inode/chardevice
     #?   application/x-mach-binary
     #?   inode/directory
     #?
     function __xsh_mime_type () {
-        /usr/bin/file -b --mime-type "$@"
+        declare mime_type f fd
+
+        for f in "$@"; do
+            fd=1 # set default fd to stdout
+            mime_type=$(/usr/bin/file -b --mime-type "${f}")
+
+            # get the first line
+            mime_type=${mime_type%%$'\n'*}
+            if [[ ${mime_type} =~ 'No such file or directory' ]]; then
+                # set fd to stderr
+                fd=2
+            fi
+            printf '%s\n' "${mime_type}" >&${fd}
+        done
     }
 
     #? Description:
@@ -91,24 +143,31 @@ function xsh () {
     #?   __xsh_shell_option [OPTION][ ][...]
     #?
     #? Option:
-    #?   [OPTION]   The syntax is `[+-]NAME`.
-    #?              See the allowed names in `help set`.
+    #?   [OPTION]         The syntax is `[+-]NAME`.
+    #?                    See the allowed names in `help set`.
     #?
     #? Example:
     #?   $ __xsh_shell_option himBH +v -x
     #?   -himBH +vx
     #?
     function __xsh_shell_option () {
-        declare prune
-        prune=$(printf '%s' "${*//[[:blank:]+-]/}")
+        # set IFS in local
+        declare IFS=$''
+        # squash all the arguments without whitespaces, `+`, and `-`
+        declare testing="${*//[ +-]}"
 
-        declare on=${-//[^${prune}]/}
-        [[ -n $on ]] && on=-$on || :
+        # remove all the shell options that are not in the testing list from the turned on shell options `$-`
+        # and prefix the `-`
+        declare on="-${-//[^${testing:-.}]}"
 
-        declare off=${prune//[$-]/}
-        [[ -n $off ]] && off=+$off || :
+        # remove all the shell options that are turned on from the testing list
+        # and prefix the `+`
+        declare off="+${testing//[$-]}"
 
-        echo $on $off  # do not double quote the parameter
+        # remove the `+` and `-` if there's no any shell option
+        # do not double quote the variables
+        # shellcheck disable=SC2086
+        echo ${on%-} ${off%+}
     }
 
 
@@ -120,26 +179,26 @@ function xsh () {
     #?   __xsh_call_with_shell_option [-1 OPTION] [-0 OPTION] [...] <FUNCTION | SCRIPT>
     #?
     #? Option:
-    #?   [-1 OPTION]  Turn on followed options.
-    #?   [-0 OPTION]  Turn off followed options.
+    #?   [-1 OPTION]      Turn on followed options.
+    #?   [-0 OPTION]      Turn off followed options.
     #?
-    #?   OPTION       The same with shell options.
-    #?                See `help set`.
+    #?   OPTION           The same with shell options.
+    #?                    See `help set`.
     #?
     #? Example:
     #?   $ __xsh_call_with_shell_option -1 vx echo $HOME
     #?
     function __xsh_call_with_shell_option () {
-        declare OPTIND OPTARG opt
         declare -a options
+        declare OPTIND OPTARG opt
 
         while getopts 1:0: opt; do
             case ${opt} in
                 1)
-                    options+=(-${OPTARG})
+                    options+=(-"${OPTARG}")
                     ;;
                 0)
-                    options+=(+${OPTARG})
+                    options+=(+"${OPTARG}")
                     ;;
                 *)
                     return 255
@@ -148,10 +207,10 @@ function xsh () {
         done
         shift $((OPTIND - 1))
 
-        declare ret=0
+        declare mime_type ret=0
+        mime_type=$(__xsh_mime_type "$(command -v "$1")" 2>/dev/null)
 
-        if [[ $(type -t "$1" || :) == file &&
-                  $(__xsh_mime_type "$(command -v "$1")" | cut -d/ -f1) == text ]]; then
+        if [[ $(type -t "$1" || :) == file && ${mime_type%%/*} == text ]]; then
             # call script with shell options enabled
             bash "${options[@]}" "$(command -v "$1")" "${@:2}"
             ret=$?
@@ -168,6 +227,7 @@ function xsh () {
             ret=$?
 
             # restore state of shell options
+            # shellcheck disable=SC2086
             set ${exopts}  # do not double quote the parameter
         fi
 
@@ -181,17 +241,17 @@ function xsh () {
     #?   __xsh_debug [-1 OPTION] [-0 OPTION] [...] <FUNCTION | SCRIPT>
     #?
     #? Option:
-    #?   [-1 OPTION]  Turn on followed options.
-    #?   [-0 OPTION]  Turn off followed options.
+    #?   [-1 OPTION]      Turn on the followed options.
+    #?   [-0 OPTION]      Turn off the followed options.
     #?
-    #?   OPTION       The same with shell options.
-    #?                See `help set`.
+    #?   OPTION           The same with shell options.
+    #?                    See `help set`.
     #?
     #?   If no option given, `-1 x` is set as default.
     #?
-    #? Usage:
-    #?   __xsh_debug foo_func
-    #?   __xsh_debug bar_script.sh
+    #? Example:
+    #?   $ __xsh_debug foo_func
+    #?   $ __xsh_debug bar_script.sh
     #?
     function __xsh_debug () {
         if [[ ${1:0:1} != - ]]; then
@@ -222,11 +282,12 @@ function xsh () {
     #?
     function __xsh_trap_return () {
         declare command="
-        if [[ \$FUNCNAME == xsh ]]; then
+        if [[ \${FUNCNAME} == xsh ]]; then
             trap - RETURN
             ${1:?}
         fi;"
-        trap "$command" RETURN
+        # shellcheck disable=SC2064
+        trap "${command}" RETURN
     }
 
     #? Description:
@@ -237,7 +298,7 @@ function xsh () {
     #?
     function __xsh_log () {
         declare level
-        level=$(echo "$1" | tr [[:lower:]] [[:upper:]])
+        level=$(echo "$1" | tr "[:lower:]" "[:upper:]")
 
         declare caller
         if [[ ${FUNCNAME[1]} == xsh && ${#FUNCNAME[@]} -gt 2 ]]; then
@@ -272,13 +333,15 @@ function xsh () {
     #?   2: VER1 < VER2
     #?
     function __xsh_version_comparator () {
-        if [[ $1 == $2 ]]; then
+        if [[ $1 == "$2" ]]; then
             echo 0
             return
         fi
-        declare ver1=( ${1//./ } ) ver2=( ${2//./ } ) \
-                n1=${#ver1[@]} n2=${#ver2[@]} index
-        for index in $(seq 0 $((n1 > n2 ? n1 : n2))); do
+        # don't double quote `$1` and `$2`
+        # shellcheck disable=SC2206
+        declare -a ver1=( ${1//./ } ) ver2=( ${2//./ } )
+        declare n1=${#ver1[@]} n2=${#ver2[@]} index
+        for (( index = 0; index <= $((n1 > n2 ? n1 : n2)); index++ )); do
             if [[ ${ver1[index]} -gt ${ver2[index]} ]]; then
                 echo 1
                 return
@@ -297,9 +360,7 @@ function xsh () {
     #?   __xsh_chmod_x_by_dir <PATH>
     #?
     function __xsh_chmod_x_by_dir () {
-        declare path=$1
-
-        find "${path}" \
+        find "${1:?}" \
              -type f \
              -name "*.sh" \
              -exec chmod +x {} \;
@@ -335,7 +396,9 @@ function xsh () {
     #?   __xsh_git_version
     #?
     function __xsh_git_version () {
-        git version | awk '{print $3}'
+        # shellcheck disable=SC2207
+        declare versions=( $(git version) )
+        echo "${versions[2]}"
     }
 
     #? Description:
@@ -345,7 +408,10 @@ function xsh () {
     #?   __xsh_git_get_all_tags
     #?
     function __xsh_git_get_all_tags () {
-        git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort | awk '{print $4}'
+        git tag \
+            | xargs -I@ git log --format=format:"%ai @%n" -1 @ \
+            | sort \
+            | awk '{print $4}'
     }
 
     #? Description:
@@ -355,7 +421,7 @@ function xsh () {
     #?   __xsh_git_fetch_remote_tags
     #?
     function __xsh_git_fetch_remote_tags () {
-        if [[ $(__xsh_version_comparator 1.9.0 $(__xsh_git_version)) -eq 1 ]]; then
+        if [[ $(__xsh_version_comparator 1.9.0 "$(__xsh_git_version)") -eq 1 ]]; then
             # git version < 1.9.0
             git fetch --prune origin "+refs/tags/*:refs/tags/*"
         else
@@ -391,7 +457,7 @@ function xsh () {
     #?   __xsh_git_is_workdir_dirty
     #?
     function __xsh_git_is_workdir_dirty () {
-        test -n "$(git status -s)"
+        [[ -n "$(git status -s)" ]]
     }
 
     #? Description:
@@ -420,11 +486,9 @@ function xsh () {
     #?   REPO             Git repo in syntax: `USERNAME/REPO`.
     #?                    E.g. `username/xsh-lib-foo`
     function __xsh_git_clone () {
-        declare OPTARG OPTIND opt
-        declare git_server repo
-
         declare -a git_options
-        git_server=${xsh_git_server}
+        declare git_server=${XSH_GIT_SERVER} \
+                OPTARG OPTIND opt
 
         while getopts s:b:t: opt; do
             case ${opt} in
@@ -432,7 +496,7 @@ function xsh () {
                     git_server=${OPTARG%/}  # remove tailing '/'
                     ;;
                 b|t)
-                    git_options+=(-${opt})
+                    git_options+=(-"${opt}")
                     git_options+=("${OPTARG}")
                     ;;
                 *)
@@ -441,7 +505,7 @@ function xsh () {
             esac
         done
         shift $((OPTIND - 1))
-        repo=$1
+        declare repo=$1
 
         if [[ -z ${repo} ]]; then
             __xsh_log error "Repo name is null or not set."
@@ -453,7 +517,7 @@ function xsh () {
             return 255
         fi
 
-        declare repo_path=${xsh_repo_home}/${repo}
+        declare repo_path=${XSH_REPO_HOME:?}/${repo}
         if [[ -e ${repo_path} ]]; then
             __xsh_log error "Repo already exists at ${repo_path}."
             return 255
@@ -464,6 +528,7 @@ function xsh () {
             return 255
         fi
 
+        # never use a shallow clone here
         git clone "${git_server}/${repo}" "${repo_path}"
 
         # update to latest tagged version
@@ -494,14 +559,13 @@ function xsh () {
     #?   [-t TAG]         Update to a specific TAG version.
     #?
     function __xsh_git_force_update () {
-        declare OPTIND OPTARG opt
-
-        declare target
+        declare target \
+                OPTIND OPTARG opt
 
         while getopts b:t: opt; do
             case ${opt} in
                 b|t)
-                    target=$OPTARG
+                    target=${OPTARG}
                     ;;
                 *)
                     return 255
@@ -517,10 +581,10 @@ function xsh () {
         # fetch remote tags to local
         __xsh_git_fetch_remote_tags
 
-        if [[ -z $target ]]; then
+        if [[ -z ${target} ]]; then
             target=$(__xsh_git_get_latest_tag)
 
-            if [[ -z $target ]]; then
+            if [[ -z ${target} ]]; then
                 __xsh_log error "No any available tagged version found."
                 return 255
             fi
@@ -528,10 +592,13 @@ function xsh () {
 
         declare current
         current=$(__xsh_git_get_current_tag)
-        if [[ ${current} == ${target} ]]; then
+        if [[ ${current} == "${target}" ]]; then
             __xsh_log info "Already at the latest version: ${current}."
             return
         fi
+
+        # suppress the warning of 'detached HEAD' state
+        git config advice.detachedHead false
 
         __xsh_log info "Updating repo to ${target}."
         if ! git checkout -f "${target}"; then
@@ -540,7 +607,7 @@ function xsh () {
         fi
 
         if [[ $(__xsh_git_get_current_branch) != 'HEAD' ]]; then
-            git reset --hard origin/${target}
+            git reset --hard origin/"${target}"
             if ! git pull; then
                 __xsh_log error "Failed to pull repo."
                 return 255
@@ -550,6 +617,7 @@ function xsh () {
 
     #? Description:
     #?   Show help for xsh builtin functions or utilities.
+    #?   The dev mode is being checked indirectly.
     #?
     #? Usage:
     #?   __xsh_help [-t] [-c] [-d] [-sS SECTION,...] [BUILTIN | LPUR]
@@ -598,8 +666,8 @@ function xsh () {
         {
             if [[ -z ${topic} ]]; then
                 __xsh_help_self_cache
-            elif [[ $(type -t "__xsh_${topic}" || :) == function ]]; then
-                __xsh_help_builtin "$@" "__xsh_${topic}"
+            elif [[ $(type -t "__xsh_${topic//-/_}" || :) == function ]]; then
+                __xsh_help_builtin "$@" "__xsh_${topic//-/_}"
             else
                 __xsh_help_lib "$@" "${topic}"
             fi
@@ -613,7 +681,7 @@ function xsh () {
     #?   __xsh_sha1sum [OPTIONS]
     #?
     function __xsh_sha1sum () {
-        if type -t sha1sum; then
+        if type -t sha1sum >/dev/null; then
             sha1sum "$@"
         else
             shasum "$@"
@@ -629,8 +697,9 @@ function xsh () {
     function __xsh_help_self_cache () {
         declare hash cached_help
 
-        hash=$(__xsh_sha1sum "${xsh_home}/xsh/xsh.sh" 2>/dev/null | cut -d' ' -f1)
-        cached_help=/tmp/.${FUNCNAME[0]}_${hash}
+        # shellcheck disable=SC2207
+        hash=( $(__xsh_sha1sum "${XSH_HOME}/xsh/xsh.sh") )
+        cached_help=/tmp/.${FUNCNAME[0]}_${hash[0]}
 
         if [[ -f ${cached_help} ]]; then
             cat "${cached_help}"
@@ -647,11 +716,11 @@ function xsh () {
     #?
     function __xsh_help_self () {
         # show sections of Description and Usage of xsh itself
-        __xsh_help_builtin -s Description,Usage xsh
+        __xsh_help_builtin -s 'Description,Usage' xsh
 
         declare -a names=(
             calls imports unimports list load unload update
-            upgrade version versions debug help log
+            upgrade version versions lib_dev_manager debug help log
         )
 
         declare name
@@ -671,7 +740,7 @@ function xsh () {
         done
 
         # show rest sections of xsh itself
-        __xsh_help_builtin -s 'Convention,Debug Mode,Dev Mode' xsh
+        __xsh_help_builtin -s 'Builtin,Convention,Debug Mode,Dev Mode' xsh
     }
 
     #? Description:
@@ -689,13 +758,14 @@ function xsh () {
         # get the last argument
         declare builtin=${!#}
         # remove the last argument from argument list
-        declare options=( "${@:1:$#-1}" )
+        declare -a options=( "${@:1:$#-1}" )
 
-        __xsh_info -f "${builtin}" "${options[@]}" "${xsh_home}/xsh/xsh.sh"
+        __xsh_info -f "${builtin}" "${options[@]}" "${XSH_HOME}/xsh/xsh.sh"
     }
 
     #? Description:
     #?   Show help for xsh utilities.
+    #?   The dev mode is being checked.
     #?
     #?   The util name appearing in the doc in syntax `@<UTIL>` will be replaced
     #?   as the full util name.
@@ -707,32 +777,46 @@ function xsh () {
     #?   See `xsh help help`.
     #?
     function __xsh_help_lib () {
+
+        function __xsh_help_lib__ () {
+            # get the last argument
+            declare lpur=${!#}
+            # remove the last argument from argument list
+            declare -a options=( "${@:1:$#-1}" )
+
+            declare path
+            path=$(__xsh_get_path_by_lpur "${lpur}")
+            declare ln
+            while read -r ln; do
+                if [[ -n ${ln} ]]; then
+                    declare util lpue
+                    util=$(__xsh_get_util_by_path "${ln}")
+                    lpue=$(__xsh_get_lpue_by_path "${ln}")
+
+                    if [[ -z ${util} ]]; then
+                        __xsh_log error "util is null: %s." "${path}"
+                        return 255
+                    fi
+
+                    if [[ -z ${lpue} ]]; then
+                        __xsh_log error "lpue is null: %s." "${path}"
+                        return 255
+                    fi
+
+                    __xsh_info "${options[@]}" "${ln}" \
+                        | sed "s|@${util}|xsh ${lpue}|g"
+                fi
+            done <<< "${path}"
+        }
+
         # get the last argument
         declare lpur=${!#}
-        # remove the last argument from argument list
-        declare -a options=( "${@:1:$#-1}" )
 
-        declare ln
-        while read -r ln; do
-            if [[ -n ${ln} ]]; then
-                declare util lpue
-                util=$(__xsh_get_util_by_path "${ln}")
-                lpue=$(__xsh_get_lpue_by_path "${ln}")
-
-                if [[ -z ${util} ]]; then
-                    __xsh_log error "util is null: %s." "${path}"
-                    return 255
-                fi
-
-                if [[ -z ${lpue} ]]; then
-                    __xsh_log error "lpue is null: %s." "${path}"
-                    return 255
-                fi
-
-                __xsh_info "${options[@]}" "${ln}" \
-                    | sed "s|@${util}|xsh ${lpue}|g"
-            fi
-        done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
+        if __xsh_is_dev "${lpur}"; then
+            XSH_LIB_HOME=${XSH_DEV_HOME} __xsh_help_lib__ "$@"
+        else
+            __xsh_help_lib__ "$@"
+        fi
     }
 
     #? Description:
@@ -755,17 +839,41 @@ function xsh () {
     #?   See `xsh help help` for the rest options.
     #?
     function __xsh_info () {
-        declare OPTIND OPTARG opt
+
+        function __xsh_filter_section_with_title__ () {
+            declare section=${1:?}
+
+            awk -v sectionregex="^(${section//,/|}):" '{
+                 if (str && substr($0, 1, 1) ~ "[[:alnum:]]") {
+                    print str
+                    str = ""
+                 }
+                 if ($0 ~ sectionregex) str = $0
+                 else if (str) str = str RS $0
+            } END {if (str) print str}'
+        }
+
+        function __xsh_filter_section_without_title__ () {
+            declare section=${1:?}
+
+            awk -v sectionregex="^(${section//,/|}):" '{
+                 if (flag && substr($0, 1, 1) ~ "[[:alnum:]]") {
+                    print str
+                    flag = str = ""
+                 }
+                 if ($0 ~ sectionregex) flag = 1
+                 else if (flag) str = str (str ? RS : "") $0
+            } END {if (str) print str}'
+        }
 
         # get the last argument
-        declare path=${!#}
+        declare path=${!#} funcname \
+                OPTIND OPTARG opt
 
         if [[ -z ${path} || ${path:1:1} == - ]]; then
             __xsh_log error "LPU path is null or not set."
             return 255
         fi
-
-        declare funcname
 
         while getopts f:tcds:S:i: opt; do
             case ${opt} in
@@ -774,72 +882,40 @@ function xsh () {
                     ;;
                 t)
                     if [[ -n ${funcname} ]]; then
-                        awk -v nameregex="^(${funcname//,/|})$" \
-                            '{
-                                if ($1 == "function" && $2 ~ nameregex)
-                                   print "[functions]" FS $2
-                             }' "${path}"
+                        __xsh_get_funcname_from_file "${path}" "${funcname}"
                     else
                         __xsh_get_title_by_path "${path}"
                     fi
                     ;;
                 d)
                     if [[ -n ${funcname} ]]; then
-                        awk -v nameregex="^(${funcname//,/|})$" \
-                            '{
-                                if (str && $1 == "function" && $2 ~ nameregex) {
-                                   gsub("[ ]*#\\?[ ]?", "", str)
-                                   print str
-                                   str = ""
-                                }
-                                if ($1 == "#?") {
-                                   str = str (str ? RS : "") $0
-                                } else {
-                                   str = ""
-                                }
-                             }' "${path}"
+                        __xsh_get_doc_from_file "${path}" "${funcname}"
                     else
                         awk '/^#\?/ {sub("^[ ]*#\\?[ ]?", ""); print}' "${path}"
                     fi
                     ;;
                 c)
                     if [[ -n ${funcname} ]]; then
-                        declare -f ${funcname//,/ }  # do not double quote the parameter
+                        __xsh_get_funccode_from_file "${path}" "${funcname}"
                     else
                         sed '/^#?/d' "${path}"
                     fi
                     ;;
                 s)
-                    __xsh_info -f "${funcname}" -d "${path}" \
-                        | awk -v sectionregex="^(${OPTARG//,/|}):" \
-                              '{
-                                    if (str && substr($0, 1, 1) ~ "[[:alnum:]]") {
-                                       print str
-                                       str = ""
-                                    }
-                                    if ($0 ~ sectionregex) str = $0
-                                    else if (str) str = str RS $0
-                               } END {if (str) print str}'
+                    __xsh_info -f "${funcname}" -d "${path}" | __xsh_filter_section_with_title__ "${OPTARG}"
                     ;;
                 S)
-                    __xsh_info -f "${funcname}" -d "${path}" \
-                        | awk -v sectionregex="^(${OPTARG//,/|}):" \
-                              '{
-                                    if (flag && substr($0, 1, 1) ~ "[[:alnum:]]") {
-                                       print str
-                                       flag = str = ""
-                                    }
-                                    if ($0 ~ sectionregex) flag = 1
-                                    else if (flag) str = str (str ? RS : "") $0
-                               } END {if (str) print str}'
+                    __xsh_info -f "${funcname}" -d "${path}" | __xsh_filter_section_without_title__ "${OPTARG}"
                     ;;
                 i)
                     if [[ -n ${funcname} ]]; then
                         declare name
                         for name in ${funcname//,/ }; do
+                            # shellcheck disable=SC2059
                             printf "${OPTARG}"  # do not use `printf '%s'`
                         done
                     else
+                        # shellcheck disable=SC2059
                         printf "${OPTARG}"  # do not use `printf '%s'`
                     fi
                     ;;
@@ -851,13 +927,101 @@ function xsh () {
     }
 
     #? Description:
+    #?   Extract the function name from file.
+    #?
+    #? Usage:
+    #?   __xsh_get_funcname_from_file <FILE> [NAME,...]
+    #?
+    #? Option:
+    #?   <FILE>           File path.
+    #?
+    #?   [NAME]           Show info for the function only.
+    #?                    The name list can be delimited with comma `,`.
+    #?                    The output order of function is determined by the coding order
+    #?                    rather than the list order.
+    #?
+    function __xsh_get_funcname_from_file () {
+        declare path=${1:?} funcname=$2
+
+        awk -v nameregex="^(${funcname//,/|})$" '{
+            if ($1 == "function" && $2 ~ nameregex)
+                print "[functions]" FS $2
+        }' "${path}"
+    }
+
+    #? Description:
+    #?   Extract the function code from file.
+    #?
+    #? Usage:
+    #?   __xsh_get_funccode_from_file <FILE> [NAME,...]
+    #?
+    #? Option:
+    #?   <FILE>           File path.
+    #?
+    #?   [NAME]           Show info for the function only.
+    #?                    The name list can be delimited with comma `,`.
+    #?                    The output order of function is determined by the coding order
+    #?                    rather than the list order.
+    #?
+    function __xsh_get_funccode_from_file () {
+        declare path=${1:?} funcname=$2
+
+        awk -v nameregex="^(${funcname//,/|})$" -v indent=-1 '{
+            if ($1 == "function" && $2 ~ nameregex) {
+                indent = index($0, "function") - 1
+            }
+            if (indent >= 0) {
+                if (indent > 0) sub("^[ ]{" indent "}", "")
+                str = str (str ? RS : "") $0
+                if (substr($0, 1, 1) == "}") {
+                    print str
+                    str = ""
+                    indent = -1
+                }
+            }
+        }' "${path}"
+    }
+
+    #? Description:
+    #?   Extract the document from file.
+    #?   The document is defined by the line started with `#?`.
+    #?
+    #? Usage:
+    #?   __xsh_get_doc_from_file <FILE> [NAME,...]
+    #?
+    #? Option:
+    #?   <FILE>           File path.
+    #?
+    #?   [NAME]           Show info for the function only.
+    #?                    The name list can be delimited with comma `,` wthout.
+    #?                    The output order of function is determined by the coding order
+    #?                    rather than the list order.
+    #?
+    function __xsh_get_doc_from_file () {
+        declare path=${1:?} funcname=$2
+
+        awk -v nameregex="^(${funcname//,/|})$" '{
+            if (str && $1 == "function" && $2 ~ nameregex) {
+                gsub("[ ]*#\\?[ ]?", "", str)
+                print str
+                str = ""
+            }
+            if ($1 == "#?") {
+                str = str (str ? RS : "") $0
+            } else {
+                str = ""
+            }
+        }' "${path}"
+    }
+
+    #? Description:
     #?   Show available versions of xsh.
     #?
     #? Usage:
     #?   __xsh_versions
     #?
     function __xsh_versions () {
-        (cd "${xsh_home}/xsh" \
+        (cd "${XSH_HOME}/xsh" \
              && __xsh_git_get_all_tags
         )
     }
@@ -869,7 +1033,7 @@ function xsh () {
     #?   __xsh_version
     #?
     function __xsh_version () {
-        (cd "${xsh_home}/xsh" \
+        (cd "${XSH_HOME}/xsh" \
              && __xsh_git_get_current_tag
         )
     }
@@ -877,6 +1041,7 @@ function xsh () {
     #? Description:
     #?   Show a list of loaded xsh libraries.
     #?   If the LPUR is given, show a list of matching utils.
+    #?   The dev mode is being checked indirectly.
     #?
     #? Usage:
     #?   __xsh_list [LPUR]
@@ -898,9 +1063,9 @@ function xsh () {
     #?   Get specific property of `xsh.lib` of a lib or repo.
     #?
     #? Usage:
-    #?   __xsh_get_cfg_property <LIB | REPO> <PROPERTY>
+    #?   __xsh_lib_get_cfg_property <LIB | REPO> <PROPERTY>
     #?
-    function __xsh_get_cfg_property () {
+    function __xsh_lib_get_cfg_property () {
         declare name=$1
         declare property=$2
 
@@ -917,9 +1082,9 @@ function xsh () {
         declare cfg
 
         if [[ -z ${name##*/*} ]]; then
-            cfg=${xsh_repo_home}/${name}/xsh.lib
+            cfg=${XSH_REPO_HOME}/${name}/xsh.lib
         else
-            cfg=${xsh_lib_home}/${name}/xsh.lib
+            cfg=${XSH_LIB_HOME}/${name}/xsh.lib
         fi
 
         if [[ ! -f ${cfg} ]]; then
@@ -931,31 +1096,21 @@ function xsh () {
     }
 
     #? Description:
-    #?
-    #?
-    #? Usage:
-    #?
-    #?
-    function __xsh_get_lib_by_repo () {
-        declare repo=$1
-
-        if [[ -z ${repo} ]]; then
-            __xsh_log error "Repo is null or not set."
-            return 255
-        fi
-
-        __xsh_get_cfg_property "${repo}" name
-    }
-
-    #? Description:
     #?   List loaded libraries with version.
+    #?   The dev mode is being checked.
     #?
     #? Usage:
     #?   __xsh_lib_list
     #?
     function __xsh_lib_list () {
-        declare lib lib_path repo version
+        declare path
+        if __xsh_is_dev; then
+            path=$(find "${XSH_DEV_HOME}" -maxdepth 1 -type l)
+        else
+            path=$(find "${XSH_LIB_HOME}" -maxdepth 1 -type l)
+        fi
 
+        declare lib lib_path repo version
         while read -r lib_path; do
             if [[ -z ${lib_path} ]]; then
                 break
@@ -966,37 +1121,40 @@ function xsh () {
                        | awk -F/ '{print $(NF-1) FS $NF}')
 
             printf '%s (%s) => %s\n' "${lib}" "${version:-latest}" "${repo}"
-        done <<< "$(find "${xsh_lib_home}" -maxdepth 1 -type l)"
+        done <<< "${path}"
     }
 
     #? Description:
     #?   Library manager.
     #?
     #? Usage:
-    #?   __xsh_lib_manager REPO [unimport] [link] [unlink] [delete]
-    #?
-    #? Option:
-    #?   REPO             Git repo in syntax: `USERNAME/REPO`.
-    #?                    E.g. `username/xsh-lib-foo`
+    #?   __xsh_lib_manager COMMAND <REPO> [COMMAND_OPTION]
     #?
     #? Commands:
-    #?   [unimport]       unimport all imported utilities for the REPO.
-    #?   [link]           link the REPO as library.
-    #?   [unlink]         unlink the linked REPO.
-    #?   [delete]         delete the REPO.
+    #?   unimport         Unimport all imported utilities for the library linked
+    #?                    to the REPO.
+    #?   link             Link the REPO as a library.
+    #?   unlink           Unlink the linked library of the REPO.
+    #?   delete           Delete the whole REPO linked to the library.
     #?
-    #?   The order of the commands matters.
+    #? Option:
+    #?   <REPO>           Git repo in syntax: `USERNAME/REPO`.
+    #?                    E.g. `username/xsh-lib-foo`
     #?
     function __xsh_lib_manager () {
-        declare repo=$1
-        shift
+        declare command=$1 repo=$2
+
+        if [[ -z ${command} ]]; then
+            __xsh_log error "Command is null or not set."
+            return 255
+        fi
 
         if [[ -z ${repo} ]]; then
             __xsh_log error "Repo name is null or not set."
             return 255
         fi
 
-        declare repo_path=${xsh_repo_home}/${repo}
+        declare repo_path=${XSH_REPO_HOME:?}/${repo}
         if [[ ! -d ${repo_path} ]]; then
             __xsh_log error "Repo doesn't exist at ${repo_path}."
             return 255
@@ -1009,36 +1167,58 @@ function xsh () {
             return 255
         fi
 
-        declare lib_path=${xsh_lib_home}/${lib}
+        declare lib_path=${XSH_LIB_HOME:?}/${lib}
 
-        declare ret
-        while [[ $# -gt 0 ]]; do
-            case $1 in
-                unimport)
-                    __xsh_unimport "${lib}/*"
-                    ;;
-                link)
-                    ln -sf "${repo_path}" "${lib_path}"
-                    ;;
-                unlink)
-                    /bin/rm -f "${lib_path}"
-                    ;;
-                delete)
-                    /bin/rm -rf "${repo_path}"
-                    ;;
-                *)
-                    return 255
-                    ;;
-            esac
+        case "${command}" in
+            unimport)
+                __xsh_unimport "${lib}"
+                ;;
+            link)
+                ln -sf "${repo_path}" "${lib_path}"
+                ;;
+            unlink)
+                /bin/rm -f "${lib_path}"
+                ;;
+            delete)
+                /bin/rm -rf "${repo_path:?}"
+                ;;
+            *)
+                __xsh_log error "${command}: unsupported command."
+                return 255
+                ;;
+        esac
 
-            ret=$?
-            if [[ ${ret} -ne 0 ]]; then
-                __xsh_log error "Command failed: $1: ${ret}."
-                return ${ret}
-            fi
+        declare ret=$?
+        if [[ ${ret} -ne 0 ]]; then
+            __xsh_log error "${command}: failed, returns: ${ret}."
+            return ${ret}
+        fi
+    }
 
-            shift
-        done
+    #? Description:
+    #?   Development library manager.
+    #?
+    #? Usage:
+    #?   __xsh_lib_dev_manager COMMAND <REPO> <REPO_HOME>
+    #?
+    #? Commands:
+    #?   unimport         Unimport all imported utilities for the development
+    #?                    library linked to the REPO.
+    #?   link             Link the REPO as a development library.
+    #?   unlink           Unlink the linked development library of the REPO.
+    #?   delete           Delete the whole REPO linked to the development REPO.
+    #?
+    #? Option:
+    #?   <REPO>           Git repo in syntax: `USERNAME/REPO`.
+    #?                    E.g. `username/xsh-lib-foo`
+    #?
+    #?   <REPO_HOME>      The path to the Git repo without the REPO part.
+    #?                    E.g. `/path/to/repohome` of
+    #?                         `/path/to/repohome/username/xsh-lib-foo`.
+    #?
+    function __xsh_lib_dev_manager () {
+        # set temporary environment variables for dev lib, and proxy __xsh_lib_manager
+        XSH_LIB_HOME=${XSH_DEV_HOME:?} XSH_REPO_HOME=${3:?} __xsh_lib_manager "$@"
     }
 
     #? Description:
@@ -1062,12 +1242,17 @@ function xsh () {
         # get the last argument
         declare repo=${!#}
 
+        if [[ -z ${repo} ]]; then
+            __xsh_log error "Repo name is null or not set."
+            return 255
+        fi
+
         __xsh_git_clone "$@" || return
-        __xsh_lib_manager "${repo}" link
+        __xsh_lib_manager link "${repo}"
         declare ret=$?
         if [[ ${ret} -ne 0 ]]; then
-            __xsh_log warning "Deleting repo ${xsh_repo_home:?}/${repo:?}."
-            rm -rf "${xsh_repo_home:?}/${repo:?}"
+            __xsh_log warning "Deleting repo ${XSH_REPO_HOME}/${repo}."
+            rm -rf "${XSH_REPO_HOME:?}/${repo:?}"
             return ${ret}
         fi
     }
@@ -1085,7 +1270,14 @@ function xsh () {
     function __xsh_unload () {
         declare repo=$1
 
-        __xsh_lib_manager "${repo}" unimport unlink delete
+        if [[ -z ${repo} ]]; then
+            __xsh_log error "Repo name is null or not set."
+            return 255
+        fi
+
+        __xsh_lib_manager unimport "${repo}"
+        __xsh_lib_manager unlink "${repo}"
+        __xsh_lib_manager delete "${repo}"
     }
 
     #? Description:
@@ -1112,14 +1304,15 @@ function xsh () {
             return 255
         fi
 
-        __xsh_lib_manager "${repo}" unimport unlink || return
+        __xsh_lib_manager unimport "${repo}" || return
+        __xsh_lib_manager unlink "${repo}" || return
 
-        (cd "${xsh_repo_home}/${repo}" \
+        (cd "${XSH_REPO_HOME}/${repo}" \
              && __xsh_git_force_update "$@" \
              && __xsh_git_chmod_x
         ) || return
 
-        __xsh_lib_manager "${repo}" link
+        __xsh_lib_manager link "${repo}"
     }
 
     #? Description:
@@ -1136,23 +1329,65 @@ function xsh () {
     #?   [-t TAG]         Update to a specific TAG version.
     #?
     function __xsh_upgrade () {
-        declare repo_path=${xsh_home}/xsh
+        declare repo_path=${XSH_HOME}/xsh
 
         (cd "${repo_path}" \
              && __xsh_git_force_update "$@" \
              && __xsh_git_chmod_x
         ) || return
 
+        # shellcheck source=/dev/null
         source "${repo_path}/xsh.sh"
     }
 
     #? Description:
-    #?   Apply init files under the given library path, start from library root.
-    #?   For example: `__xsh_init /home/user/.xsh/lib/x/string` will try to
-    #?   apply following init files if they present.
+    #?   Get the init files under the given library path.
+    #?   The init files are searched from the utility's parent directory, up
+    #?   along to the library root.
+    #?   For example, given the path `/home/user/.xsh/lib/x/functions/date`, the
+    #?   following init files are returned if they present.
     #?
-    #?     * /home/user/.xsh/lib/x/__init__.sh
-    #?     * /home/user/.xsh/lib/x/string/__init__.sh
+    #?     * /home/user/.xsh/lib/x/functions/date/__init__.sh
+    #?     * /home/user/.xsh/lib/x/functions/__init__.sh
+    #?
+    #? Usage:
+    #?   __xsh_get_init_files <DIR>
+    #?
+    function __xsh_get_init_files () {
+        declare dir=${1:?} scope
+
+        # remove XSH_LIB_HOME path from beginning
+        scope=${dir#${XSH_LIB_HOME}}
+        # remove the leading `/`
+        scope=${scope#/}
+        # remove the tailing `/`
+        scope=${scope%/}
+
+        # replace all slash `/` to whitespace
+        # shellcheck disable=SC2206
+        declare -a scopes=( ${scope//\// } )
+
+        declare index init_file
+        for (( index = "${#scopes[@]}"; index >= 0; index-- )); do
+            scope=${scopes[*]:0:index}
+            # replace all whitespace to slash `/`
+            init_file=${XSH_LIB_HOME}/${scope// //}/__init__.sh
+
+            if [[ -f ${init_file} ]]; then
+                echo "${init_file}"
+            fi
+        done
+    }
+
+    #? Description:
+    #?   Apply the init files for the function utility.
+    #?   The init files are searched from the library root, down to the
+    #?   utility's parent directory.
+    #?   For example: `__xsh_init /home/user/.xsh/lib/x/functions/date` will try to apply
+    #?   the following init files in order if they present.
+    #?
+    #?     * /home/user/.xsh/lib/x/functions/__init__.sh
+    #?     * /home/user/.xsh/lib/x/functions/date/__init__.sh
     #?
     #?   Previously applied init files will be skipped.
     #?
@@ -1160,49 +1395,42 @@ function xsh () {
     #?   applied init files.
     #?
     #? Usage:
-    #?   __xsh_init <DIR>
+    #?   __xsh_make_init <FILE>
     #?
-    function __xsh_init () {
-        declare dir=$1
+    #? Option:
+    #?   <FILE>           Path to the function utility.
+    #?
+    function __xsh_make_init () {
+        declare path=${1:?} code util lpuc
 
-        declare scope=${dir#${xsh_lib_home}}  # remove xsh_lib_home path from beginning
+        util=$(__xsh_get_util_by_path "${path}")
+        lpuc=$(__xsh_get_lpuc_by_path "${path}")
 
-        # remove the leading `/`
-        scope=${scope%/}
-        # remove the tailing `/`
-        scope=${scope#/}
-        # replace all `/` to newline
-        scope=${scope//\//$'\n'}
+        code=$(cat "${path}")
 
-        if [[ -z ${scope} ]]; then
-            __xsh_log ERROR "Found empty init scope for dir: ${dir}"
-            return 255
-        fi
-
-        declare ln init_subdir
-        while read -r ln; do
-            if [[ -z ${init_subdir} ]]; then
-                init_subdir=${ln}
-            else
-                init_subdir=${init_subdir}/${ln}
+        declare init_file
+        while read -r init_file; do
+            if [[ ${__XSH_INIT__[*]} =~ (^| )"${init_file}"($| ) ]]; then
+                # skip this init file
+                continue
             fi
 
-            declare init_file=${xsh_lib_home}/${init_subdir}/__init__.sh
+            # apply function decorators found in the init file
+            declare name
+            while read -r name; do
+                # shellcheck disable=SC2015
+                [[ -z ${name} ]] && continue || :
+                name=init_${name}
 
-            if [[ -f ${init_file} ]]; then
-                # replace all `/` to `-`
-                declare init_expr=${init_subdir//\//-}
+                code=$(__xsh_apply_func_decorator "${name:?}" "${code:?}" "${init_file}")
+            done < <(__xsh_get_init_decorators "${init_file}")
 
-                if ! printf '%s\n' "${__XSH_INIT__[@]}" | grep -q "^${init_expr}$"; then
-                    # remember the applied init file
-                    # do not declare it, make it global
-                    __XSH_INIT__+=("${init_expr}")
+            # remember the applied init file
+            # do not declare it, make it global
+            code="${code}; __XSH_INIT__+=( \"${init_file}\" )"
+        done < <(__xsh_get_init_files "${path%/*}")
 
-                    # apply the init file
-                    source "${init_file}"
-                fi
-            fi
-        done <<< "${scope}"
+        printf '%s' "${code}"
     }
 
     #? Description:
@@ -1212,6 +1440,8 @@ function xsh () {
     #?
     #?   The imported utilities can be called directly without
     #?   leading `xsh` as syntax: `LIB-PACKAGE-UTIL`.
+    #?
+    #?   The dev mode is being checked indirectly.
     #?
     #?   Legal input:
     #?     '*'
@@ -1227,8 +1457,7 @@ function xsh () {
     #?   <LPUR> [...]     See the section of Convention.
     #?
     function __xsh_imports () {
-        declare lpur
-        declare ret=0
+        declare lpur ret=0
 
         for lpur in "$@"; do
             __xsh_import "${lpur}"
@@ -1239,38 +1468,51 @@ function xsh () {
 
     #? Description:
     #?   Import the matching utilities for LPUR.
+    #?   The dev mode is being checked.
     #?
     #? Usage:
     #?   __xsh_import <LPUR>
     #?
     function __xsh_import () {
+
+        function __xsh_import__ () {
+            declare lpur=${1:?} path
+            path=$(__xsh_get_path_by_lpur "${lpur}")
+
+            declare ln type
+            while read -r ln; do
+                if [[ -z ${ln} ]]; then
+                    __xsh_log error "LPUC is not found for the LPUR."
+                    return 255
+                fi
+                type=$(__xsh_get_type_by_path "${ln}")
+
+                case ${type} in
+                    functions)
+                        __xsh_import_function "${ln}"
+                        ;;
+                    scripts)
+                        __xsh_import_script "${ln}"
+                        ;;
+                    *)
+                        return 255
+                        ;;
+                esac
+            done <<< "${path}"
+        }
+
         declare lpur=$1
-        declare ln type
 
         if [[ -z ${lpur} ]]; then
             __xsh_log error "LPUR is null or not set."
             return 255
         fi
 
-        while read -r ln; do
-            if [[ -z ${ln} ]]; then
-                __xsh_log error "LPUC is not found for the LPUR."
-                return 255
-            fi
-            type=$(__xsh_get_type_by_path "${ln}")
-
-            case ${type} in
-                functions)
-                    __xsh_import_function "${ln}"
-                    ;;
-                scripts)
-                    __xsh_import_script "${ln}"
-                    ;;
-                *)
-                    return 255
-                    ;;
-            esac
-        done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
+        if __xsh_is_dev "${lpur}"; then
+            XSH_LIB_HOME=${XSH_DEV_HOME} __xsh_import__ "${lpur}"
+        else
+            __xsh_import__ "${lpur}"
+        fi
     }
 
     #? Description:
@@ -1280,16 +1522,11 @@ function xsh () {
     #? Usage:
     #?   __xsh_import_function <FILE>
     #?
+    #? Option:
+    #?   <FILE>           Path to the function utility.
+    #?
     function __xsh_import_function () {
-        declare path=$1
-
-        if [[ -z ${path} ]]; then
-            __xsh_log error "LPU path is null or not set."
-            return 255
-        fi
-
-        # apply init files
-        __xsh_init "${path%/*}"
+        declare path=${1:?}
 
         # source the function
         source /dev/stdin <<< "$(__xsh_make_function "${path}")"
@@ -1297,100 +1534,208 @@ function xsh () {
 
     #? Descriptions:
     #?   Make the function code ready.
-    #?     * Applying decorators
+    #?     * Applying function decorators
     #?     * Renaming function name
+    #?     * export -f the function
     #?
     #? Usage:
     #?   __xsh_make_function <FILE>
     #?
+    #? Option:
+    #?   <FILE>           Path to the function utility.
+    #?
+    #? Output:
+    #?   The changed code.
+    #?
     function __xsh_make_function () {
-        declare path=${1:?}
+        declare path=${1:?} code util lpuc
 
-        declare code util lpuc
-        code=$(cat "${path}")
         util=$(__xsh_get_util_by_path "${path}")
         lpuc=$(__xsh_get_lpuc_by_path "${path}")
 
-        declare ln  # decorator line
-
-        # applying decorators
-        while read ln; do
-            [[ -z ${ln} ]] && continue
-
-            declare name=${ln%% *}
-            declare options=${ln#* }
-
-            if [[ $(type -t "__xsh_decorator_${name:?}" || :) == function ]]; then
-                # applying the decorator
-                code=$(__xsh_decorator_${name} <(printf '%s' "${code}") \
-                                       "${util}" "${lpuc}" "${options}")
-            else
-                __xsh_log error "$name: decorator is invalid."
-                return 255
-            fi
-        done <<< "$(__xsh_get_decorator "${path}")"
+        # apply init files if found
+        code=$(__xsh_make_init "${path}")
 
         # renaming function name
-        sed -e "s/^function ${util} ()/function ${lpuc} ()/g" \
-            -e "s/@${util} /${lpuc} /g" <<< "${code}"
+        code=$(sed -e "s/^function ${util} ()/function ${lpuc} ()/g" \
+                   -e "s/@${util} /${lpuc} /g" <(printf '%s' "${code:?}"))
+
+        # apply function decorators if found
+        declare decorator
+        declare -a options
+        while read -r decorator; do
+            # shellcheck disable=SC2015
+            [[ -z ${decorator} ]] && continue || :
+            # do not double quote the variable
+            # shellcheck disable=SC2206
+            options=( ${decorator} )
+
+            code=$(__xsh_apply_func_decorator "${options[0]}" "${code:?}" "${options[@]:1}")
+        done < <(__xsh_get_decorators "${path}")
 
         # export function to sub-processes
-        printf "\n%s\n" "export -f ${lpuc}"
+        printf "%s\n%s\n" "${code}" "export -f ${lpuc}"
+    }
+
+    #? Description:
+    #?   Get init file's decorators.
+    #?   If the `runtime` decorator is not found, then the `static`
+    #?   decorator will be added to the returned decorator list.
+    #?
+    #? Usage:
+    #?   __xsh_get_init_decorators <FILE>
+    #?
+    #? Option:
+    #?   <FILE>           Path to the init file.
+    #?
+    function __xsh_get_init_decorators () {
+        declare -a decorators
+        # shellcheck disable=SC2207
+        decorators=( $(__xsh_get_decorators "$@") )
+        if [[ ! ${decorators[*]} =~ (^| )runtime($| ) ]]; then
+            decorators+=( 'static' )
+        fi
+        printf '%s\n' "${decorators[@]}"
     }
 
     #? Description:
     #?   Get decorators.
     #?
     #? Usage:
-    #?   __xsh_get_decorator <FILE>
+    #?   __xsh_get_decorators <FILE>
     #?
-    function __xsh_get_decorator () {
+    #? Option:
+    #?   <FILE>           File path.
+    #?
+    function __xsh_get_decorators () {
         declare path=${1:?}
 
         # filter the pattern `#? @foo bar` and output the part `foo bar`
-        awk '/^#\? @/ {sub(/^#\? @/, ""); print $0}' "${path}"
+        awk '/^#\? @.+/ {sub(/^#\? @/, ""); print $0}' "${path}"
     }
 
     #? Description:
-    #?   Apply decorator `xsh`.
+    #?   Apply function decorator to function utilities.
     #?
     #? Usage:
-    #?   __xsh_decorator_xsh <FILE> <UTIL> <LPUC> <OPTIONS>
+    #?   __xsh_apply_func_decorator <NAME> <FUNC> [OPTIONS ...]
+    #?
+    #? Option:
+    #?   <NAME>           Decorator name.
+    #?
+    #?   <FUNC>           Function code.
+    #?
+    #?   [OPTIONS]        Options for the decorator.
     #?
     #? Output:
-    #?   Code after applied decorator.
+    #?   The code after the decorator is applied.
     #?
-    function __xsh_decorator_xsh () {
-        declare path=${1:?}
-        declare util=${2:?}
-        declare lpuc=${3:?}
-        declare options=${4:?}
+    function __xsh_apply_func_decorator () {
+        declare name=${1:?}
+
+        if [[ $(type -t "__xsh_func_decorator_${name}" || :) == function ]]; then
+            # applying the decorator
+            __xsh_func_decorator_"${name}" "${@:2}"
+        else
+            __xsh_log error "${name}: not found the function decorator."
+            return 255
+        fi
+    }
+
+    #? Description:
+    #?   Apply function decorator `xsh` to function utilities.
+    #?
+    #? Usage:
+    #?   __xsh_func_decorator_xsh <FUNC> <OPTIONS ...>
+    #?
+    #? Option:
+    #?   <FUNC>           Function code.
+    #?
+    #?   <OPTIONS>        xsh command/builtin and its options.
+    #?
+    #? Output:
+    #?   The code after the decorator is applied.
+    #?
+    function __xsh_func_decorator_xsh () {
+        declare code=${1:?}
+
+        # insert the decorator code at the beginning of the function body
+        sed "/^function [a-zA-Z-]* () {/ r /dev/stdin" <(printf '%s' "${code}") <<< "xsh ${*:2}"
+    }
+
+    #? Description:
+    #?   Apply function decorator `subshell` to function utilities.
+    #?   Wrap a function, for example:
+    #?       function foo () { :; }
+    #?
+    #?   Into a subshell:
+    #?       function foo () {(
+    #?       function __foo__ () { :; }
+    #?       __foo__ "$@"
+    #?       )}
+    #?
+    #? Usage:
+    #?   __xsh_func_decorator_subshell <FUNC>
+    #?
+    #? Option:
+    #?   <FUNC>           Function code.
+    #?
+    #? Output:
+    #?   The code after the decorator is applied.
+    #?
+    function __xsh_func_decorator_subshell () {
+        declare code=${1:?} name
+
+        name=$(awk '/^function [a-zA-Z-]+ ()/ {print $2}' <<< "${code}")
+        code=${code/#function ${name} ()/function __${name}__ ()}
+        printf 'function %s () {(\n%s\n__%s__ "$@"\n)}\n' \
+               "${name}" "${code}" "${name}"
+    }
+
+    #? Description:
+    #?   Apply init decorator `static` to function utilities.
+    #?   The init file is put right before the function. It gets sourced
+    #?   every time the function gets imported.
+    #?
+    #? Usage:
+    #?   __xsh_func_decorator_init_static <FUNC> <INIT_FILE>
+    #?
+    #? Option:
+    #?   <FUNC>           Function code.
+    #?
+    #?   <INIT_FILE>      Path to the init file.
+    #?
+    #? Output:
+    #?   The code after the decorator is applied.
+    #?
+    function __xsh_func_decorator_init_static () {
+        declare code=${1:?} init_file=${2:?}
 
         # insert the decorator code at the first line of the function
-        sed "/^function ${util} () {/ r /dev/stdin" "${path}" <<< "xsh ${options}"
+        sed "1 r /dev/stdin" <(printf '%s' "${code}") <<< "source ${init_file}"
     }
 
     #? Description:
-    #?   Apply decorator `subshell`.
+    #?   Apply init decorator `runtime` to function utilities.
+    #?   The init file is put at the beginning of the function. It gets sourced
+    #?   every time the function get executed.
     #?
     #? Usage:
-    #?   __xsh_decorator_subshell <FILE> <UTIL> <LPUC> <OPTIONS>
+    #?   __xsh_func_decorator_init_runtime <FUNC> <INIT_FILE>
+    #?
+    #? Option:
+    #?   <FUNC>           Function code.
+    #?
+    #?   <INIT_FILE>      Path to the init file.
     #?
     #? Output:
-    #?   Code after applied decorator.
+    #?   The code after the decorator is applied.
     #?
-    function __xsh_decorator_subshell () {
-        declare path=${1:?}
-        declare util=${2:?}
-        declare lpuc=${3:?}
-        declare options=${4:?}  # unused by now
+    function __xsh_func_decorator_init_runtime () {
+        declare code=${1:?} init_file=${2:?}
 
-        # wrap the function:
-        # `function foo () { bar; }`
-        # as new function:
-        # `function foo () { ( function __foo__ () { bar; }; __foo__ "$@" ); }`
-        printf "function ${util} () {\n(\n%s\n__${lpuc}__ \"\$@\"\n)\n}\n" \
-               "$(sed "s/^function ${util} ()/function __${lpuc}__ ()/g" "${path}")"
+        # insert the decorator code at the beginning of the function body
+        sed "/^function [a-zA-Z-]* () {/ r /dev/stdin" <(printf '%s' "${code}") <<< "source ${init_file}"
     }
 
     #? Description:
@@ -1416,6 +1761,7 @@ function xsh () {
     #? Description:
     #?   Un-import the matching utilities that have been sourced or linked.
     #?   The sourced functions are unset, and the linked scripts are unlinked.
+    #?   The dev mode is being checked indirectly.
     #?
     #? Usage:
     #?   __xsh_unimports <LPUR> [...]
@@ -1436,27 +1782,22 @@ function xsh () {
 
     #? Description:
     #?   Un-import the matching utilities for LPUR.
+    #?   The dev mode is being checked.
     #?
     #? Usage:
     #?   __xsh_unimport <LPUR>
     #?
     function __xsh_unimport () {
-        # legal input:
-        #   '*'
-        #   /, <lib>
-        #   <lib>/<pkg>, /<pkg>
-        #   <lib>/<pkg>/<util>, /<pkg>/<util>
-        #   <lib>/<util>, /<util>
-        declare lpur=$1
-        declare ln type
 
-        if [[ -z ${lpur} ]]; then
-            __xsh_log error "LPUR is null or not set."
-            return 255
-        fi
+        function __xsh_unimport__ () {
+            declare lpur=${1:?} path
+            path=$(__xsh_get_path_by_lpur "${lpur}")
 
-        while read -r ln; do
-            if [[ -n ${ln} ]]; then
+            declare ln type
+            while read -r ln; do
+                if [[ -z ${ln} ]]; then
+                    continue
+                fi
                 type=$(__xsh_get_type_by_path "${ln}")
 
                 case ${type} in
@@ -1470,8 +1811,21 @@ function xsh () {
                         return 255
                         ;;
                 esac
-            fi
-        done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
+            done <<< "${path}"
+        }
+
+        declare lpur=$1
+
+        if [[ -z ${lpur} ]]; then
+            __xsh_log error "LPUR is null or not set."
+            return 255
+        fi
+
+        if __xsh_is_dev "${lpur}"; then
+            XSH_LIB_HOME=${XSH_DEV_HOME} __xsh_unimport__ "${lpur}"
+        else
+            __xsh_unimport__ "${lpur}"
+        fi
     }
 
     #? Description:
@@ -1482,13 +1836,7 @@ function xsh () {
     #?   __xsh_unimport_function <FILE>
     #?
     function __xsh_unimport_function () {
-        declare path=$1
-        declare util lpuc
-
-        if [[ -z ${path} ]]; then
-            __xsh_log error "LPU path is null or not set."
-            return 255
-        fi
+        declare path=${1:?} util lpuc
 
         util=$(__xsh_get_util_by_path "${path}")
         lpuc=$(__xsh_get_lpuc_by_path "${path}")
@@ -1503,13 +1851,7 @@ function xsh () {
     #?   __xsh_unimport_script <FILE>
     #?
     function __xsh_unimport_script () {
-        declare path=$1
-        declare lpuc
-
-        if [[ -z ${path} ]]; then
-            __xsh_log error "LPU path is null or not set."
-            return 255
-        fi
+        declare path=${1:?} lpuc
 
         lpuc=$(__xsh_get_lpuc_by_path "${path}")
         rm -f "/usr/local/bin/${lpuc}"
@@ -1519,7 +1861,101 @@ function xsh () {
     }
 
     #? Description:
+    #?   Test if the debug mode is enabled for current context.
+    #?   The environment variable XSH_DEBUG is used during the test.
+    #?
+    #? Usage:
+    #?   __xsh_is_debug <LPUE>
+    #?
+    #? Option:
+    #?   <LPUE>          The debug mode is tested against the LPUE.
+    #?
+    #? Return:
+    #?   0:               Enabled.
+    #?   != 0:            Not enabled.
+    #?
+    function __xsh_is_debug () {
+        if [[ -z ${XSH_DEBUG} ]]; then
+            return 1
+        fi
+
+        declare input=${1:?}
+        input=$(__xsh_complete_lpue "${input}")
+
+        declare xsh_debug
+        xsh_debug=$(declare -p XSH_DEBUG 2>/dev/null)
+
+        if [[ ${xsh_debug} =~ ^declare\ -x ]]; then
+            case ${XSH_DEBUG} in
+                1)
+                    XSH_DEBUG=( "${input}" )
+                    ;;
+                *)
+                    # shellcheck disable=SC2207
+                    # shellcheck disable=SC2128
+                    XSH_DEBUG=( $(__xsh_get_lpue_by_lpur "${XSH_DEBUG}") )
+                    ;;
+            esac
+        fi
+        [[ ${XSH_DEBUG[*]} =~ (^| )"${input}"($| ) ]]
+        return $?
+    }
+
+    #? Description:
+    #?   Test if the dev mode is enabled for current context.
+    #?   The environment variable XSH_DEV is used during the test.
+    #?
+    #? Usage:
+    #?   __xsh_is_dev [INPUT]
+    #?
+    #? Option:
+    #?   [INPUT]          The dev mode is tested against the INPUT.
+    #?                    If the INPUT is not present, and XSH_DEV=1, it returns 0.
+    #? Return:
+    #?   0:               Enabled.
+    #?   != 0:            Not enabled.
+    #?
+    function __xsh_is_dev () {
+        if [[ -z ${XSH_DEV} ]]; then
+            return 1
+        fi
+
+        declare input=$1
+
+        if [[ -n ${input} ]]; then
+            input=$(__xsh_complete_lpue "${input}")
+        fi
+
+        declare xsh_dev
+        xsh_dev=$(declare -p XSH_DEV 2>/dev/null)
+
+        if [[ ${xsh_dev} =~ ^declare\ -x ]]; then
+            case ${XSH_DEV} in
+                1)
+                    # set to the exact input
+                    XSH_DEV=( "${input}" )
+                    ;;
+                *)
+                    # shellcheck disable=SC2128
+                    # shellcheck disable=SC2178
+                    XSH_DEV=$(__xsh_complete_lpue "${XSH_DEV}")
+                    # shellcheck disable=SC2128
+                    XSH_DEV=( "${XSH_DEV}" )
+                    # set to a list of LPUE that matches XSH_DEV
+                    # shellcheck disable=SC2207
+                    # shellcheck disable=SC2128
+                    XSH_DEV+=( $(XSH_LIB_HOME=${XSH_DEV_HOME} __xsh_get_lpue_by_lpur "${XSH_DEV}") )
+            esac
+        fi
+
+        [[ ${XSH_DEV[*]} =~ (^| )"${input}"($| ) ]]
+        return $?
+    }
+
+    #? Description:
     #?   Call utilities in a batch. No options can be passed.
+    #?   The debug mode is being checked indirectly.
+    #?   The dev mode is being checked indirectly.
     #?
     #? Usage:
     #?   __xsh_calls <LPUE> [...]
@@ -1528,8 +1964,7 @@ function xsh () {
     #?   <LPUE> [...]     LPUE. See the section of Convention.
     #?
     function __xsh_calls () {
-        declare lpue
-        declare ret=0
+        declare lpue ret=0
 
         for lpue in "$@"; do
             __xsh_call "${lpue}"
@@ -1540,7 +1975,8 @@ function xsh () {
 
     #? Description:
     #?   Call a function or a script by LPUE.
-    #?   global variable `XSH_DEV` and `XSH_DEV_HOME` are being handled.
+    #?   The debug mode is being checked indirectly.
+    #?   The dev mode is being checked.
     #?
     #? Usage:
     #?   __xsh_call <LPUE> [OPTIONS]
@@ -1559,42 +1995,17 @@ function xsh () {
             return 255
         fi
 
-        declare lpuc
-        lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
-
-        if [[ -n ${XSH_DEV} ]]; then
-            if [[ -z ${XSH_DEV_HOME} ]]; then
-                __xsh_log error "XSH_DEV_HOME is not set properly."
-                return 255
-            fi
-
-            declare xsh_dev
-            case ${XSH_DEV} in
-                1)
-                    XSH_DEV=${lpuc}
-                    xsh_dev=${lpuc}
-                    ;;
-                *)
-                    xsh_dev=$(
-                        # set xsh_lib_home within sub shell
-                        xsh_lib_home=${XSH_DEV_HOME}
-                        __xsh_get_lpuc_by_lpur "${XSH_DEV}")
-                    ;;
-            esac
-
-            if grep -q "^${lpuc}$" <<< "${xsh_dev}"; then
-                # force to import and unimport dev util
-                xsh_lib_home=${XSH_DEV_HOME} __xsh_exec -i -u "${lpue}" "${@:2}"
-                return
-            fi
+        if __xsh_is_dev "${lpue}"; then
+            # force to import and unimport dev util
+            XSH_LIB_HOME=${XSH_DEV_HOME} __xsh_exec -i -u "${lpue}" "${@:2}"
+        else
+            __xsh_exec "${lpue}" "${@:2}"
         fi
-
-        __xsh_exec "${lpue}" "${@:2}"
     }
 
     #? Description:
     #?   Call a function or a script by LPUE.
-    #?   Global variable `XSH_DEBUG` is being handled.
+    #?   The debug mode is being checked.
     #?
     #? Usage:
     #?   __xsh_exec [-i] [-u] <LPUE>
@@ -1604,9 +2015,9 @@ function xsh () {
     #?   [-u]             Unimport the util after the execution.
     #?
     function __xsh_exec () {
-        declare OPTIND OPTARG opt
+        declare import=0 unimport=0 \
+                OPTIND OPTARG opt
 
-        declare import=0 unimport=0
         while getopts iu opt; do
             case ${opt} in
                 i)
@@ -1621,45 +2032,29 @@ function xsh () {
             esac
         done
         shift $((OPTIND - 1))
-        declare lpue=$1
-
-        if [[ -z ${lpue} ]]; then
-            __xsh_log error "LPUE is null or not set."
-            return 255
-        fi
+        declare lpue=${1:?}
 
         declare lpuc
         lpuc=$(__xsh_get_lpuc_by_lpue "${lpue}")
 
         if [[ ${import} -eq 1 ]]; then
             __xsh_import "${lpue}"
-        elif ! type -t "${lpuc}" >/dev/null 2>&1; then
+        elif ! type -t "${lpuc}" >/dev/null; then
             __xsh_import "${lpue}"
         fi
 
-        declare ret=0
+        declare mime_type
+        mime_type=$(__xsh_mime_type "$(command -v "$1")" 2>/dev/null)
 
+        # shellcheck disable=SC2128
         if [[ -n ${XSH_DEBUG} ]]; then
-            declare xsh_debug
-
-            case ${XSH_DEBUG} in
-                1)
-                    XSH_DEBUG=${lpuc}
-                    xsh_debug=${lpuc}
-                    ;;
-                *)
-                    xsh_debug=$(__xsh_get_lpuc_by_lpur "${XSH_DEBUG}")
-                    ;;
-            esac
-
-            if grep -q "^${lpuc}$" <<< "${xsh_debug}"; then
+            if __xsh_is_debug "${lpue}"; then
                 __xsh_call_with_shell_option -1 vx "${lpuc}" "${@:2}"
             else
                 __xsh_call_with_shell_option -0 vx "${lpuc}" "${@:2}"
             fi
         else
-            if [[ $(type -t "${lpuc}" || :) == file &&
-                      $(__xsh_mime_type "$(command -v "${lpuc}")" | cut -d/ -f1) == text ]]; then
+            if [[ $(type -t "${lpuc}" || :) == file && ${mime_type%%/*} == text ]]; then
                 # call script
                 bash "$(command -v "${lpuc}")" "${@:2}"
             else
@@ -1667,7 +2062,7 @@ function xsh () {
                 ${lpuc} "${@:2}"
             fi
         fi
-        ret=$?
+        declare ret=$?
 
         if [[ ${unimport} -eq 1 ]]; then
             __xsh_unimport "${lpue}"
@@ -1690,50 +2085,34 @@ function xsh () {
             return 255
         fi
 
-        lpur=${lpur/#\//x\/}  # set default lib `x` if lpur is started with /
-        lpur=${lpur/%\//\/*}  # set default pur `*` if lpur is ended with /
+        lpur=$(__xsh_complete_lpue "${lpur}")
+
+        # append `*` if the lpur is ended with slash `/`
+        lpur=${lpur/%\//\/*}
+
         if [[ -n ${lpur##*\/*} ]]; then
+            # append `/*` if the lpur doesn't contain any slash `/`
             lpur=${lpur}/\*
-        else
-            :
         fi
         echo "${lpur}"
     }
 
     #? Description:
-    #?   TODO
+    #?   Complete a LPUE.
     #?
     #? Usage:
-    #?   __xsh_get_lib_by_lpur <LPUR>
+    #?   __xsh_complete_lpue <LPUE>
     #?
-    function __xsh_get_lib_by_lpur () {
-        declare lpur=$1
+    function __xsh_complete_lpue () {
+        declare lpue=$1
 
-        if [[ -z ${lpur} ]]; then
-            __xsh_log error "LPUR is null or not set."
+        if [[ -z ${lpue} ]]; then
+            __xsh_log error "LPUE is null or not set."
             return 255
         fi
 
-        lpur=$(__xsh_complete_lpur "${lpur}")
-        echo "${lpur%%/*}"  # remove anything after first / (include the /)
-    }
-
-    #? Description:
-    #?   TODO
-    #?
-    #? Usage:
-    #?   __xsh_get_pur_by_lpur <LPUR>
-    #?
-    function __xsh_get_pur_by_lpur () {
-        declare lpur=$1
-
-        if [[ -z ${lpur} ]]; then
-            __xsh_log error "LPUR is null or not set."
-            return 255
-        fi
-
-        lpur=$(__xsh_complete_lpur "${lpur}")
-        echo "${lpur#*/}"  # remove lib part
+        # prepend `x` as the default lib if the lpur is started with slash `/`
+        echo "${lpue/#\//x/}"
     }
 
     #? Description:
@@ -1743,27 +2122,22 @@ function xsh () {
     #?   __xsh_get_path_by_lpur <LPUR>
     #?
     function __xsh_get_path_by_lpur () {
-        declare lpur=$1
-        declare lib pur
+        declare lpur=${1:?} lib pur
 
-        if [[ -z ${lpur} ]]; then
-            __xsh_log error "LPUR is null or not set."
-            return 255
-        fi
+        lpur=$(__xsh_complete_lpur "${lpur}")
+        lib=${lpur%%/*}  # remove anything after first / (include the /)
+        pur=${lpur#*/}  # remove lib part
 
-        lib=$(__xsh_get_lib_by_lpur "${lpur}")
-        pur=$(__xsh_get_pur_by_lpur "${lpur}")
-
-        find -L "${xsh_lib_home}" \
+        find -L "${XSH_LIB_HOME}" \
              \( \
-             -path "${xsh_lib_home}/${lib}/functions/${pur}.sh" \
+             -path "${XSH_LIB_HOME}/${lib}/functions/${pur}.sh" \
              -or \
-             -path "${xsh_lib_home}/${lib}/functions/${pur}/*" \
+             -path "${XSH_LIB_HOME}/${lib}/functions/${pur}/*" \
              -name "*.sh" \
              -or \
-             -path "${xsh_lib_home}/${lib}/scripts/${pur}.sh" \
+             -path "${XSH_LIB_HOME}/${lib}/scripts/${pur}.sh" \
              -or \
-             -path "${xsh_lib_home}/${lib}/scripts/${pur}/*" \
+             -path "${XSH_LIB_HOME}/${lib}/scripts/${pur}/*" \
              -name "*.sh" \
              \) \
              -and \
@@ -1776,22 +2150,44 @@ function xsh () {
     #?   TODO
     #?
     #? Usage:
-    #?   __xsh_get_lpuc_by_lpur <LPUR>
+    #?   __xsh_get_lpue_by_lpur <LPUR>
     #?
-    function __xsh_get_lpuc_by_lpur () {
+    function __xsh_get_lpue_by_lpur () {
         declare lpur=$1
-        declare ln
 
         if [[ -z ${lpur} ]]; then
             __xsh_log error "LPUR is null or not set."
             return 255
         fi
 
+        declare ln
         while read -r ln; do
             if [[ -n ${ln} ]]; then
-                __xsh_get_lpuc_by_path "${ln}"
+                __xsh_get_lpue_by_path "${ln}"
             fi
-        done <<< "$(__xsh_get_path_by_lpur "${lpur}")"
+        done < <(__xsh_get_path_by_lpur "${lpur}")
+    }
+
+    #? Description:
+    #?   TODO
+    #?
+    #? Usage:
+    #?   __xsh_get_lpuc_by_lpur <LPUR>
+    #?
+    function __xsh_get_lpuc_by_lpur () {
+        declare lpur=$1
+
+        if [[ -z ${lpur} ]]; then
+            __xsh_log error "LPUR is null or not set."
+            return 255
+        fi
+
+        declare ln
+        while read -r ln; do
+            if [[ -n ${ln} ]]; then
+                __xsh_get_lpuc_by_lpue "${ln}"
+            fi
+        done < <(__xsh_get_lpue_by_lpur "${lpur}")
     }
 
     #? Description:
@@ -1840,15 +2236,14 @@ function xsh () {
     #?   __xsh_get_type_by_path <PATH>
     #?
     function __xsh_get_type_by_path () {
-        declare path=$1
-        declare type
+        declare path=$1 type
 
         if [[ -z ${path} ]]; then
             __xsh_log error "LPU path is null or not set."
             return 255
         fi
 
-        type=${path#${xsh_lib_home}/*/}  # strip path from begin
+        type=${path#${XSH_LIB_HOME}/*/}  # strip path from beginning
         echo "${type%%/*}"  # strip path from end
     }
 
@@ -1856,19 +2251,12 @@ function xsh () {
     #?   TODO
     #?
     #? Usage:
-    #?   __xsh_get_lib_by_path <PATH>
+    #?   __xsh_get_lib_by_repo <REPO>
     #?
-    function __xsh_get_lib_by_path () {
-        declare path=$1
-        declare lib
+    function __xsh_get_lib_by_repo () {
+        declare repo=${1:?}
 
-        if [[ -z ${path} ]]; then
-            __xsh_log error "LPU path is null or not set."
-            return 255
-        fi
-
-        lib=${path#${xsh_lib_home}/}  # strip path from begin
-        echo "${lib%%/*}"  # remove anything after first / (include the /)
+        __xsh_lib_get_cfg_property "${repo}" name
     }
 
     #? Description:
@@ -1878,37 +2266,11 @@ function xsh () {
     #?   __xsh_get_util_by_path <PATH>
     #?
     function __xsh_get_util_by_path () {
-        declare path=$1
-        declare util
-
-        if [[ -z ${path} ]]; then
-            __xsh_log error "LPU path is null or not set."
-            return 255
-        fi
+        declare path=${1:?} util
 
         util=${path%.sh}  # remove file extension
-        util=$(echo "${util}" | sed 's|/[0-9]*$||')  # handle util selector
-        util=${util##*/}  # get util
-        echo "${util}"
-    }
-
-    #? Description:
-    #?   TODO
-    #?
-    #? Usage:
-    #?   __xsh_get_pue_by_path <PATH>
-    #?
-    function __xsh_get_pue_by_path () {
-        declare path=${1:?}
-        declare pue
-
-        if [[ -z ${path} ]]; then
-            __xsh_log error "LPU path is null or not set."
-            return 255
-        fi
-
-        pue=${path#${xsh_lib_home}/*/*/}  # strip path from begin
-        echo "${pue%.sh}"  # remove file extension
+        util=${util%/[0-9]*}  # handle util selector, started with digits
+        echo "${util##*/}"  # get util
     }
 
     #? Description:
@@ -1918,16 +2280,12 @@ function xsh () {
     #?   __xsh_get_lpue_by_path <PATH>
     #?
     function __xsh_get_lpue_by_path () {
-        declare path=${1:?}
-        declare lib pue
+        declare path=${1:?} lib pue
 
-        if [[ -z ${path} ]]; then
-            __xsh_log error "LPU path is null or not set."
-            return 255
-        fi
-
-        lib=$(__xsh_get_lib_by_path "${path}")
-        pue=$(__xsh_get_pue_by_path "${path}")
+        lib=${path#${XSH_LIB_HOME}/}  # strip path from beginning
+        lib=${lib%%/*}  # remove anything after first / (include the /)
+        pue=${path#${XSH_LIB_HOME}/*/*/}  # strip path from beginning
+        pue=${pue%.sh}  # remove file extension
         echo "${lib}/${pue}"
     }
 
@@ -1938,13 +2296,7 @@ function xsh () {
     #?   __xsh_get_lpuc_by_path <PATH>
     #?
     function __xsh_get_lpuc_by_path () {
-        declare path=$1
-        declare lpue
-
-        if [[ -z ${path} ]]; then
-            __xsh_log error "LPU path is null or not set."
-            return 255
-        fi
+        declare path=$1 lpue
 
         lpue=$(__xsh_get_lpue_by_path "${path}")
         __xsh_get_lpuc_by_lpue "${lpue}"
@@ -1957,7 +2309,7 @@ function xsh () {
     #?   __xsh_get_internal_functions
     #?
     function __xsh_get_internal_functions () {
-        typeset -f xsh \
+        declare -f xsh \
             | awk '$1 == "function" && match($2, "^__xsh_") > 0 && $3 == "()" {print $2}'
     }
 
@@ -1968,7 +2320,10 @@ function xsh () {
     #?   __xsh_clean
     #?
     function __xsh_clean () {
+        # shellcheck disable=SC2046
         unset -f $(__xsh_get_internal_functions)
+        unset XSH_DEBUG
+        unset XSH_DEV
     }
 
 
@@ -1976,28 +2331,40 @@ function xsh () {
 
     # call __xsh_clean() while xsh() returns
     # clean env if reaching the final exit point of xsh
+    # shellcheck disable=SC2016
     __xsh_trap_return '
             if [[ $(__xsh_count_in_funcstack xsh) -eq 1 ]]; then
                 __xsh_clean >/dev/null 2>&1
             fi;'
 
-    declare xsh_home
-
     # check environment variable
     if [[ -n ${XSH_HOME%/} ]]; then
         # remove tailing '/'
-        xsh_home=${XSH_HOME%/}
+        XSH_HOME=${XSH_HOME%/}
     else
         __xsh_log error "XSH_HOME is not set properly."
         return 255
     fi
 
-    declare xsh_repo_home=${xsh_home}/repo
-    declare xsh_lib_home=${xsh_home}/lib
-    declare xsh_git_server='https://github.com'
+    if [[ -n ${XSH_DEV_HOME%/} ]]; then
+        # remove tailing '/'
+        XSH_DEV_HOME=${XSH_DEV_HOME%/}
+    else
+        __xsh_log error "XSH_DEV_HOME is not set properly."
+        return 255
+    fi
 
-    if [[ ! -e ${xsh_lib_home} ]]; then
-        mkdir -p "${xsh_lib_home}"
+    # declare global variables if they are not declared yet or are empty
+    declare XSH_REPO_HOME=${XSH_REPO_HOME:-${XSH_HOME}/repo}
+    declare XSH_LIB_HOME=${XSH_LIB_HOME:-${XSH_HOME}/lib}
+    declare XSH_GIT_SERVER=${XSH_GIT_SERVER:-https://github.com}
+
+    # check dirs
+    if [[ ! -e ${XSH_REPO_HOME} ]]; then
+        mkdir -p "${XSH_REPO_HOME}"
+    fi
+    if [[ ! -e ${XSH_LIB_HOME} ]]; then
+        mkdir -p "${XSH_LIB_HOME}"
     fi
 
     # check input
@@ -2006,10 +2373,11 @@ function xsh () {
         return 255
     fi
 
-    if [[ $(type -t "__xsh_$1" || :) == function ]]; then
-        # xsh command and builtin function
-        __xsh_$1 "${@:2}"
+    if [[ $(type -t "__xsh_${1//-/_}" || :) == function ]]; then
+        # xsh command or builtin function
+        __xsh_"${1//-/_}" "${@:2}"
     else
+        # xsh library utility
         __xsh_call "$1" "${@:2}"
     fi
 }

@@ -99,7 +99,7 @@ The xsh framework supports both public and private libraries.
 * Handle logs
 * Handle output
 
-Of course, some of the above topics can be built as libraries, packages, or utilities themself.
+Of course, some of the above topics can be built as libraries, packages, or utilities themselves.
 
 
 
@@ -168,11 +168,11 @@ To list all the utilities of the library `x`, use:
 ```bash
 $ xsh list x
 
-[SCRIPT] x/log/filter
-[FUNCTIONS] x/string/lower
-[FUNCTIONS] x/string/random
-[FUNCTIONS] x/string/upper
-[FUNCTIONS] x/string/uuid
+[script] x/log/filter
+[functions] x/string/lower
+[functions] x/string/random
+[functions] x/string/upper
+[functions] x/string/uuid
 ...
 ```
 
@@ -209,7 +209,7 @@ $ xsh unload xsh-lib/core
 
 ### 4.2. Invoke xsh Utilities
 
-There are three methods to invoke xsh utilities.
+There are two methods to invoke xsh utilities.
 
 Before to talk about that, let's get familiar with the glossary `LPUE`, `LPUR`, and `LPUC`.
 
@@ -237,23 +237,7 @@ Now let's get back to the three methods:
    HELLO WORLD
    ```
 
-2. Call LPUEs in batch. You can't pass any options.
-
-   The syntax:
-
-   ```bash
-   $ xsh calls <LPUE> ...
-   ```
-
-   A sample:
-
-   ```bash
-   $ xsh calls x/string/random x/string/uuid
-
-   e30e865ed22f3ef94be36c77-e507-4eee-9075-1aa259c1613e
-   ```
-
-3. Call a LPUC without the leading `xsh` command.
+1. Call a LPUC without the leading `xsh` command.
 
    The syntax:
 
@@ -428,7 +412,7 @@ function upper () {
 }
 ```
 
-You will need to follow the comment style to let xsh generate help info.
+You will need to follow the exact comment style to let xsh generate help info.
 
 The function should be started with the exact syntax:
 
@@ -446,7 +430,7 @@ Push the code to a Git repo, for example, Github, on branch `master`, then the l
 
 Load the sample library `xsh-lib-sample` on Github:
 
-Note: Option `-b master` is necessary to tell you are loading the latest untagged version for testing purposes.
+Note: Option `-b master` is necessary to tell that you are loading the latest untagged version for testing purposes.
 
 ```bash
 $ xsh load -b master <yourusername>/xsh-lib-sample
@@ -492,53 +476,49 @@ $ xsh load <yourusername>/xsh-lib-sample
 
 ### 5.2. Debugging (Debug Mode)
 
-With the debug mode enabled, the shell options: `-vx` is set for the debugging utilities. Debug mode is available only for the commands started with `xsh`. 
+With the debug mode enabled, the shell options: `-vx` is set for the debugging utilities. The debug mode is available only for the commands started with `xsh`.
 
-Enable debug mode by setting an environment variable: `XSH_DEBUG`.
+Enable the debug mode by setting an environment variable: `XSH_DEBUG` before the command `xsh`.
 
 Values for XSH_DEBUG:
 ```
-1: Debugging current called xsh utility.
-<LPUR>: Debugging the matching xsh utilities.
-```
-Example:
-
-Enable `set -vx` for the utility `/string/upper`:
-```bash
-$ XSH_DEBUG=1 xsh /string/upper foo
+1     : Enable the debug mode for whatever the LPUE input by `xsh`.
+        e.g: XSH_DEBUG=1 xsh /string/upper foo
+<LPUR>: Enabled the debug mode for the LPUE input by `xsh` if the LPUE equals to or matches the <LPUR> set by XSH_DEBUG.
+        e.g: XSH_DEBUG=/string xsh /string/upper foo
+        e.g: XSH_DEBUG=/string/pipe/upper xsh /string/upper foo
 ```
 
-Enable `set -vx` for all utilities under the package `/string`:
-```bash
-$ XSH_DEBUG='/string' xsh /string/upper foo
-```
+The debug mode applies to the following commands and internal functions:
+* calls
+* call, exec
 
-The above is for debugging xsh libraries.
-For the general debugging purpose, see `xsh help debug`. 
+The debug mode is for debugging xsh libraries.
+For the general debugging purpose, use `xsh debug`, see `xsh help debug`.
 
-`xsh debug <FUNCTION | SCRIPT>`
+`xsh debug [-1 OPTION] [-0 OPTION] [...] <FUNCTION | SCRIPT>`
 
-It provides a consistent way to debug functions and scripts without having to manually switch the shell options on and off, especially with functions, the syntax `bash -x script.sh` is out of hands. Although you may use the subprocess syntax `(set -x; foo_func)` to avoid messing the current process up, but subprocess has its own side effection.
+It provides a consistent way to debug functions and scripts without having to manually switch the shell options on and off, especially with functions, the syntax `bash -x script.sh` is out of hands. Although you may use the subprocess syntax `(set -x; foo_func)` to avoid messing the current process up, but subprocess has its own side effects.
 
 
 
 ### 5.3 Development at Local (Dev Mode)
 
 The dev mode is for developers to develop xsh libraries.
-With the dev mode enabled, the utilities from the development library will be called rather than those from the normal library.
+With the dev mode enabled, the utilities from the development library will be used rather than those from the normal library.
+The dev mode is available only for the commands started with `xsh`.
 
 Before using the dev mode, you need to create symbol links for the libraries that need to use dev mode, put the symbol links in the directory `~/.xsh/lib-dev`, and point them to your development workspaces.
+This can be done with the command: `xsh lib-dev-manager link ...`, and be undone with the command `xsh lib-dev-manager unlink ...`.
 
-The normal libraries look like:
+Example:
 
 ```bash
-$ ls -l ~/.xsh/lib
-total 0
-lrwxr-xr-x  1 alex  staff  33 Oct 14 11:57 aws -> /Users/alex/.xsh/repo/xsh-lib/aws
-lrwxr-xr-x  1 alex  staff  34 Oct 10 15:07 x -> /Users/alex/.xsh/repo/xsh-lib/core
+$ xsh lib-dev-manager link xsh-lib/core ~/projects
+$ xsh lib-dev-manager link xsh-lib/aws ~/projects
 ```
 
-The development libraries look like:
+After the link, the development libraries look like:
 
 ```bash
 $ ls -l ~/.xsh/lib-dev
@@ -548,19 +528,26 @@ lrwxr-xr-x  1 alex  staff  33 Sep  4 16:36 x -> /Users/alex/projects/xsh-lib/cor
 ```
 
 Then the dev mode is ready to use.
-Enable dev mode by setting an environment variable: `XSH_DEV`.
+Enable the dev mode by setting an environment variable: `XSH_DEV` before the command `xsh`.
 
 Values for XSH_DEV:
 ```
-1:      Call current called xsh utility from the development library.
-<LPUR>: Call the matching xsh utilities from the development library.
+1     : Enable the dev mode for whatever the LPUE or LPUR input by `xsh`.
+        e.g: XSH_DEV=1 xsh /string/upper foo
+             XSH_DEV=1 xsh import /string
+             XSH_DEV=1 xsh list
+
+<LPUR>: Enabled the dev mode for the LPUE or LPUR input by `xsh` if the LPUE/LPUR equals to or matches the <LPUR> set by XSH_DEV.
+        e.g: XSH_DEV=/string xsh import /string
+        e.g: XSH_DEV=/string xsh help /string/upper
+        e.g: XSH_DEV=/string/pipe/upper xsh /string/upper foo
+        Be noted, the following usage won't work as expected:
+        e.g: XSH_DEV=/string xsh import /
 ```
 
-Example:
-
-```bash
-$ XSH_DEV=1 xsh /string/upper foo
-```
+The dev mode applies to the following commands and internal functions:
+* calls, imports, unimports, list, help
+* call, import, unimport, lib_list, help_lib
 
 
 
@@ -579,5 +566,3 @@ $ XSH_DEV=1 xsh /string/upper foo
 * Library registration
 
 * Document generation
-
-* Test Case framework

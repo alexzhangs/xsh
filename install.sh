@@ -140,7 +140,9 @@ function update-profile () {
 }
 
 function clean-in-profile () {
-    sed-regex-inplace -e '/. ~\/.xshrc/d' "${1:?}"
+    if [[ -e ${1:?} ]]; then
+        sed-regex-inplace -e '/. ~\/.xshrc/d' "${1:?}"
+    fi
 }
 
 function uninstall-xsh () {
