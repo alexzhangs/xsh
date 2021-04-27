@@ -28,24 +28,23 @@ env:
   - PATH=${PATH}:${HOME}/kcov/bin
 
 before_install:
-  - |-
-  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    # kcov: test coverage
-    wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
-    tar xzf master.tar.gz
-    cd kcov-master
-    mkdir build
-    cd build
-    cmake -DCMAKE_INSTALL_PREFIX=${HOME}/kcov ..
-    make
-    make install
-    cd ../..
-    rm -rf kcov-master
-    mkdir -p coverage
-  fi
-
+  - |
+    if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
+      # kcov: test coverage
+      wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
+      tar xzf master.tar.gz
+      cd kcov-master
+      mkdir build
+      cd build
+      cmake -DCMAKE_INSTALL_PREFIX=${HOME}/kcov ..
+      make
+      make install
+      cd ../..
+      rm -rf kcov-master
+      mkdir -p coverage
+    fi
   # shellspec: test framework
-  curl -fsSL https://git.io/shellspec | sh -s -- -y
+  - curl -fsSL https://git.io/shellspec | sh -s -- -y
 
 install:
   # xsh
