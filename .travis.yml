@@ -25,14 +25,14 @@ jobs:
       osx_image: xcode12.2
 env:
   global:
-    # kcov
-    - PATH=${PATH}:${HOME}/kcov/bin
+    # shellspec and kcov
+    - PATH=${PATH}:${HOME}/.local/bin:${HOME}/kcov/bin
     - COVDIR=${HOME}/coverage
 
 before_install:
+  # kcov: test coverage
   - |
     if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
-      # kcov: test coverage
       wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
       tar xzf master.tar.gz
       cd kcov-master
@@ -43,7 +43,6 @@ before_install:
       make install
       cd ../..
       rm -rf kcov-master
-      mkdir -p "${COVDIR}"
     fi
 
   # shellspec: test framework
@@ -56,9 +55,11 @@ install:
 
 script:
   - xsh version
+  - shellspec --version
+  - kcov --version
   # start test with coverage
-  - ~/.local/bin/shellspec --dry-run --kcov --covdir "${COVDIR}" -s /bin/bash --no-warning-as-failure spec/test_xsh_spec.sh
+  - shellspec --dry-run --kcov --covdir "${COVDIR}" -s /bin/bash --no-warning-as-failure spec/test_xsh_spec.sh
 
 after_success:
-  # upload report
-  #- bash <(curl -s https://codecov.io/bash) -s "${COVDIR}"
+  # upload coverage report
+  - bash <(curl -s https://codecov.io/bash) -s "${COVDIR}"
