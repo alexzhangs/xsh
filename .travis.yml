@@ -24,9 +24,10 @@ jobs:
     - os: osx
       osx_image: xcode12.2
 env:
-  # kcov
-  - PATH=${PATH}:${HOME}/kcov/bin
-  - COVDIR=~/coverage
+  global:
+    # kcov
+    - PATH=${PATH}:${HOME}/kcov/bin
+    - COVDIR=~/coverage
 
 before_install:
   - |
