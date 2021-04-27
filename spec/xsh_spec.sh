@@ -104,7 +104,7 @@ Describe 'xsh.sh'
       When call xsh debug xsh /string/random
       The status should be success
       The output should not equal ''
-      The error should start with '+'
+      The error should include '+'
     End
 
     It 'imports /date/adjust'
@@ -133,7 +133,7 @@ Describe 'xsh.sh'
       When call xsh /string/random
       The status should be success
       The output should not equal ''
-      The error should start with '+'
+      The error should include '+'
     End
 
     It 'call /string/upper with XSH_DEBUG=/string/pipe/upper'
@@ -141,7 +141,7 @@ Describe 'xsh.sh'
       When call xsh /string/upper 'Hello World'
       The status should be success
       The output should equal 'HELLO WORLD'
-      The error should start with '+'
+      The error should include '+'
     End
 
     It 'update library xsh-lib/core to latest stable version'
@@ -192,7 +192,7 @@ Describe 'xsh.sh'
       When call xsh call-with-shell-option -1 x echo foo
       The status should be success
       The output should equal 'foo'
-      The error should start with '+'
+      The error should include '+'
     End
 
     It 'call count-in-funcstack'
