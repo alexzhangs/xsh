@@ -58,8 +58,8 @@ script:
   - shellspec --version
   - kcov --version
   # start test with coverage
-  - shellspec -s /bin/bash --no-warning-as-failure spec/xsh_spec.sh
+  - shellspec --kcov --covdir "${COVDIR}" -s /bin/bash --no-warning-as-failure spec/xsh_spec.sh
 
 after_success:
   # upload coverage report
-  #- bash <(curl -s https://codecov.io/bash) -s "${COVDIR}"
+  - bash <(curl -s https://codecov.io/bash) -s "${COVDIR}"
