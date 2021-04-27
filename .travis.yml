@@ -26,6 +26,7 @@ jobs:
 env:
   # kcov
   - PATH=${PATH}:${HOME}/kcov/bin
+  - COVDIR=~/coverage
 
 before_install:
   - |
@@ -41,7 +42,6 @@ before_install:
       make install
       cd ../..
       rm -rf kcov-master
-      mkdir -p coverage
     fi
   # shellspec: test framework
   - curl -fsSL https://git.io/shellspec | sh -s -- -y
@@ -54,8 +54,8 @@ install:
 script:
   - xsh version
   # start test with coverage
-  - ~/.local/bin/shellspec --kcov -s /bin/bash --no-warning-as-failure spec/xsh_spec.sh
+  - ~/.local/bin/shellspec --kcov --covdir "${COVDIR}" -s /bin/bash --no-warning-as-failure spec/xsh_spec.sh
 
 after_success:
-  # upload coverage
-  - bash <(curl -s https://codecov.io/bash)
+  # upload report
+  - bash <(curl -s https://codecov.io/bash) -s "${COVDIR}"
