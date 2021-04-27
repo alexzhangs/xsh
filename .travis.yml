@@ -54,7 +54,7 @@ install:
 script:
   - xsh version
   # start test with coverage
-  - kcov coverage ~/.local/bin/shellspec -s /bin/bash --no-warning-as-failure spec/xsh_spec.sh
+  - ~/.local/bin/shellspec --kcov -s /bin/bash --no-warning-as-failure spec/xsh_spec.sh
 
 after_success:
   # upload coverage
