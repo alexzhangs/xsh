@@ -2334,7 +2334,7 @@ function xsh () {
     # shellcheck disable=SC2016
     __xsh_trap_return '
             if [[ $(__xsh_count_in_funcstack xsh) -eq 1 ]]; then
-                __xsh_clean >/dev/null 2>&1
+                __xsh_clean
             fi;'
 
     # check environment variable
