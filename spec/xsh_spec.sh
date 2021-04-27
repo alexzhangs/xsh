@@ -8,8 +8,8 @@ Describe 'xsh.sh'
     End
 
     It 'show XSH paths'
-      The path ${XSH_HOME} should be directory
-      The path ${XSH_DEV_HOME} should be directory
+      The path "${XSH_HOME}" should be directory
+      The path "${XSH_DEV_HOME}" should be directory
     End
   End
 
@@ -60,8 +60,8 @@ Describe 'xsh.sh'
       When call xsh load xsh-lib/core
       The status should be success
       The output should not equal ''
-      The path ${XSH_HOME}/repo/xsh-lib/core should be directory
-      The path ${XSH_HOME}/lib/x should be symlink
+      The path "${XSH_HOME}"/repo/xsh-lib/core should be directory
+      The path "${XSH_HOME}"/lib/x should be symlink
     End
 
     It 'show loaded libraries of xsh'
@@ -246,7 +246,7 @@ Describe 'xsh.sh'
       When call xsh lib-dev-manager link xsh-lib/core /tmp
       The status should be success
       The output should equal ''
-      The path ${XSH_DEV_HOME}/x should be symlink
+      The path "${XSH_DEV_HOME}"/x should be symlink
     End
 
     It 'call imports /string/foo'
@@ -371,8 +371,8 @@ Describe 'xsh.sh'
       When call xsh unload xsh-lib/core
       The status should be success
       The output should equal ''
-      The path ${XSH_HOME}/repo/xsh-lib/core should not be exist
-      The path ${XSH_HOME}/lib/x should not be exist
+      The path "${XSH_HOME}"/repo/xsh-lib/core should not be exist
+      The path "${XSH_HOME}"/lib/x should not be exist
     End
 
     It 'show loaded libraries of xsh'
