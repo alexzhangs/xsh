@@ -57,7 +57,7 @@ install:
 script:
   - xsh version
   # start test with coverage
-  - ~/.local/bin/shellspec -x --kcov --covdir "${COVDIR}" -s /bin/bash --no-warning-as-failure spec/test_xsh_spec.sh
+  - bash -vx ~/.local/bin/shellspec --kcov --covdir "${COVDIR}" -s /bin/bash --no-warning-as-failure spec/test_xsh_spec.sh
 
 after_success:
   # upload report
