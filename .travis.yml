@@ -48,21 +48,6 @@ before_install:
   # shellspec: test framework
   - curl -fsSL https://git.io/shellspec | sh -s -- -y
 
-  # shellspec: temporary patch
-  - |
-    if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
-      sed -i 's/shellspec_profile_start$/shellspec_profile_start; set -vx/' /home/travis/.local/lib/shellspec/lib/core/dsl.sh
-      grep -C 10 'shellspec_profile_start' /home/travis/.local/lib/shellspec/lib/core/dsl.sh
-
-      printf '%s' '
-      kcov_version() {
-        echo "using the pached kcov_version" >&2
-        command_path "$1" || return 1
-        "$1" --version 2>/dev/null || return 0
-      }' >> ~/.local/lib/shellspec/lib/libexec/shellspec.sh
-      tail -100 ~/.local/lib/shellspec/lib/libexec/shellspec.sh
-    fi
-
 install:
   # xsh
   - bash install.sh -s
