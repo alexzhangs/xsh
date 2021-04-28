@@ -21,13 +21,6 @@ function xsh () {
         unset XSH_DEV
     }
 
-    function __xsh_foo () {
-        echo FOO
-     }
-
-    __xsh_trap_return '
-        __xsh_clean;'
-
-    __xsh_foo
+    __xsh_trap_return '__xsh_clean;'
 }
 export -f xsh
