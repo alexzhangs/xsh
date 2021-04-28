@@ -1711,8 +1711,13 @@ function xsh () {
     function __xsh_func_decorator_init_static () {
         declare code=${1:?} init_file=${2:?}
 
-        # insert the decorator code at the first line of the function
-        sed "1 r /dev/stdin" <(printf '%s' "${code}") <<< "source ${init_file}"
+        # insert the decorator code before the function code
+        sed '1 {
+        h
+        r /dev/stdin
+        g
+        N
+        }' <(printf '%s' "${code}") <<< "source ${init_file}"
     }
 
     #? Description:
@@ -1735,7 +1740,7 @@ function xsh () {
         declare code=${1:?} init_file=${2:?}
 
         # insert the decorator code at the beginning of the function body
-        sed "/^function [a-zA-Z-]* () {/ r /dev/stdin" <(printf '%s' "${code}") <<< "source ${init_file}"
+        sed '/^function [a-zA-Z-]* () {/ r /dev/stdin' <(printf '%s' "${code}") <<< "source ${init_file}"
     }
 
     #? Description:
