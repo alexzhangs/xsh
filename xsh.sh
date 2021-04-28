@@ -6,11 +6,6 @@ function xsh () {
         :
     }
 
-    declare command="
-        trap - RETURN
-        __xsh_clean
-    "
-
-    trap "${command}" RETURN
+    trap "trap - RETURN; __xsh_clean;" RETURN
 }
 export -f xsh
