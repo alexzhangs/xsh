@@ -77,7 +77,7 @@ install:
   - source ~/.xshrc
 
 script:
-  - xsh version
+  #- xsh version
   - shellspec --version
   - kcov --version
   # start test with coverage
