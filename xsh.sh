@@ -158,25 +158,12 @@ function xsh () {
     }
 
     #? Description:
-    #?   List all xsh internal functions.
-    #?
-    #? Usage:
-    #?   __xsh_get_internal_functions
-    #?
-    function __xsh_get_internal_functions () {
-        declare -f xsh \
-            | awk '$1 == "function" && match($2, "^__xsh_") > 0 && $3 == "()" {print $2}'
-    }
-
-    #? Description:
     #?   Clean environment on xsh() returns.
     #?
     #? Usage:
     #?   __xsh_clean
     #?
     function __xsh_clean () {
-        # shellcheck disable=SC2046
-        unset -f $(__xsh_get_internal_functions)
         unset XSH_DEBUG
         unset XSH_DEV
     }
@@ -188,9 +175,7 @@ function xsh () {
     # clean env if reaching the final exit point of xsh
     # shellcheck disable=SC2016
     __xsh_trap_return '
-            if [[ $(__xsh_count_in_funcstack xsh) -eq 1 ]]; then
-                __xsh_clean
-            fi;'
+            __xsh_clean;'
 
     if [[ $(type -t "__xsh_${1//-/_}" || :) == function ]]; then
         # xsh command or builtin function
@@ -200,3 +185,4 @@ function xsh () {
         __xsh_call "$1" "${@:2}"
     fi
 }
+export -f xsh
