@@ -2,7 +2,6 @@ function xsh () {
 
     function __xsh_clean () {
         unset -f $(echo __xsh_clean)
-        unset XSH_DEBUG
         :
     }
 
