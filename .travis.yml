@@ -43,13 +43,16 @@ before_install:
       make install
       cd ../..
       rm -rf kcov-master
-
-      # temporary patch
-      sed -i 's/set -e; shift/set -ex; shift/' ~/.local/lib/shellspec/lib/core/dsl.sh
     fi
 
   # shellspec: test framework
   - curl -fsSL https://git.io/shellspec | sh -s -- -y
+
+  # temporary patch
+  - |
+    if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
+      sed -i 's/set -e; shift/set -ex; shift/' ~/.local/lib/shellspec/lib/core/dsl.sh
+    fi  
 
 install:
   # xsh
