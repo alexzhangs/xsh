@@ -4,6 +4,6 @@ function xsh () {
         unset -f $(echo __xsh_clean); :
     }
 
-    trap "trap - RETURN; __xsh_clean;" RETURN
+    __xsh_clean
 }
 export -f xsh
