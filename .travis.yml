@@ -51,8 +51,8 @@ before_install:
   # temporary patch
   - |
     if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
-      sed -i 's/set -e; shift/set -ex; shift/' ~/.local/lib/shellspec/lib/core/dsl.sh
-    fi  
+      sed -i 's/shellspec_invoke_example /set -x; shellspec_invoke_example /' ~/.local/lib/shellspec/lib/core/dsl.sh
+    fi
 
 install:
   # xsh
