@@ -11,10 +11,10 @@ Describe 'Foo'
     The result of function exported_functions should include 'foo'
   End
 
-  It 'call function: xsh log'
-    When call xsh log 'LOG'
+  It 'call function: xsh'
+    When call xsh
     The status should be success
-    The output should include 'LOG'
+    The output should include ''
     The variable XSH_HOME should be exported
     The result of function exported_functions should include 'xsh'
   End
