@@ -49,13 +49,13 @@ before_install:
   - curl -fsSL https://git.io/shellspec | sh -s -- -y
 
   # temporary patch
-  - |
+  #- |
     #sed -i 's/shellspec_yield 2>"$SHELLSPEC_LEAK_FILE"/(set +vx; shellspec_yield 2>"$SHELLSPEC_LEAK_FILE")/' ~/.local/lib/shellspec/lib/core/dsl.sh
     #sed -i 's/shellspec_yield "$@" 2>"$SHELLSPEC_LEAK_FILE"/(set +vx; shellspec_yield "$@" 2>"$SHELLSPEC_LEAK_FILE")/' ~/.local/lib/shellspec/lib/core/dsl.sh
 
-    sed -i 's|shellspec_yield 2>"$SHELLSPEC_LEAK_FILE"|shellspec_yield 2>/dev/null|' ~/.local/lib/shellspec/lib/core/dsl.sh
-    sed -i 's|shellspec_yield "$@" 2>"$SHELLSPEC_LEAK_FILE"|shellspec_yield "$@" 2>/dev/null|' ~/.local/lib/shellspec/lib/core/dsl.sh
-    grep -C 5 'shellspec_yield 2' ~/.local/lib/shellspec/lib/core/dsl.sh
+    #sed -i 's|shellspec_yield 2>"$SHELLSPEC_LEAK_FILE"|shellspec_yield 2>/dev/null|' ~/.local/lib/shellspec/lib/core/dsl.sh
+    #sed -i 's|shellspec_yield "$@" 2>"$SHELLSPEC_LEAK_FILE"|shellspec_yield "$@" 2>/dev/null|' ~/.local/lib/shellspec/lib/core/dsl.sh
+    #grep -C 5 'shellspec_yield 2' ~/.local/lib/shellspec/lib/core/dsl.sh
 
     #sed -i '/shellspec_yield()/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< '   [[ -z $SHELLSPEC_BLOCK_NO ]] && return || :'
 
@@ -64,9 +64,8 @@ before_install:
     #sed -i '/shellspec_yield()/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< 'set +vx'
     #grep -A 5 'shellspec_yield()' ~/.local/lib/shellspec/lib/core/dsl.sh
 
-    sed -i '/[ -s "$SHELLSPEC_LEAK_FILE" ] && shellspec_on LEAK/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< 'echo LEAK $SHELLSPEC_LEAK_FILE; [[ -s $SHELLSPEC_LEAK_FILE ]] && cat "$SHELLSPEC_LEAK_FILE" || :; echo LEAK END'
-
-    sed -i 's/shellspec_output_if LEAK/#shellspec_output_if LEAK/' ~/.local/lib/shellspec/lib/core/dsl.sh
+    #sed -i '/[ -s "$SHELLSPEC_LEAK_FILE" ] && shellspec_on LEAK/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< 'echo LEAK $SHELLSPEC_LEAK_FILE; [[ -s $SHELLSPEC_LEAK_FILE ]] && cat "$SHELLSPEC_LEAK_FILE" || :; echo LEAK END'
+    #sed -i 's/shellspec_output_if LEAK/#shellspec_output_if LEAK/' ~/.local/lib/shellspec/lib/core/dsl.sh
 
     #if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
     #  sed -i 's/"shellspec_yield$SHELLSPEC_BLOCK_NO"/set -x; "shellspec_yield$SHELLSPEC_BLOCK_NO"/' ~/.local/lib/shellspec/lib/core/dsl.sh
@@ -82,7 +81,7 @@ script:
   - shellspec --version
   - kcov --version
   # start test with coverage
-  - ~/.local/bin/shellspec --kcov --covdir "${COVDIR}" -s /bin/bash spec/test_xsh_spec.sh
+  - ~/.local/bin/shellspec --kcov --kcov-path ~/kcov/bin/kcov --covdir ~/coverage -s /bin/bash spec/xsh_spec.sh
 
 after_success:
   # upload coverage report
