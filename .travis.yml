@@ -43,6 +43,9 @@ before_install:
       make install
       cd ../..
       rm -rf kcov-master
+
+      # temporary patch
+      sed -i 's/set -e; shift/set -ex; shift/' ~/.local/lib/shellspec/lib/core/dsl.sh
     fi
 
   # shellspec: test framework
