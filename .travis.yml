@@ -55,6 +55,7 @@ before_install:
 
     sed -i 's|shellspec_yield 2>"$SHELLSPEC_LEAK_FILE"|shellspec_yield 2>/dev/null|' ~/.local/lib/shellspec/lib/core/dsl.sh
     sed -i 's|shellspec_yield "$@" 2>"$SHELLSPEC_LEAK_FILE"|shellspec_yield "$@" 2>/dev/null|' ~/.local/lib/shellspec/lib/core/dsl.sh
+    grep -C 5 'shellspec_yield 2' ~/.local/lib/shellspec/lib/core/dsl.sh
 
     #sed -i '/shellspec_yield()/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< '   [[ -z $SHELLSPEC_BLOCK_NO ]] && return || :'
 
@@ -63,7 +64,7 @@ before_install:
     #sed -i '/shellspec_yield()/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< 'set +vx'
     grep -A 5 'shellspec_yield()' ~/.local/lib/shellspec/lib/core/dsl.sh
 
-    #sed -i '/[ -s "$SHELLSPEC_LEAK_FILE" ] && shellspec_on LEAK/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< 'echo LEAK:; cat "$SHELLSPEC_LEAK_FILE"'
+    sed -i '/[ -s "$SHELLSPEC_LEAK_FILE" ] && shellspec_on LEAK/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< 'echo LEAK $SHELLSPEC_LEAK_FILE; [[ -s $SHELLSPEC_LEAK_FILE ]] && cat "$SHELLSPEC_LEAK_FILE" || :'
 
     #if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
     #  sed -i 's/"shellspec_yield$SHELLSPEC_BLOCK_NO"/set -x; "shellspec_yield$SHELLSPEC_BLOCK_NO"/' ~/.local/lib/shellspec/lib/core/dsl.sh
