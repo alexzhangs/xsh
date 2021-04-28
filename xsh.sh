@@ -19,7 +19,13 @@ function xsh () {
         unset -f $(__xsh_get_internal_functions)
     }
 
+    function __xsh_foo () {
+        echo FOO
+     }
+
     __xsh_trap_return '
         __xsh_clean;'
+
+    __xsh_foo
 }
 export -f xsh
