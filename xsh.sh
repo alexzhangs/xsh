@@ -176,7 +176,6 @@ function xsh () {
     #?
     function __xsh_clean () {
         # shellcheck disable=SC2046
-        unset -f $(__xsh_get_internal_functions)
         unset XSH_DEBUG
         unset XSH_DEV
     }
@@ -188,7 +187,7 @@ function xsh () {
     # clean env if reaching the final exit point of xsh
     # shellcheck disable=SC2016
     __xsh_trap_return '
-            __xsh_clean;'
+        unset -f $(__xsh_get_internal_functions);'
 
     if [[ $(type -t "__xsh_${1//-/_}" || :) == function ]]; then
         # xsh command or builtin function
