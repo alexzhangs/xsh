@@ -17,7 +17,7 @@ Describe 'xsh.sh'
       When call xsh imports /date/adjust
       The status should be success
       The output should equal ''
-      #The result of function exported_functions should include 'x-date-adjust'
+      The result of function exported_functions should include 'x-date-adjust'
       #The variable XSH_X_DATE__POSIX_FMT should be exported
       #The variable __XSH_INIT__ should be present
     End
