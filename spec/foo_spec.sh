@@ -10,4 +10,12 @@ Describe 'Foo'
     The variable FOO should be exported
     The result of function exported_functions should include 'bar'
   End
+
+  It 'call function xsh help'
+    When call xsh help
+    The status should be success
+    The output should include 'Usage'
+    The variable XSH_HOME should be exported
+    The result of function exported_functions should include 'xsh'
+  End
 End
