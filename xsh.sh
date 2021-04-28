@@ -1,15 +1,5 @@
 function xsh () {
 
-    function __xsh_trap_return () {
-        declare command="
-        if [[ \${FUNCNAME} == xsh ]]; then
-            trap - RETURN
-            ${1:?}
-        fi;"
-
-        trap "${command}" RETURN
-    }
-
     function __xsh_get_internal_functions () {
         declare -f xsh \
             | awk '$1 == "function" && match($2, "^__xsh_") > 0 && $3 == "()" {print $2}'
@@ -21,6 +11,12 @@ function xsh () {
         unset XSH_DEV
     }
 
-    __xsh_trap_return '__xsh_clean;'
+    declare command="
+    if [[ \${FUNCNAME} == xsh ]]; then
+        trap - RETURN
+        __xsh_clean
+    fi;"
+
+    trap "${command}" RETURN
 }
 export -f xsh
