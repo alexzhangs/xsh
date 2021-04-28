@@ -50,9 +50,10 @@ before_install:
 
   # temporary patch
   - |
-    if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
-      sed -i 's/"shellspec_yield$SHELLSPEC_BLOCK_NO"/set -x; "shellspec_yield$SHELLSPEC_BLOCK_NO"/' ~/.local/lib/shellspec/lib/core/dsl.sh
-    fi
+    #if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
+    #  sed -i 's/"shellspec_yield$SHELLSPEC_BLOCK_NO"/set -x; "shellspec_yield$SHELLSPEC_BLOCK_NO"/' ~/.local/lib/shellspec/lib/core/dsl.sh
+    #fi
+    sed -i '/shellspec_yield()/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< ' [[ -z $SHELLSPEC_BLOCK_NO ]] && return || :'
 
 install:
   # xsh
@@ -64,7 +65,7 @@ script:
   - shellspec --version
   - kcov --version
   # start test with coverage
-  - ~/.local/bin/shellspec -x --kcov --covdir "${COVDIR}" -s /bin/bash spec/test_xsh_spec.sh
+  - ~/.local/bin/shellspec --kcov --covdir "${COVDIR}" -s /bin/bash spec/test_xsh_spec.sh
 
 after_success:
   # upload coverage report
