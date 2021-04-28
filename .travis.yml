@@ -26,7 +26,7 @@ jobs:
 env:
   global:
     # shellspec and kcov
-    - PATH=${PATH}:${HOME}/.local/bin:${HOME}/kcov/bin
+    - PATH=${HOME}/.local/bin:${HOME}/kcov/bin:${PATH}
     - COVDIR=${HOME}/coverage
 
 before_install:
@@ -81,7 +81,7 @@ script:
   - shellspec --version
   - kcov --version
   # start test with coverage
-  - ~/.local/bin/shellspec --kcov --kcov-path ~/kcov/bin/kcov --covdir ~/coverage -s /bin/bash spec/xsh_spec.sh
+  - ~/.local/bin/shellspec --kcov --kcov-path ~/kcov/bin/kcov --covdir ~/coverage -s /bin/bash spec/foo_spec.sh
 
 after_success:
   # upload coverage report
