@@ -1,6 +1,6 @@
 Describe 'xsh.sh'
   Include xsh.sh
-  exported_functions () { declare -Fx | awk '{print $3}'; }
+  exported_functions() { declare -Fx | awk '{print $3}'; }
 
   Describe 'environments'
     It 'show XSH environment variables'
