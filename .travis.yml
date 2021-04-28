@@ -48,6 +48,15 @@ before_install:
   # shellspec: test framework
   - curl -fsSL https://git.io/shellspec | sh -s -- -y
 
+  # shellspec: temporary patch
+  - |
+    if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
+    printf '%s' '
+    kcov_version() {
+      command_path "$1" || return 1
+      "$1" --version 2>/dev/null || return 0
+    }' >> ~/.local/lib/shellspec/lib/libexec/shellspec.sh
+
 install:
   # xsh
   - bash install.sh -s
