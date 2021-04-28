@@ -1,10 +1,5 @@
 function xsh () {
 
-    function __xsh_count_in_funcstack () {
-        printf '%s\n' "${FUNCNAME[@]}" \
-            | grep -c "^${1}$"
-    }
-
     function __xsh_trap_return () {
         declare command="
         if [[ \${FUNCNAME} == xsh ]]; then
@@ -50,10 +45,7 @@ function xsh () {
         unset XSH_DEV
     }
 
-
-    __xsh_trap_return '
-            __xsh_clean;'
-
     __xsh_"${1}" "${@:2}"
+    __xsh_clean
 }
 export -f xsh
