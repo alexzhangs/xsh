@@ -12,17 +12,17 @@ addons:
       - libcurl4-openssl-dev
       - libdw-dev
       - libiberty-dev
-  homebrew:
-    update: true
-    packages:
-      - kcov
+  #homebrew:
+  #  update: true
+  #  packages:
+  #    - kcov
 
 jobs:
   include:
     - os: linux
       dist: xenial
-    - os: osx
-      osx_image: xcode12.2
+    #- os: osx
+    #  osx_image: xcode12.2
 env:
   global:
     # shellspec and kcov
