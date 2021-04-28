@@ -1427,7 +1427,7 @@ function xsh () {
 
             # remember the applied init file
             # do not declare it, make it global
-            code="${code}; __XSH_INIT__+=( \"${init_file}\" )"
+            code="__XSH_INIT__+=( \"${init_file}\" ); ${code}"
         done < <(__xsh_get_init_files "${path%/*}")
 
         printf '%s' "${code}"
