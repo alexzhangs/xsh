@@ -1950,6 +1950,7 @@ function xsh () {
                     # shellcheck disable=SC2207
                     # shellcheck disable=SC2128
                     XSH_DEV+=( $(XSH_LIB_HOME=${XSH_DEV_HOME} __xsh_get_lpue_by_lpur "${XSH_DEV}") )
+                    ;;
             esac
         fi
 
