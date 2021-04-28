@@ -50,10 +50,12 @@ before_install:
 
   # temporary patch
   - |
+    sed -i '/shellspec_yield()/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< ' [[ -z $SHELLSPEC_BLOCK_NO ]] && return || :'
+    grep -C 3 shellspec_yield ~/.local/lib/shellspec/lib/core/dsl.sh
+
     #if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
     #  sed -i 's/"shellspec_yield$SHELLSPEC_BLOCK_NO"/set -x; "shellspec_yield$SHELLSPEC_BLOCK_NO"/' ~/.local/lib/shellspec/lib/core/dsl.sh
     #fi
-    sed -i '/shellspec_yield()/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< ' [[ -z $SHELLSPEC_BLOCK_NO ]] && return || :'
 
 install:
   # xsh
