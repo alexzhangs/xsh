@@ -1,4 +1,5 @@
 Describe 'Foo'
+  Include xsh.sh
   exported_functions() { declare -Fx | awk '{print $3}'; }
 
   It 'call function foo'
