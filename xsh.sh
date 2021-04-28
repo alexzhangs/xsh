@@ -175,6 +175,8 @@ function xsh () {
     #?   __xsh_clean
     #?
     function __xsh_clean () {
+        # shellcheck disable=SC2046
+        unset -f $(__xsh_get_internal_functions)
         unset XSH_DEBUG
         unset XSH_DEV
     }
