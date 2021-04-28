@@ -7,10 +7,9 @@ function xsh () {
     }
 
     declare command="
-    if [[ \${FUNCNAME} == xsh ]]; then
         trap - RETURN
         __xsh_clean
-    fi;"
+    "
 
     trap "${command}" RETURN
 }
