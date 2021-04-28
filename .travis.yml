@@ -53,6 +53,7 @@ before_install:
     if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
       printf '%s' '
       kcov_version() {
+        echo 'using the pached kcov_version' >&2
         command_path "$1" || return 1
         "$1" --version 2>/dev/null || return 0
       }' >> ~/.local/lib/shellspec/lib/libexec/shellspec.sh
@@ -68,7 +69,7 @@ script:
   - shellspec --version
   - kcov --version
   # start test with coverage
-  - sh -x shellspec --kcov --covdir "${COVDIR}" -s /bin/bash --no-warning-as-failure spec/test_xsh_spec.sh
+  - sh -x ~/.local/bin/shellspec --kcov --covdir "${COVDIR}" -s /bin/bash --no-warning-as-failure spec/test_xsh_spec.sh
 
 after_success:
   # upload coverage report
