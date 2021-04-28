@@ -2,7 +2,7 @@ Describe 'xsh.sh'
   Include xsh.sh
 
   Describe 'commands'
-    exported_functions () { declare -Fx | awk '{print $3}'; }
+    exported_functions() { declare -Fx | awk '{print $3}'; }
 
     It 'load library xsh-lib/core'
       When call xsh load xsh-lib/core
