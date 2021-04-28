@@ -51,6 +51,8 @@ before_install:
   # shellspec: temporary patch
   - |
     if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
+      sed -i 's/shellspec_profile_start$/shellspec_profile_start; set -vx/' /home/travis/.local/lib/shellspec/lib/core/dsl.sh
+
       printf '%s' '
       kcov_version() {
         echo 'using the pached kcov_version' >&2
@@ -69,7 +71,7 @@ script:
   - shellspec --version
   - kcov --version
   # start test with coverage
-  - sh -x ~/.local/bin/shellspec --kcov --covdir "${COVDIR}" -s /bin/bash --no-warning-as-failure spec/test_xsh_spec.sh
+  - shellspec --kcov --covdir "${COVDIR}" -s /bin/bash --no-warning-as-failure spec/test_xsh_spec.sh
 
 after_success:
   # upload coverage report
