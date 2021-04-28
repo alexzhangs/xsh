@@ -1687,7 +1687,7 @@ function xsh () {
         declare code=${1:?} name
 
         name=$(awk '/^function [a-zA-Z-]+ ()/ {print $2}' <<< "${code}")
-        code=${code/#function ${name} ()/function __${name}__ ()}
+        code=${code/function ${name} ()/function __${name}__ ()}
         printf 'function %s () {(\n%s\n__%s__ "$@"\n)}\n' \
                "${name}" "${code}" "${name}"
     }
