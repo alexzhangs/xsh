@@ -49,7 +49,7 @@ before_install:
   - curl -fsSL https://git.io/shellspec | sh -s -- -y
 
   # temporary patch
-  #- |
+  - |
     #sed -i 's/shellspec_yield 2>"$SHELLSPEC_LEAK_FILE"/(set +vx; shellspec_yield 2>"$SHELLSPEC_LEAK_FILE")/' ~/.local/lib/shellspec/lib/core/dsl.sh
     #sed -i 's/shellspec_yield "$@" 2>"$SHELLSPEC_LEAK_FILE"/(set +vx; shellspec_yield "$@" 2>"$SHELLSPEC_LEAK_FILE")/' ~/.local/lib/shellspec/lib/core/dsl.sh
 
@@ -67,9 +67,15 @@ before_install:
     #sed -i '/[ -s "$SHELLSPEC_LEAK_FILE" ] && shellspec_on LEAK/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< 'echo LEAK $SHELLSPEC_LEAK_FILE; [[ -s $SHELLSPEC_LEAK_FILE ]] && cat "$SHELLSPEC_LEAK_FILE" || :; echo LEAK END'
     #sed -i 's/shellspec_output_if LEAK/#shellspec_output_if LEAK/' ~/.local/lib/shellspec/lib/core/dsl.sh
 
-    #if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
+    if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
+       printf '%s' '
+       kcov_version() {
+         echo "using the pached kcov_version" >&2
+         command_path "$1" || return 1
+         "$1" --version 2>/dev/null || return 0
+       }' >> ~/.local/lib/shellspec/lib/libexec/shellspec.sh
     #  sed -i 's/"shellspec_yield$SHELLSPEC_BLOCK_NO"/set -x; "shellspec_yield$SHELLSPEC_BLOCK_NO"/' ~/.local/lib/shellspec/lib/core/dsl.sh
-    #fi
+    fi
 
 install:
   # xsh
