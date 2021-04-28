@@ -99,7 +99,6 @@
 #?
 function xsh () {
 
-
     #? Description:
     #?   Count the number of given function name in ${FUNCNAME[@]}
     #?
@@ -193,42 +192,6 @@ function xsh () {
                 __xsh_clean
             fi;'
 
-    # check environment variable
-    if [[ -n ${XSH_HOME%/} ]]; then
-        # remove tailing '/'
-        XSH_HOME=${XSH_HOME%/}
-    else
-        __xsh_log error "XSH_HOME is not set properly."
-        return 255
-    fi
-
-    if [[ -n ${XSH_DEV_HOME%/} ]]; then
-        # remove tailing '/'
-        XSH_DEV_HOME=${XSH_DEV_HOME%/}
-    else
-        __xsh_log error "XSH_DEV_HOME is not set properly."
-        return 255
-    fi
-
-    # declare global variables if they are not declared yet or are empty
-    declare XSH_REPO_HOME=${XSH_REPO_HOME:-${XSH_HOME}/repo}
-    declare XSH_LIB_HOME=${XSH_LIB_HOME:-${XSH_HOME}/lib}
-    declare XSH_GIT_SERVER=${XSH_GIT_SERVER:-https://github.com}
-
-    # check dirs
-    if [[ ! -e ${XSH_REPO_HOME} ]]; then
-        mkdir -p "${XSH_REPO_HOME}"
-    fi
-    if [[ ! -e ${XSH_LIB_HOME} ]]; then
-        mkdir -p "${XSH_LIB_HOME}"
-    fi
-
-    # check input
-    if [[ -z $1 ]]; then
-        __xsh_help >&2
-        return 255
-    fi
-
     if [[ $(type -t "__xsh_${1//-/_}" || :) == function ]]; then
         # xsh command or builtin function
         __xsh_"${1//-/_}" "${@:2}"
@@ -237,5 +200,3 @@ function xsh () {
         __xsh_call "$1" "${@:2}"
     fi
 }
-# export function to sub-processes
-export -f xsh
