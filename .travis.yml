@@ -59,6 +59,8 @@ before_install:
     sed -i '/shellspec_yield()/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< 'set +vx'
     grep -A 5 'shellspec_yield()' ~/.local/lib/shellspec/lib/core/dsl.sh
 
+    sed -i '/[ -s "$SHELLSPEC_LEAK_FILE" ] && shellspec_on LEAK/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< 'echo LEAK:; cat "$SHELLSPEC_LEAK_FILE"'
+
     #if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
     #  sed -i 's/"shellspec_yield$SHELLSPEC_BLOCK_NO"/set -x; "shellspec_yield$SHELLSPEC_BLOCK_NO"/' ~/.local/lib/shellspec/lib/core/dsl.sh
     #fi
