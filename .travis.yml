@@ -53,8 +53,8 @@ before_install:
     #sed -i 's/shellspec_yield 2>"$SHELLSPEC_LEAK_FILE"/(set +vx; shellspec_yield 2>"$SHELLSPEC_LEAK_FILE")/' ~/.local/lib/shellspec/lib/core/dsl.sh
     #sed -i 's/shellspec_yield "$@" 2>"$SHELLSPEC_LEAK_FILE"/(set +vx; shellspec_yield "$@" 2>"$SHELLSPEC_LEAK_FILE")/' ~/.local/lib/shellspec/lib/core/dsl.sh
 
-    sed -i 's/shellspec_yield 2>"$SHELLSPEC_LEAK_FILE"/shellspec_yield 2>/dev/null)/' ~/.local/lib/shellspec/lib/core/dsl.sh
-    sed -i 's/shellspec_yield "$@" 2>"$SHELLSPEC_LEAK_FILE"/shellspec_yield "$@" 2>/dev/null)/' ~/.local/lib/shellspec/lib/core/dsl.sh
+    sed -i 's|shellspec_yield 2>"$SHELLSPEC_LEAK_FILE"|shellspec_yield 2>/dev/null|' ~/.local/lib/shellspec/lib/core/dsl.sh
+    sed -i 's|shellspec_yield "$@" 2>"$SHELLSPEC_LEAK_FILE"|shellspec_yield "$@" 2>/dev/null|' ~/.local/lib/shellspec/lib/core/dsl.sh
 
     #sed -i '/shellspec_yield()/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< '   [[ -z $SHELLSPEC_BLOCK_NO ]] && return || :'
 
