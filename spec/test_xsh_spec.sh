@@ -14,7 +14,7 @@ Describe 'xsh.sh'
     End
 
     It 'imports /date/adjust'
-      When call sh imports /date/adjust
+      When call xsh imports /date/adjust
       The status should be success
       The output should equal ''
       #The result of function exported_functions should include 'x-date-adjust'
