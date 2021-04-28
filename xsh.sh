@@ -158,6 +158,17 @@ function xsh () {
     }
 
     #? Description:
+    #?   List all xsh internal functions.
+    #?
+    #? Usage:
+    #?   __xsh_get_internal_functions
+    #?
+    function __xsh_get_internal_functions () {
+        declare -f xsh \
+            | awk '$1 == "function" && match($2, "^__xsh_") > 0 && $3 == "()" {print $2}'
+    }
+
+    #? Description:
     #?   Clean environment on xsh() returns.
     #?
     #? Usage:
