@@ -17,6 +17,8 @@ function xsh () {
 
     function __xsh_clean () {
         unset -f $(__xsh_get_internal_functions)
+        unset XSH_DEBUG
+        unset XSH_DEV
     }
 
     function __xsh_foo () {
