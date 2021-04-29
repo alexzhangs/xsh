@@ -80,7 +80,7 @@ before_install:
       #grep -A 5 'shellspec_statement()' ~/.local/lib/shellspec/lib/core/dsl.sh
       #sed -i 's/eval shellspec_syntax_dispatch modifier.*$/{ set -vx; &; set +vx; } 2>\&1/' ~/.local/lib/shellspec/lib/core/subjects/variable.sh
       #grep -C 5 'eval shellspec_syntax_dispatch modifier' ~/.local/lib/shellspec/lib/core/subjects/variable.sh
-      sed -i 's/shellspec_exists_envkey.*/declare -f shellspec_exists_envkey; { set -vxT; &; set +vxT; } >\&1/' ~/.local/lib/shellspec/lib/core/matchers/be/variable.sh
+      sed -i 's/shellspec_exists_envkey.*/declare -f shellspec_exists_envkey; { set -vxT; &; set +vxT; } 2>\&1/' ~/.local/lib/shellspec/lib/core/matchers/be/variable.sh
       grep -C 3 'shellspec_exists_envkey' ~/.local/lib/shellspec/lib/core/matchers/be/variable.sh
     fi
 
