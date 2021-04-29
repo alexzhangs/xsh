@@ -58,7 +58,7 @@ script:
   - shellspec --version
   - kcov --version
   # start test with coverage
-  - shellspec --kcov --covdir ~/coverage -s /bin/bash spec/foo_spec.sh
+  - shellspec --kcov --covdir ~/coverage -s /bin/bash spec/xsh_spec.sh
 
 after_success:
   # upload coverage report
