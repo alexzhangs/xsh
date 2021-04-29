@@ -1,5 +1,5 @@
 Describe 'Bar'
-  bar() { echo BAR; }
+  bar () { echo BAR; }
 
   It 'call function: bar'
     When call bar
