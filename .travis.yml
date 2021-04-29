@@ -76,9 +76,10 @@ before_install:
       }' >> ~/.local/lib/shellspec/lib/libexec/shellspec.sh
 
       #sed -i 's/"shellspec_yield$SHELLSPEC_BLOCK_NO"/set -x; "shellspec_yield$SHELLSPEC_BLOCK_NO"/' ~/.local/lib/shellspec/lib/core/dsl.sh
-      sed -i 's/"shellspec_$@"/{ set -vx; "shellspec_$@"; set +vx; } 2>\&1/' ~/.local/lib/shellspec/lib/core/dsl.sh
-      grep -A 5 'shellspec_statement()' ~/.local/lib/shellspec/lib/core/dsl.sh
-      #sed -i 's/eval shellspec_syntax_dispatch modifier ${1+'"$@"'}/{ set -vx; eval shellspec_syntax_dispatch modifier ${1+'"$@"'}; set +vx; } 2>\&1/' ~/.local/lib/shellspec/lib/core/subjects/variable.sh
+      #sed -i 's/"shellspec_$@"/{ set -vx; "shellspec_$@"; set +vx; } 2>\&1/' ~/.local/lib/shellspec/lib/core/dsl.sh
+      #grep -A 5 'shellspec_statement()' ~/.local/lib/shellspec/lib/core/dsl.sh
+      sed -i 's/eval shellspec_syntax_dispatch modifier ${1+'"$@"'}/{ set -vx; eval shellspec_syntax_dispatch modifier ${1+'"$@"'}; set +vx; } 2>\&1/' ~/.local/lib/shellspec/lib/core/subjects/variable.sh
+      grep -C 5 'eval shellspec_syntax_dispatch modifier' ~/.local/lib/shellspec/lib/core/subjects/variable.sh
     fi
 
 install:
