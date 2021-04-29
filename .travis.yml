@@ -82,7 +82,7 @@ before_install:
       #sed -i 's/eval shellspec_syntax_dispatch modifier.*$/{ set -vx; &; set +vx; } 2>\&1/' ~/.local/lib/shellspec/lib/core/subjects/variable.sh
       #grep -C 5 'eval shellspec_syntax_dispatch modifier' ~/.local/lib/shellspec/lib/core/subjects/variable.sh
 
-      sed -i 's/shellspec_exists_envkey.*/declare -f shellspec_exists_envkey; echo $-; set; { set +e; set -vx; echo $-; &; declare ret=$? set -e; set +vx; } 2>\&1; [[ $ret -eq 0 ]]/' ~/.local/lib/shellspec/lib/core/matchers/be/variable.sh
+      sed -i 's/shellspec_exists_envkey.*/declare -f shellspec_exists_envkey; echo $-; set; { set +e; set -vx; echo $-; type -t shellspec_exists_envkey; shellspec_exists_envkey () { return 0; }; &; declare ret=$? set -e; set +vx; } 2>\&1; [[ $ret -eq 0 ]]/' ~/.local/lib/shellspec/lib/core/matchers/be/variable.sh
       grep -C 3 'shellspec_exists_envkey' ~/.local/lib/shellspec/lib/core/matchers/be/variable.sh
 
       #sed -i 's/shellspec_exists_envkey.*/return 0/' ~/.local/lib/shellspec/lib/core/matchers/be/variable.sh
