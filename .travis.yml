@@ -12,17 +12,17 @@ addons:
       - libcurl4-openssl-dev
       - libdw-dev
       - libiberty-dev
-  #homebrew:
-  #  update: true
-  #  packages:
-  #    - kcov
+  homebrew:
+    update: true
+    packages:
+      - kcov
 
 jobs:
   include:
     - os: linux
       dist: xenial
-    #- os: osx
-    #  osx_image: xcode12.2
+    - os: osx
+      osx_image: xcode12.2
 env:
   global:
     # shellspec and kcov
@@ -48,71 +48,17 @@ before_install:
   # shellspec: test framework
   - curl -fsSL https://git.io/shellspec | sh -s -- -y
 
-  # temporary patch
-  - |
-    #sed -i 's/shellspec_yield 2>"$SHELLSPEC_LEAK_FILE"/(set +vx; shellspec_yield 2>"$SHELLSPEC_LEAK_FILE")/' ~/.local/lib/shellspec/lib/core/dsl.sh
-    #sed -i 's/shellspec_yield "$@" 2>"$SHELLSPEC_LEAK_FILE"/(set +vx; shellspec_yield "$@" 2>"$SHELLSPEC_LEAK_FILE")/' ~/.local/lib/shellspec/lib/core/dsl.sh
-
-    #sed -i 's|shellspec_yield 2>"$SHELLSPEC_LEAK_FILE"|shellspec_yield 2>/dev/null|' ~/.local/lib/shellspec/lib/core/dsl.sh
-    #sed -i 's|shellspec_yield "$@" 2>"$SHELLSPEC_LEAK_FILE"|shellspec_yield "$@" 2>/dev/null|' ~/.local/lib/shellspec/lib/core/dsl.sh
-    #grep -C 5 'shellspec_yield 2' ~/.local/lib/shellspec/lib/core/dsl.sh
-
-    #sed -i '/shellspec_yield()/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< '   [[ -z $SHELLSPEC_BLOCK_NO ]] && return || :'
-
-    #sed -i '/shellspec_yield()/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< '[[ -z $SHELLSPEC_BLOCK_NO ]] && { SHELLSPEC_LINENO=""; echo LOOP; return; } || :'
-    #sed -i '/shellspec_yield()/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< 'declare -f "shellspec_yield$SHELLSPEC_BLOCK_NO"'
-    #sed -i '/shellspec_yield()/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< 'set +vx'
-    #grep -A 5 'shellspec_yield()' ~/.local/lib/shellspec/lib/core/dsl.sh
-
-    #sed -i '/[ -s "$SHELLSPEC_LEAK_FILE" ] && shellspec_on LEAK/ r /dev/stdin' ~/.local/lib/shellspec/lib/core/dsl.sh <<< 'echo LEAK $SHELLSPEC_LEAK_FILE; [[ -s $SHELLSPEC_LEAK_FILE ]] && cat "$SHELLSPEC_LEAK_FILE" || :; echo LEAK END'
-    #sed -i 's/shellspec_output_if LEAK/#shellspec_output_if LEAK/' ~/.local/lib/shellspec/lib/core/dsl.sh
-
-    if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
-      printf '%s' '
-      kcov_version() {
-        echo "using the pached kcov_version" >&2
-        command_path "$1" || return 1
-        "$1" --version 2>/dev/null || return 0
-      }' >> ~/.local/lib/shellspec/lib/libexec/shellspec.sh
-
-      #sed -i 's/"shellspec_yield$SHELLSPEC_BLOCK_NO"/set -x; "shellspec_yield$SHELLSPEC_BLOCK_NO"/' ~/.local/lib/shellspec/lib/core/dsl.sh
-      #sed -i 's/"shellspec_$@"/{ set -vx; "shellspec_$@"; set +vx; } 2>\&1/' ~/.local/lib/shellspec/lib/core/dsl.sh
-      #grep -A 5 'shellspec_statement()' ~/.local/lib/shellspec/lib/core/dsl.sh
-
-      #sed -i 's/eval shellspec_syntax_dispatch modifier.*$/{ set -vx; &; set +vx; } 2>\&1/' ~/.local/lib/shellspec/lib/core/subjects/variable.sh
-      #grep -C 5 'eval shellspec_syntax_dispatch modifier' ~/.local/lib/shellspec/lib/core/subjects/variable.sh
-
-      sed -i 's/shellspec_exists_envkey.*/declare -f shellspec_exists_envkey; trap -p; echo $-; set; { set +e; set -vx; echo $-; ulimit -a; eval "$(declare -f shellspec_exists_envkey | sed -e "s/( /{ /" -e "s/ )/ }/"; declare -f shellspec_exists_envkey; &; declare ret=$?; set -e; set +vx; } 2>\&1; [[ $ret -eq 0 ]]/' ~/.local/lib/shellspec/lib/core/matchers/be/variable.sh
-      grep -C 3 'shellspec_exists_envkey' ~/.local/lib/shellspec/lib/core/matchers/be/variable.sh
-
-      #sed -i 's/shellspec_exists_envkey.*/return 0/' ~/.local/lib/shellspec/lib/core/matchers/be/variable.sh
-
-      #sed -i 's/shellspec_list_envkeys_callback.*/{ set -vx; &; declare ret=$?; set +vx; } 2>\&1; [[ $ret -eq 0 ]]/' ~/.local/lib/shellspec/lib/general.sh
-      #grep 'shellspec_list_envkeys_callback' ~/.local/lib/shellspec/lib/general.sh
-
-      #sed -i 's/shellspec_list_envkeys callback/{ set -vx; &; declare ret=$?; set +vx; } 2>\&1; [[ $ret -eq 0 ]]/' ~/.local/lib/shellspec/lib/general.sh
-      #grep 'shellspec_list_envkeys ' ~/.local/lib/shellspec/lib/general.sh
-
-      #sed -i '/key="$1"/ r /dev/stdin' ~/.local/lib/shellspec/lib/general.sh <<< 'set -vx'
-      #sed -i 's/^  ) &&:$/  ) 2>\&1 \&\&:/' ~/.local/lib/shellspec/lib/general.sh
-      #grep -A 10 'shellspec_exists_envkey()' ~/.local/lib/shellspec/lib/general.sh
-
-      #sed -i 's/key="$1"/return 0/' ~/.local/lib/shellspec/lib/general.sh
-      #sed -i '/shellspec_exists_envkey()/ r /dev/stdin' ~/.local/lib/shellspec/lib/general.sh <<< 'return 0'
-
-    fi
-
 install:
   # xsh
   - bash install.sh -s
   - source ~/.xshrc
 
 script:
-  #- xsh version
+  - xsh version
   - shellspec --version
   - kcov --version
   # start test with coverage
-  - ~/.local/bin/shellspec --kcov --covdir ~/coverage -s /bin/bash spec/foo_spec.sh
+  - shellspec --kcov --covdir ~/coverage -s /bin/bash spec/foo_spec.sh
 
 after_success:
   # upload coverage report
