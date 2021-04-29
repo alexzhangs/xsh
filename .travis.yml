@@ -82,14 +82,18 @@ before_install:
       #sed -i 's/eval shellspec_syntax_dispatch modifier.*$/{ set -vx; &; set +vx; } 2>\&1/' ~/.local/lib/shellspec/lib/core/subjects/variable.sh
       #grep -C 5 'eval shellspec_syntax_dispatch modifier' ~/.local/lib/shellspec/lib/core/subjects/variable.sh
 
-      #sed -i 's/shellspec_exists_envkey.*/declare -f shellspec_exists_envkey; echo $-; set; { set -vxT; &; declare ret=$? set +vxT; } 2>\&1; return $ret/' ~/.local/lib/shellspec/lib/core/matchers/be/variable.sh
+      #sed -i 's/shellspec_exists_envkey.*/declare -f shellspec_exists_envkey; echo $-; set; { set -vxT; &; declare ret=$? set +vxT; } 2>\&1; [[ $ret -eq 0 ]]/' ~/.local/lib/shellspec/lib/core/matchers/be/variable.sh
       #grep -C 3 'shellspec_exists_envkey' ~/.local/lib/shellspec/lib/core/matchers/be/variable.sh
 
-      sed -i 's/shellspec_list_envkeys_callback.*/{ set -vx; &; set +vx; } 2>\&1/' ~/.local/lib/shellspec/lib/general.sh
-      grep 'shellspec_list_envkeys_callback' ~/.local/lib/shellspec/lib/general.sh
+      #sed -i 's/shellspec_list_envkeys_callback.*/{ set -vx; &; declare ret=$?; set +vx; } 2>\&1; [[ $ret -eq 0 ]]/' ~/.local/lib/shellspec/lib/general.sh
+      #grep 'shellspec_list_envkeys_callback' ~/.local/lib/shellspec/lib/general.sh
 
-      sed -i 's/shellspec_list_envkeys callback/{ set -vx; &; declare ret=$?; set +vx; [[ $? -eq 0 ]]; } 2>\&1/' ~/.local/lib/shellspec/lib/general.sh
-      grep 'shellspec_list_envkeys ' ~/.local/lib/shellspec/lib/general.sh
+      #sed -i 's/shellspec_list_envkeys callback/{ set -vx; &; declare ret=$?; set +vx; } 2>\&1; [[ $ret -eq 0 ]]/' ~/.local/lib/shellspec/lib/general.sh
+      #grep 'shellspec_list_envkeys ' ~/.local/lib/shellspec/lib/general.sh
+
+      sed -i '/key="$1"/ r /dev/stdin' ~/.local/lib/shellspec/lib/general.sh <<< 'set -vx'
+      sed -i 's/^  ) &&:$/  ) 2>\&1 \&\&:/' ~/.local/lib/shellspec/lib/general.sh
+      grep -A 10 'shellspec_exists_envkey()' ~/.local/lib/shellspec/lib/general.sh
     fi
 
 install:
