@@ -96,6 +96,8 @@ before_install:
       #sed -i '/key="$1"/ r /dev/stdin' ~/.local/lib/shellspec/lib/general.sh <<< 'set -vx'
       #sed -i 's/^  ) &&:$/  ) 2>\&1 \&\&:/' ~/.local/lib/shellspec/lib/general.sh
       #grep -A 10 'shellspec_exists_envkey()' ~/.local/lib/shellspec/lib/general.sh
+
+      sed -i 's/key="$1"/echo &; &/' ~/.local/lib/shellspec/lib/general.sh
     fi
 
 install:
