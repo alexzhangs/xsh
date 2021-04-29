@@ -13,7 +13,6 @@ addons:
       - libdw-dev
       - libiberty-dev
   homebrew:
-    update: true
     packages:
       - kcov
 
