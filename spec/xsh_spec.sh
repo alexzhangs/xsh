@@ -1,5 +1,7 @@
 Describe 'xsh.sh'
   Include xsh.sh
+  is_linux_on_travis () { [[ ${TRAVIS_OS_NAME} == 'linux' ]]; }
+  exported_functions () { declare -Fx | awk '{print $3}'; }
 
   Describe 'environments'
     It 'show XSH environment variables'
@@ -8,8 +10,8 @@ Describe 'xsh.sh'
     End
 
     It 'show XSH paths'
-      The path ${XSH_HOME} should be directory
-      The path ${XSH_DEV_HOME} should be directory
+      The path "${XSH_HOME}" should be directory
+      The path "${XSH_DEV_HOME}" should be directory
     End
   End
 
@@ -27,6 +29,12 @@ Describe 'xsh.sh'
     End
 
     It 'show help of xsh'
+      When call xsh
+      The status should be failure
+      The error should include 'Usage'
+    End
+
+    It 'show help of xsh'
       When call xsh help
       The status should be success
       The output should include 'Usage'
@@ -36,6 +44,12 @@ Describe 'xsh.sh'
       When call xsh help help
       The status should be success
       The output should include 'Usage'
+    End
+
+    It 'show code of xsh help'
+      When call xsh help -c help
+      The status should be success
+      The output should include 'function __xsh_help'
     End
 
     It 'call log info'
@@ -60,8 +74,9 @@ Describe 'xsh.sh'
       When call xsh load xsh-lib/core
       The status should be success
       The output should not equal ''
-      The path ${XSH_HOME}/repo/xsh-lib/core should be directory
-      The path ${XSH_HOME}/lib/x should be symlink
+      The error should include ''
+      The path "${XSH_HOME}"/repo/xsh-lib/core should be directory
+      The path "${XSH_HOME}"/lib/x should be symlink
     End
 
     It 'show loaded libraries of xsh'
@@ -92,34 +107,37 @@ Describe 'xsh.sh'
       When call xsh /string/upper 'Hello World'
       The status should be success
       The output should equal 'HELLO WORLD'
+      #The result of function exported_functions should include 'x-string-upper'
     End
 
     It 'call calls /string/random'
       When call xsh calls /string/random
       The status should be success
       The output should not equal ''
+      #The result of function exported_functions should include 'x-string-random'
     End
 
     It 'call debug xsh /string/random'
       When call xsh debug xsh /string/random
       The status should be success
       The output should not equal ''
-      The error should start with '+'
+      The error should include '+'
     End
 
     It 'imports /date/adjust'
       When call xsh imports /date/adjust
       The status should be success
       The output should equal ''
-      The function 'x-date-adjust' should equal 'x-date-adjust'
-      The variable XSH_X_DATE__POSIX_FMT should be exported
-      The variable __XSH_INIT__ should be present
+      #The result of function exported_functions should include 'x-date-adjust'
+      #The variable XSH_X_DATE__POSIX_FMT should be exported
+      #The variable __XSH_INIT__ should be present
     End
 
     It 'unimports /date/adjust'
       When call xsh unimports /date/adjust
       The status should be success
       The output should equal ''
+      #The result of function exported_functions should not include 'x-date-adjust'
     End
 
     It 'call calls /string/random'
@@ -133,7 +151,7 @@ Describe 'xsh.sh'
       When call xsh /string/random
       The status should be success
       The output should not equal ''
-      The error should start with '+'
+      The error should include '+'
     End
 
     It 'call /string/upper with XSH_DEBUG=/string/pipe/upper'
@@ -141,19 +159,29 @@ Describe 'xsh.sh'
       When call xsh /string/upper 'Hello World'
       The status should be success
       The output should equal 'HELLO WORLD'
-      The error should start with '+'
+      The error should include '+'
+    End
+
+    It 'call /file/inject'
+      Skip if 'has segmentation fault issue' is_linux_on_travis
+      BeforeCall 'touch /tmp/.xsh-file-inject'
+      AfterCall 'rm -f /tmp/.xsh-file-inject'
+      When call xsh /file/inject -c bar -p end /tmp/.xsh-file-inject
+      The status should be success
     End
 
     It 'update library xsh-lib/core to latest stable version'
       When call xsh update xsh-lib/core
       The status should be success
       The output should not equal ''
+      The error should include ''
     End
 
     It 'update library xsh-lib/core to latest version'
       When call xsh update -b master xsh-lib/core
       The status should be success
       The output should not equal ''
+      The error should include ''
     End
   End
 
@@ -192,7 +220,7 @@ Describe 'xsh.sh'
       When call xsh call-with-shell-option -1 x echo foo
       The status should be success
       The output should equal 'foo'
-      The error should start with '+'
+      The error should include '+'
     End
 
     It 'call count-in-funcstack'
@@ -246,7 +274,7 @@ Describe 'xsh.sh'
       When call xsh lib-dev-manager link xsh-lib/core /tmp
       The status should be success
       The output should equal ''
-      The path ${XSH_DEV_HOME}/x should be symlink
+      The path "${XSH_DEV_HOME}"/x should be symlink
     End
 
     It 'call imports /string/foo'
@@ -257,42 +285,37 @@ Describe 'xsh.sh'
 
     It 'call imports /string with XSH_DEV=1'
       BeforeCall 'export XSH_DEV=1'
-      AfterCall 'unset -f x-string-foo'
       When call xsh imports /string
       The status should be success
-      The function 'x-string-foo' should equal 'x-string-foo'
+      #The result of function exported_functions should include 'x-string'
     End
 
-    It 'call imports /string with XSH_DEV=/string'
+    It 'call unimports /string with XSH_DEV=/string'
       BeforeCall 'export XSH_DEV=/string'
-      AfterCall 'unset -f x-string-foo'
-      When call xsh imports /string
+      When call xsh unimports /string
       The status should be success
-      The function 'x-string-foo' should equal 'x-string-foo'
+      #The result of function exported_functions should not include 'x-string'
     End
 
     It 'call imports /string/foo with XSH_DEV=1'
       BeforeCall 'export XSH_DEV=1'
-      AfterCall 'unset -f x-string-foo'
       When call xsh imports /string/foo
       The status should be success
-      The function 'x-string-foo' should equal 'x-string-foo'
+      #The result of function exported_functions should include 'x-string-foo'
     End
 
-    It 'call imports /string/foo with XSH_DEV=/string'
+    It 'call unimports /string/foo with XSH_DEV=/string'
       BeforeCall 'export XSH_DEV=/string'
-      AfterCall 'unset -f x-string-foo'
-      When call xsh imports /string/foo
+      When call xsh unimports /string/foo
       The status should be success
-      The function 'x-string-foo' should equal 'x-string-foo'
+      #The result of function exported_functions should not include 'x-string-foo'
     End
 
     It 'call imports /string/foo with XSH_DEV=/string/foo'
       BeforeCall 'export XSH_DEV=/string/foo'
-      AfterCall 'unset -f x-string-foo'
       When call xsh imports /string/foo
       The status should be success
-      The function 'x-string-foo' should equal 'x-string-foo'
+      #The result of function exported_functions should include 'x-string-foo'
     End
 
     It 'call list with XSH_DEV=1'
@@ -349,6 +372,7 @@ Describe 'xsh.sh'
       When call xsh /string/foo
       The status should be success
       The output should equal 'foo'
+      #The result of function exported_functions should not include 'x-string-foo'
     End
 
     It 'call /string/foo with XSH_DEV=/string'
@@ -356,6 +380,7 @@ Describe 'xsh.sh'
       When call xsh /string/foo
       The status should be success
       The output should equal 'foo'
+      #The result of function exported_functions should not include 'x-string-foo'
     End
 
     It 'call /string/foo with XSH_DEV=/string/foo'
@@ -363,6 +388,7 @@ Describe 'xsh.sh'
       When call xsh /string/foo
       The status should be success
       The output should equal 'foo'
+      #The result of function exported_functions should not include 'x-string-foo'
     End
   End
 
@@ -371,8 +397,9 @@ Describe 'xsh.sh'
       When call xsh unload xsh-lib/core
       The status should be success
       The output should equal ''
-      The path ${XSH_HOME}/repo/xsh-lib/core should not be exist
-      The path ${XSH_HOME}/lib/x should not be exist
+      The error should include ''
+      The path "${XSH_HOME}"/repo/xsh-lib/core should not be exist
+      The path "${XSH_HOME}"/lib/x should not be exist
     End
 
     It 'show loaded libraries of xsh'
@@ -385,6 +412,14 @@ Describe 'xsh.sh'
       When call xsh upgrade
       The status should be success
       The output should not equal ''
+      The error should include ''
+    End
+
+    It 'upgrade xsh to latest version'
+      When call xsh upgrade -b master
+      The status should be success
+      The output should not equal ''
+      The error should include ''
     End
 
     It 'check if the local env is clean'

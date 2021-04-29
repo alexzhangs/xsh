@@ -1427,7 +1427,7 @@ function xsh () {
 
             # remember the applied init file
             # do not declare it, make it global
-            code="${code}; __XSH_INIT__+=( \"${init_file}\" )"
+            code="__XSH_INIT__+=( \"${init_file}\" ); ${code}"
         done < <(__xsh_get_init_files "${path%/*}")
 
         printf '%s' "${code}"
@@ -1687,7 +1687,7 @@ function xsh () {
         declare code=${1:?} name
 
         name=$(awk '/^function [a-zA-Z-]+ ()/ {print $2}' <<< "${code}")
-        code=${code/#function ${name} ()/function __${name}__ ()}
+        code=${code/function ${name} ()/function __${name}__ ()}
         printf 'function %s () {(\n%s\n__%s__ "$@"\n)}\n' \
                "${name}" "${code}" "${name}"
     }
@@ -1711,8 +1711,13 @@ function xsh () {
     function __xsh_func_decorator_init_static () {
         declare code=${1:?} init_file=${2:?}
 
-        # insert the decorator code at the first line of the function
-        sed "1 r /dev/stdin" <(printf '%s' "${code}") <<< "source ${init_file}"
+        # insert the decorator code before the function code
+        sed '1 {
+        h
+        r /dev/stdin
+        g
+        N
+        }' <(printf '%s' "${code}") <<< "source ${init_file}"
     }
 
     #? Description:
@@ -1735,7 +1740,7 @@ function xsh () {
         declare code=${1:?} init_file=${2:?}
 
         # insert the decorator code at the beginning of the function body
-        sed "/^function [a-zA-Z-]* () {/ r /dev/stdin" <(printf '%s' "${code}") <<< "source ${init_file}"
+        sed '/^function [a-zA-Z-]* () {/ r /dev/stdin' <(printf '%s' "${code}") <<< "source ${init_file}"
     }
 
     #? Description:
@@ -1945,6 +1950,7 @@ function xsh () {
                     # shellcheck disable=SC2207
                     # shellcheck disable=SC2128
                     XSH_DEV+=( $(XSH_LIB_HOME=${XSH_DEV_HOME} __xsh_get_lpue_by_lpur "${XSH_DEV}") )
+                    ;;
             esac
         fi
 
@@ -2334,7 +2340,7 @@ function xsh () {
     # shellcheck disable=SC2016
     __xsh_trap_return '
             if [[ $(__xsh_count_in_funcstack xsh) -eq 1 ]]; then
-                __xsh_clean >/dev/null 2>&1
+                __xsh_clean
             fi;'
 
     # check environment variable

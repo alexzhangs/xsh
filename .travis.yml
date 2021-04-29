@@ -1,16 +1,57 @@
 language: bash
+
 git:
+  # make sure it's a full clone
   depth: false
+
+addons:
+  # for kcov
+  apt:
+    packages:
+      - binutils-dev
+      - libcurl4-openssl-dev
+      - libdw-dev
+      - libiberty-dev
+  homebrew:
+    packages:
+      - kcov
+
 jobs:
   include:
     - os: linux
       dist: xenial
     - os: osx
       osx_image: xcode12.2
+env:
+  global:
+    # shellspec and kcov
+    - PATH=${HOME}/.local/bin:${HOME}/kcov/bin:${PATH}
+
+before_install:
+  # kcov: test coverage
+  - |
+    if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
+      wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
+      tar xzf master.tar.gz
+      (cd kcov-master && (mkdir -p build && cd build && (cmake -DCMAKE_INSTALL_PREFIX=${HOME}/kcov .. && make && make install)))
+      rm -rf kcov-master
+    fi
+
+  # shellspec: test framework
+  - curl -fsSL https://git.io/shellspec | sh -s -- -y
+
 install:
+  # xsh
   - bash install.sh -s
   - source ~/.xshrc
-  - curl -fsSL https://git.io/shellspec | sh -s -- -y
+
 script:
   - xsh version
-  - ~/.local/bin/shellspec -s /bin/bash --no-warning-as-failure spec/xsh_spec.sh
+  - shellspec --version
+  - kcov --version
+  # start test with coverage
+  - shellspec --kcov -s /bin/bash spec/xsh_spec.sh
+
+after_success:
+  # upload coverage report
+  - bash <(curl -s https://codecov.io/bash)
