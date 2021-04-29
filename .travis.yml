@@ -98,7 +98,7 @@ before_install:
       #grep -A 10 'shellspec_exists_envkey()' ~/.local/lib/shellspec/lib/general.sh
 
       sed -i 's/key="$1"/return 0/' ~/.local/lib/shellspec/lib/general.sh
-      grep -A 10 'shellspec_exists_envkey()' ~/.local/lib/shellspec/lib/general.sh
+      sed -i '/shellspec_exists_envkey()/ r /dev/stdin' ~/.local/lib/shellspec/lib/general.sh <<< 'return 0'
 
     fi
 
