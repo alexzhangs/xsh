@@ -58,7 +58,7 @@ function main () {
     sudo -H -u "${testuser}" bash "${SCRIPT_DIR}/install.sh" -f -s
 
     # run test cases with bash
-    sudo -H -u "${testuser}" bash -c '. ~/.xshrc; cd ${XSH_HOME:?}/xsh; ~/.local/bin/shellspec --kcov --covdir ~/coverage -s /bin/bash spec/xsh_spec.sh'
+    sudo -H -u "${testuser}" bash -c '. ~/.xshrc; cd ${XSH_HOME:?}/xsh; ~/.local/bin/shellspec --kcov -s /bin/bash spec/xsh_spec.sh'
 }
 
 declare SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
