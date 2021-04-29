@@ -2387,4 +2387,5 @@ function xsh () {
         __xsh_call "$1" "${@:2}"
     fi
 }
+# export function to sub-processes
 export -f xsh
