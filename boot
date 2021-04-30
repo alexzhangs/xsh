@@ -42,7 +42,7 @@ declare clonedir=/tmp/xsh-$RANDOM
 # never use a shallow clone here
 git clone "$repo" "$clonedir"
 cd "$clonedir"
-exec "${cmds[@]}"
+"${cmds[@]}"
 
 rm -rf "$clonedir"
 
