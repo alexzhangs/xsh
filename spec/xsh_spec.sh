@@ -25,7 +25,7 @@ Describe 'xsh.sh'
     It 'list available versions of xsh'
       When call xsh versions
       The status should be success
-      The output should include '0.2.0'
+      The output should include 'bootstrap'
     End
 
     It 'show current version of xsh'
