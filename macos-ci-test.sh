@@ -40,16 +40,18 @@ function main () {
     fi
 
     # create the sandbox user if not exists yet
-    if ! id ${testuser} >/dev/null 2>&1; then
+    if ! id "${testuser}" >/dev/null 2>&1; then
         sudo sysadminctl -addUser "${testuser}" -shell /bin/bash
     fi
 
+    declare FUNC
+
     # install shellspec for sandbox user if not exists yet
-    declare FUNC=$(declare -f insall-shellspec)
+    FUNC=$(declare -f insall-shellspec)
     sudo -H -u "${testuser}" bash -c "${FUNC}; insall-shellspec"
 
     # install kcov for sandbox user if not exists yet
-    declare FUNC=$(declare -f insall-kcov)
+    FUNC=$(declare -f insall-kcov)
     sudo -H -u "${testuser}" bash -c "${FUNC}; insall-kcov"
 
     # install xsh
@@ -61,7 +63,8 @@ function main () {
     sudo -H -u "${testuser}" bash -c '. ~/.xshrc; cd ${XSH_HOME:?}/xsh; ~/.local/bin/shellspec --kcov -s /bin/bash spec/xsh_spec.sh'
 }
 
-declare SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+declare SCRIPT_DIR
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 main "$@"
 

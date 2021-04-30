@@ -55,29 +55,29 @@ function is-compatible-sed-r () {
 }
 
 function is-compatible-sed-i-bsd () {
-    declare tmpfile=/tmp/xsh-sed-compatible-$RANDOM
+    declare tmpfile=/tmp/xsh-sed-compatible-${RANDOM}
     declare ret=0
 
-    touch "$tmpfile" \
+    touch "${tmpfile}" \
         && {
-        is-compatible sed -i '' '' "$tmpfile"
+        is-compatible sed -i '' '' "${tmpfile}"
         ret=$?
-        /bin/rm -f "$tmpfile"
+        /bin/rm -f "${tmpfile}"
     }
-    return $ret
+    return ${ret}
 }
 
 function is-compatible-sed-i-gnu () {
-    declare tmpfile=/tmp/xsh-sed-compatible-$RANDOM
+    declare tmpfile=/tmp/xsh-sed-compatible-${RANDOM}
     declare ret=0
 
-    touch "$tmpfile" \
+    touch "${tmpfile}" \
         && {
-        is-compatible sed -i '' "$tmpfile"
+        is-compatible sed -i '' "${tmpfile}"
         ret=$?
-        /bin/rm -f "$tmpfile"
+        /bin/rm -f "${tmpfile}"
     }
-    return $ret
+    return ${ret}
 }
 
 function sed-regex () {
@@ -170,7 +170,7 @@ function install-xsh () {
     printf "creating xsh dev home directory: XSH_DEV_HOME: %s\n" "${XSH_DEV_HOME}"
     /bin/mkdir -p "${XSH_DEV_HOME}"
 
-    printf "installing xsh from ${SCRIPT_DIR} to: ${XSH_HOME}\n"
+    printf "installing xsh from %s to: %s\n" "${SCRIPT_DIR}" "${XSH_HOME}"
     /bin/cp -a "${SCRIPT_DIR}" "${XSH_HOME}/xsh"
 
     printf "installing: %s\n" ~/.xshrc
@@ -197,7 +197,7 @@ function main () {
                 upgrade=0
                 ;;
             b)
-                branch_opts=(-b ${OPTARG:?})
+                branch_opts=(-b "${OPTARG:?}")
                 ;;
             u)
                 uninstall=1
@@ -229,6 +229,7 @@ function main () {
     install-xsh
 
     printf "applying xsh for current Shell.\n"
+    # shellcheck source=/dev/null
     . ~/.xshrc
 
     if [[ ${upgrade} -eq 1 ]]; then
@@ -243,8 +244,9 @@ function main () {
 }
 
 declare XSH_HOME=~/.xsh
-declare XSH_DEV_HOME=${XSH_HOME}/lib-dev \
-        SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+declare XSH_DEV_HOME=${XSH_HOME}/lib-dev
+declare SCRIPT_DIR
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 main "$@"
 
