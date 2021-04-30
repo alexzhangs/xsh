@@ -51,10 +51,8 @@ script:
   - kcov --version
   - shellspec --list specfiles
   - shellspec --count
-  # core test with coverage
-  - shellspec --kcov -s /bin/bash spec/xsh_spec.sh
-  # installer test with coverage
-  - shellspec --kcov -s /bin/bash spec/installer_spec.sh
+  # start test with coverage
+  - shellspec --kcov -s /bin/bash
 
 after_success:
   # upload coverage report
