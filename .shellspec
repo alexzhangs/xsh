@@ -1,6 +1,6 @@
 # shellspec options
 --require spec_helper
---pattern "xsh_spec.sh,installer_spec.sh"
+--pattern "spec/xsh_spec.sh,spec/installer_spec.sh"
 
 # kcov options
 --kcov-options "--exclude-pattern=/.shellspec,/spec/,/coverage/,/report/"
