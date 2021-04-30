@@ -1,3 +1,9 @@
+#? Description:
+#?   This is the main test case for the project.
+#?
+#? Usage:
+#?   shellspec --kcov -s /bin/bash spec/xsh_spec.sh
+#?
 Describe 'xsh.sh'
   Include xsh.sh
   is_linux_on_travis () { [[ ${TRAVIS_OS_NAME} == 'linux' ]]; }

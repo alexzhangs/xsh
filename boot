@@ -30,6 +30,8 @@
 #?
 #? Example:
 #?   curl -s https://raw.githubusercontent.com/alexzhangs/xsh/master/boot | bash && . ~/.xshrc
+#?   curl -s https://raw.githubusercontent.com/alexzhangs/xsh/master/boot | bash -s -- -s && . ~/.xshrc
+#?   curl -s https://raw.githubusercontent.com/alexzhangs/xsh/master/boot | bash -s -- -b <BRANCH> && . ~/.xshrc
 #?
 
 # exit on any error
