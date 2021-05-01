@@ -40,11 +40,6 @@ before_install:
   # shellspec: test framework
   - curl -fsSL https://git.io/shellspec | sh -s -- -y
 
-install:
-  # xsh
-  - bash install.sh -s
-  - source ~/.xshrc
-
 script:
   - xsh version
   - shellspec --version
