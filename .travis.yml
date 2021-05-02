@@ -52,9 +52,7 @@ script:
   - shellspec --list specfiles
   - shellspec --count
   # start test with coverage
-  - shellspec --kcov -s /bin/bash spec/xsh_spec.sh
-  # installer test with coverage
-  - shellspec --kcov -s /bin/bash spec/installer_spec.sh
+  - shellspec --kcov -s /bin/bash spec/xsh_spec.sh spec/installer_spec.sh
 
 after_success:
   # upload coverage report
