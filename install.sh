@@ -215,8 +215,8 @@ function main () {
         uninstall-xsh
         printf "DONE.\n"
         printf "##########################################################################\n"
-        printf "## * Please execute 'unset xsh XSH_HOME XSH_DEV_HOME' or just close     ##\n"
-        printf "##   all your opened terminals to remove xsh in your memory.            ##\n"
+        printf "## * Please execute 'unset -f xsh; unset XSH_HOME XSH_DEV_HOME' or just ##\n"
+        printf "##   close all your opened terminals to remove xsh in your memory.      ##\n"
         printf "##########################################################################\n"
         exit
     fi
