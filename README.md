@@ -553,6 +553,21 @@ The dev mode applies to the following commands and internal functions:
 
 
 
+### 5.3. Development of xsh
+
+* IDE: [PyCharm](https://www.jetbrains.com/pycharm/) & [Aquamacs](http://aquamacs.org)
+* Code static analysis: [ShellCheck](https://www.shellcheck.net)
+* Code static analysis integration: [CodeFactor](https://www.codefactor.io/dashboard)
+* Code testing framework: [ShellSpec](https://shellspec.info)
+* Code coverage: [Kcov](https://github.com/SimonKagstrom/kcov)
+* Code coverage analysis: [CodeCov](https://codecov.io)
+* Code hosting: Github
+* CI hosting: [Travis](https://travis-ci.com)
+
+Most of them are free, or free to OSS projects. Many thanks to whoever contributes to them.
+
+
+
 ## 6. Where to find xsh Libraries
 
 1. Check out the repositories under [official xsh library site](https://github.com/xsh-lib).
