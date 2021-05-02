@@ -6,7 +6,7 @@
 #?
 Describe 'installer'
   exported_functions () { declare -Fx | awk '{print $3}'; }
-  uninstall () { bash "${SHELLSPEC_PROJECT_ROOT}"/install.sh -u >dev/null; unset -f xsh; unset XSH_HOME XSH_DEV_HOME; }
+  uninstall () { bash "${SHELLSPEC_PROJECT_ROOT}"/install.sh -u >/dev/null; unset -f xsh; unset XSH_HOME XSH_DEV_HOME; }
   AfterAll 'uninstall'
 
   Describe 'install.sh'
