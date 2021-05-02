@@ -8,23 +8,17 @@ Describe 'xsh.sh'
   Include xsh.sh
   is_linux_on_travis () { [[ ${TRAVIS_OS_NAME} == 'linux' ]]; }
   exported_functions () { declare -Fx | awk '{print $3}'; }
-  # shellcheck source=/dev/null
-  install () { bash "${SHELLSPEC_PROJECT_ROOT}"/install.sh -s -f; . ~/.xshrc; }
-  uninstall () { bash "${SHELLSPEC_PROJECT_ROOT}"/install.sh -u; unset -f xsh; unset XSH_HOME XSH_DEV_HOME; }
-  AfterAll 'uninstall'
 
-  Describe 'install'
-    It 'run install.sh -s -f'
-      When run install
-      The status should be success
-      The output should include ''
-      The error should include ''
-      The path ~/.xsh should be directory
-      The path ~/.xsh/xsh should be directory
-      The path ~/.xsh/xsh/xsh.sh should be file
+  Describe 'environments'
+    It 'show XSH environment variables'
       The variable XSH_HOME should be exported
       The variable XSH_DEV_HOME should be exported
-      The result of function exported_functions should include 'xsh'
+    End
+
+    It 'show XSH paths'
+      The path "${XSH_HOME}" should be directory
+      The path "${XSH_HOME}"/xsh/xsh.sh should be file
+      The path "${XSH_DEV_HOME}" should be directory
     End
   End
 
