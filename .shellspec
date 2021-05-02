@@ -5,3 +5,4 @@
 --kcov-options "--exclude-pattern=/.shellspec,/spec/,/coverage/,/report/"
 --kcov-options "--include-path=./xsh.sh,./install.sh,./boot"
 --kcov-options "--include-pattern="
+--kcov-options "--merge"
