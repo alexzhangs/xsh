@@ -6,28 +6,13 @@
 #?
 Describe 'installer'
   exported_functions () { declare -Fx | awk '{print $3}'; }
-  uninstall () { bash "${SHELLSPEC_PROJECT_ROOT}"/install.sh -u; unset -f xsh; unset XSH_HOME XSH_DEV_HOME; }
-  AfterEach 'uninstall'
+  uninstall () { bash "${SHELLSPEC_PROJECT_ROOT}"/install.sh -u >dev/null; unset -f xsh; unset XSH_HOME XSH_DEV_HOME; }
+  AfterAll 'uninstall'
 
   Describe 'install.sh'
-    It 'run install.sh -f'
-      # shellcheck source=/dev/null
-      install () { bash "${SHELLSPEC_PROJECT_ROOT}"/install.sh -f; . ~/.xshrc; }
-      When call install
-      The status should be success
-      The output should include ''
-      The error should include ''
-      The path ~/.xsh should be directory
-      The path ~/.xsh/xsh should be directory
-      The path ~/.xsh/xsh/xsh.sh should be file
-      The variable XSH_HOME should be exported
-      The variable XSH_DEV_HOME should be exported
-      The result of function exported_functions should include 'xsh'
-    End
-
     It 'run install.sh'
       # shellcheck source=/dev/null
-      install () { bash "${SHELLSPEC_PROJECT_ROOT}"/install.sh; bash "${SHELLSPEC_PROJECT_ROOT}"/install.sh; . ~/.xshrc; }
+      install () { uninstall; bash "${SHELLSPEC_PROJECT_ROOT}"/install.sh; . ~/.xshrc; }
       When call install
       The status should be success
       The output should include ''
@@ -35,7 +20,21 @@ Describe 'installer'
       The variable XSH_HOME should be exported
       The variable XSH_DEV_HOME should be exported
       The path "${XSH_HOME}" should be directory
-      The path "${XSH_HOME}"/xsh should be directory
+      The path "${XSH_HOME}"/xsh/xsh.sh should be file
+      The path "${XSH_DEV_HOME}" should be directory
+      The result of function exported_functions should include 'xsh'
+    End
+
+    It 'run install.sh -f'
+      # shellcheck source=/dev/null
+      install () { bash "${SHELLSPEC_PROJECT_ROOT}"/install.sh -f; . ~/.xshrc; }
+      When call install
+      The status should be success
+      The output should include ''
+      The error should include ''
+      The variable XSH_HOME should be exported
+      The variable XSH_DEV_HOME should be exported
+      The path "${XSH_HOME}" should be directory
       The path "${XSH_HOME}"/xsh/xsh.sh should be file
       The path "${XSH_DEV_HOME}" should be directory
       The result of function exported_functions should include 'xsh'
@@ -51,7 +50,6 @@ Describe 'installer'
       The variable XSH_HOME should be exported
       The variable XSH_DEV_HOME should be exported
       The path "${XSH_HOME}" should be directory
-      The path "${XSH_HOME}"/xsh should be directory
       The path "${XSH_HOME}"/xsh/xsh.sh should be file
       The path "${XSH_DEV_HOME}" should be directory
       The result of function exported_functions should include 'xsh'
@@ -67,7 +65,6 @@ Describe 'installer'
       The variable XSH_HOME should be exported
       The variable XSH_DEV_HOME should be exported
       The path "${XSH_HOME}" should be directory
-      The path "${XSH_HOME}"/xsh should be directory
       The path "${XSH_HOME}"/xsh/xsh.sh should be file
       The path "${XSH_DEV_HOME}" should be directory
       The result of function exported_functions should include 'xsh'
@@ -82,11 +79,11 @@ Describe 'installer'
       The status should be success
       The output should include ''
       The error should include ''
-      The path ~/.xsh should be directory
-      The path ~/.xsh/xsh should be directory
-      The path ~/.xsh/xsh/xsh.sh should be file
       The variable XSH_HOME should be exported
       The variable XSH_DEV_HOME should be exported
+      The path "${XSH_HOME}" should be directory
+      The path "${XSH_HOME}"/xsh/xsh.sh should be file
+      The path "${XSH_DEV_HOME}" should be directory
       The result of function exported_functions should include 'xsh'
     End
   End
