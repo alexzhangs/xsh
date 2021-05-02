@@ -1,5 +1,6 @@
 # shellspec options
 --require spec_helper
+--keep-tmpdir
 
 # kcov options
 --kcov-options "--exclude-pattern=/.shellspec,/spec/,/coverage/,/report/"
