@@ -49,8 +49,12 @@ script:
   - xsh version
   - shellspec --version
   - kcov --version
+  - shellspec --list specfiles
+  - shellspec --count
   # start test with coverage
-  - shellspec --kcov -s /bin/bash spec/xsh_spec.sh
+  # run all specfiles at once otherwise the later coverage will override the former
+  # the order of the specfiles matters
+  - shellspec --kcov -s /bin/bash spec/xsh_spec.sh spec/installer_spec.sh
 
 after_success:
   # upload coverage report

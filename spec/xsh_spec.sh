@@ -17,6 +17,7 @@ Describe 'xsh.sh'
 
     It 'show XSH paths'
       The path "${XSH_HOME}" should be directory
+      The path "${XSH_HOME}"/xsh/xsh.sh should be file
       The path "${XSH_DEV_HOME}" should be directory
     End
   End
@@ -25,7 +26,7 @@ Describe 'xsh.sh'
     It 'list available versions of xsh'
       When call xsh versions
       The status should be success
-      The output should include '0.2.0'
+      The output should include 'bootstrap'
     End
 
     It 'show current version of xsh'
