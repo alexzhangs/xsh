@@ -2050,7 +2050,7 @@ function xsh () {
         fi
 
         declare mime_type
-        mime_type=$(__xsh_mime_type "$(command -v "$1")" 2>/dev/null)
+        mime_type=$(__xsh_mime_type "$(command -v "${lpuc}")" 2>/dev/null)
 
         # shellcheck disable=SC2128
         if [[ -n ${XSH_DEBUG} ]]; then
