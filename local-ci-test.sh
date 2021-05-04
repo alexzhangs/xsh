@@ -123,7 +123,7 @@ function call () {
     declare code
     IFS='' read -r -d '' code << EOF || :
 LOCAL_CI=true
-LOCAL_CI_USER=${user}
+LOCAL_CI_USER=${SANDBOX_USER}
 LOCAL_CI_REPO_SLUG=${repo_dir}
 cd ${work_dir}
 ${funccode}
