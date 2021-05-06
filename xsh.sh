@@ -1660,7 +1660,7 @@ function xsh () {
         declare code=${1:?}
 
         # insert the decorator code at the beginning of the function body
-        sed "/^function [a-zA-Z-]* () {/ r /dev/stdin" <(printf '%s' "${code}") <<< "xsh ${*:2}"
+        sed "/^function [_0-9a-zA-Z-]* () {/ r /dev/stdin" <(printf '%s' "${code}") <<< "xsh ${*:2}"
     }
 
     #? Description:
@@ -1686,7 +1686,7 @@ function xsh () {
     function __xsh_func_decorator_subshell () {
         declare code=${1:?} name
 
-        name=$(awk '/^function [a-zA-Z-]+ ()/ {print $2}' <<< "${code}")
+        name=$(awk '/^function [_0-9a-zA-Z-]+ ()/ {print $2}' <<< "${code}")
         code=${code/function ${name} ()/function __${name}__ ()}
         printf 'function %s () {(\n%s\n__%s__ "$@"\n)}\n' \
                "${name}" "${code}" "${name}"
@@ -1740,7 +1740,7 @@ function xsh () {
         declare code=${1:?} init_file=${2:?}
 
         # insert the decorator code at the beginning of the function body
-        sed '/^function [a-zA-Z-]* () {/ r /dev/stdin' <(printf '%s' "${code}") <<< "source ${init_file}"
+        sed '/^function [_0-9a-zA-Z-]* () {/ r /dev/stdin' <(printf '%s' "${code}") <<< "source ${init_file}"
     }
 
     #? Description:
