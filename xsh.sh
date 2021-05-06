@@ -1429,7 +1429,7 @@ function xsh () {
 
             # remember the applied init file
             # do not declare it, make it global
-            code="__XSH_INIT__+=( \"${init_file}\" ); ${code}"
+            code="__XSH_INIT__+=( \"${init_file}\" )"$'\n'"${code}"
         done < <(__xsh_get_init_files "${path%/*}")
 
         printf '%s' "${code}"
@@ -1660,7 +1660,7 @@ function xsh () {
     #?
     function __xsh_func_decorator_xsh () {
         # insert the decorator code at the beginning of the function body
-        sed "/^function [_0-9a-zA-Z-]* ()/ r /dev/stdin" <(printf '%s' "${1:?}") <<< "xsh ${*:2}"
+        sed "/^function [_0-9a-zA-Z-]* ()/ r /dev/stdin" <(printf '%s' "${1:?}") <<< "    xsh ${*:2}"
     }
 
     #? Description:
@@ -1735,7 +1735,7 @@ function xsh () {
     #?
     function __xsh_func_decorator_init_runtime () {
         # insert the decorator code at the beginning of the function body
-        sed '/^function [_0-9a-zA-Z-]* ()/ r /dev/stdin' <(printf '%s' "${1:?}") <<< "source ${2:?}"
+        sed '/^function [_0-9a-zA-Z-]* ()/ r /dev/stdin' <(printf '%s' "${1:?}") <<< "    source ${2:?}"
     }
 
     #? Description:
