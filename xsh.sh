@@ -1406,7 +1406,7 @@ function xsh () {
         util=$(__xsh_get_util_by_path "${path}")
         lpuc=$(__xsh_get_lpuc_by_path "${path}")
 
-        code=$(cat "${path}")
+        code=$(__xsh_info -c "${path}")
 
         declare init_file
         while read -r init_file; do
@@ -1657,10 +1657,8 @@ function xsh () {
     #?   The code after the decorator is applied.
     #?
     function __xsh_func_decorator_xsh () {
-        declare code=${1:?}
-
         # insert the decorator code at the beginning of the function body
-        sed "/^function [_0-9a-zA-Z-]* () {/ r /dev/stdin" <(printf '%s' "${code}") <<< "xsh ${*:2}"
+        sed "/^function [_0-9a-zA-Z-]* ()/ r /dev/stdin" <(printf '%s' "${1:?}") <<< "xsh ${*:2}"
     }
 
     #? Description:
@@ -1684,12 +1682,11 @@ function xsh () {
     #?   The code after the decorator is applied.
     #?
     function __xsh_func_decorator_subshell () {
-        declare code=${1:?} name
+        declare name
 
-        name=$(awk '/^function [_0-9a-zA-Z-]+ ()/ {print $2}' <<< "${code}")
-        code=${code/function ${name} ()/function __${name}__ ()}
+        name=$(awk '/^function [_0-9a-zA-Z-]+ ()/ {print $2}' <<< "${1:?}")
         printf 'function %s () {(\n%s\n__%s__ "$@"\n)}\n' \
-               "${name}" "${code}" "${name}"
+               "${name}" "${1/function ${name} ()/function __${name}__ ()}" "${name}"
     }
 
     #? Description:
@@ -1709,15 +1706,13 @@ function xsh () {
     #?   The code after the decorator is applied.
     #?
     function __xsh_func_decorator_init_static () {
-        declare code=${1:?} init_file=${2:?}
-
         # insert the decorator code before the function code
         sed '1 {
         h
         r /dev/stdin
         g
         N
-        }' <(printf '%s' "${code}") <<< "source ${init_file}"
+        }' <(printf '%s' "${1:?}") <<< "source ${2:?}"
     }
 
     #? Description:
@@ -1737,10 +1732,8 @@ function xsh () {
     #?   The code after the decorator is applied.
     #?
     function __xsh_func_decorator_init_runtime () {
-        declare code=${1:?} init_file=${2:?}
-
         # insert the decorator code at the beginning of the function body
-        sed '/^function [_0-9a-zA-Z-]* () {/ r /dev/stdin' <(printf '%s' "${code}") <<< "source ${init_file}"
+        sed '/^function [_0-9a-zA-Z-]* ()/ r /dev/stdin' <(printf '%s' "${1:?}") <<< "source ${2:?}"
     }
 
     #? Description:
