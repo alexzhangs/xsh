@@ -421,6 +421,8 @@ function xsh () {
     #?   __xsh_git_fetch_remote_tags
     #?
     function __xsh_git_fetch_remote_tags () {
+        # get ride of the moving tags on the remote
+        git fetch --tags -f
         if [[ $(__xsh_version_comparator 1.9.0 "$(__xsh_git_version)") -eq 1 ]]; then
             # git version < 1.9.0
             git fetch --prune origin "+refs/tags/*:refs/tags/*"
