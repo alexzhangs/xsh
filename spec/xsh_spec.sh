@@ -170,7 +170,7 @@ Describe 'xsh.sh'
     End
 
     It 'call /file/inject'
-      Skip if 'has segmentation fault issue' is_linux_on_travis
+      #Skip if 'has segmentation fault issue' is_linux_on_travis
       BeforeCall 'touch /tmp/.xsh-file-inject'
       AfterCall 'rm -f /tmp/.xsh-file-inject'
       When call xsh /file/inject -c bar -p end /tmp/.xsh-file-inject
