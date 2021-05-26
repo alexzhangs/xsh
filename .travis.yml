@@ -19,7 +19,7 @@ addons:
 jobs:
   include:
     - os: linux
-      dist: xenial
+      dist: bionic
     - os: osx
       osx_image: xcode12.2
 env:

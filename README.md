@@ -8,7 +8,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
 
-| Linux Ubuntu Xenial 16.04 - bash 4.3.48 | macOS 10.15.7 - bash 3.2.57 |
+| Linux Ubuntu Bionic 18.04 - bash 4.4.20 | macOS 10.15.7 - bash 3.2.57 |
 |-----------------------------------------|-----------------------------|
 | [![Build1][1]][0]                       | [![Build2][2]][0]           |
 
