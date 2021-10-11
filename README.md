@@ -1,18 +1,18 @@
-[![GitHub tag](https://img.shields.io/github/v/tag/alexzhangs/xsh?sort=date)](https://github.com/alexzhangs/xsh/)
+[![GitHub tag](https://img.shields.io/github/v/tag/alexzhangs/xsh?sort=date)](https://github.com/alexzhangs/xsh/tags)
 [![GitHub](https://img.shields.io/github/license/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
-[![GitHub last commit](https://img.shields.io/github/last-commit/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
+[![GitHub last commit](https://img.shields.io/github/last-commit/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/commits/master)
 
 [![Travis (.com)](https://img.shields.io/travis/com/alexzhangs/xsh/master.svg?style=flat-square)](https://travis-ci.com/alexzhangs/xsh/)
 [![codecov](https://codecov.io/gh/alexzhangs/xsh/branch/master/graph/badge.svg?token=HVTO788DLV)](https://codecov.io/gh/alexzhangs/xsh)
 [![CodeFactor](https://www.codefactor.io/repository/github/alexzhangs/xsh/badge)](https://www.codefactor.io/repository/github/alexzhangs/xsh)
-[![GitHub issues](https://img.shields.io/github/issues/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
-[![GitHub pull requests](https://img.shields.io/github/issues-pr/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
+[![GitHub issues](https://img.shields.io/github/issues/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/pulls)
 
 | Linux Ubuntu Bionic 18.04 - bash 4.4.20 | macOS 10.15.7 - bash 3.2.57 |
 |-----------------------------------------|-----------------------------|
 | [![Build1][1]][0]                       | [![Build2][2]][0]           |
 
-[0]: https://travis-ci.org/alexzhangs/xsh
+[0]: https://travis-ci.com/alexzhangs/xsh
 [1]: https://travis-matrix-badges.herokuapp.com/repos/alexzhangs/xsh/branches/master/1?use_travis_com=true
 [2]: https://travis-matrix-badges.herokuapp.com/repos/alexzhangs/xsh/branches/master/2?use_travis_com=true
 
