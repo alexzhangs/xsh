@@ -28,7 +28,7 @@ xsh - this repository, in a narrow sense, is not a library itself. It's just a f
 Why started this?
 It is the only way I can write nice shellcode for many different purposes so quickly, in the meanwhile, keep them well-organized as they grow, and be able to reuse them at the time they are needed again.
 
-![xsh usage](doc/xsh-usage.png)
+![xsh usage](/assets/images/xsh-usage.png)
 
 This project is still at version `0.x`, and should be considered immature.
 
