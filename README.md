@@ -476,6 +476,12 @@ $ xsh load <yourusername>/xsh-lib-sample
 
 
 
+#### 5.1.5. Create library with template
+
+Using the Github template repository [xsh-lib/template](https://github.com/xsh-lib/template) is the simplest way to create a new empty xsh library.
+
+
+
 ### 5.2. Debugging (Debug Mode)
 
 With the debug mode enabled, the shell options: `-vx` is set for the debugging utilities. The debug mode is available only for the commands started with `xsh`.
