@@ -995,7 +995,7 @@ function xsh () {
     #?   <FILE>           File path.
     #?
     #?   [NAME]           Show info for the function only.
-    #?                    The name list can be delimited with comma `,` wthout.
+    #?                    The name list can be delimited with comma `,` without.
     #?                    The output order of function is determined by the coding order
     #?                    rather than the list order.
     #?
