@@ -622,10 +622,12 @@ function xsh () {
     #?   The dev mode is being checked indirectly.
     #?
     #? Usage:
-    #?   __xsh_help [-t] [-c] [-d] [-sS SECTION,...] [BUILTIN | LPUR]
+    #?   __xsh_help [-t] [-T] [-c] [-d] [-sS SECTION,...] [BUILTIN | LPUR]
     #?
     #? Option:
     #?   [-t]             Show title.
+    #?
+    #?   [-T]             Show highlighted title surrounded with lines.
     #?
     #?   [-c]             Show code.
     #?                    The shown code is formatted by shell with BUILTIN.
@@ -688,6 +690,33 @@ function xsh () {
         else
             shasum "$@"
         fi
+    }
+
+    #? Description:
+    #?   Repeat a string n times.
+    #?
+    #? Usage:
+    #?   __xsh_repeat STRING [N]
+    #?
+    #? Options:
+    #?   STRING  String to repeat.
+    #?   [N]     Repeat N times, default is 1, means no repeat.
+    #?
+    #? Output:
+    #?   Concatenation of N STRINGs.
+    #?
+    #? Example:
+    #?   $ __xsh_repeat Foo 3
+    #?   FooFooFoo
+    #?
+    function __xsh_repeat () {
+        declare str=$1 times=${2:-1}
+
+        if [[ -z ${str} ]]; then
+            return
+        fi
+
+        printf "%${times}s" | sed "s| |${str}|g"
     }
 
     #? Description:
@@ -773,7 +802,7 @@ function xsh () {
     #?   as the full util name.
     #?
     #? Usage:
-    #?   __xsh_help_lib [-t] [-c] [-d] [-sS SECTION,...] <LPUR>
+    #?   __xsh_help_lib [-t] [-T] [-c] [-d] [-sS SECTION,...] <LPUR>
     #?
     #? Option:
     #?   See `xsh help help`.
@@ -784,7 +813,7 @@ function xsh () {
             # get the last argument
             declare lpur=${!#}
             # remove the last argument from argument list
-            declare -a options=( "${@:1:$#-1}" )
+            declare -a options=( -T "${@:1:$#-1}" )
 
             declare path
             path=$(__xsh_get_path_by_lpur "${lpur}")
@@ -825,13 +854,15 @@ function xsh () {
     #?   Show specific info for xsh builtin functions or utilities.
     #?
     #? Usage:
-    #?   __xsh_info [-f NAME,...] [-t] [-c] [-d] [-sS SECTION,...] [-i STRING] [...] <PATH>
+    #?   __xsh_info [-f NAME,...] [-t] [-T] [-c] [-d] [-sS SECTION,...] [-i STRING] [...] <PATH>
     #?
     #? Option:
     #?   [-f NAME]        Show info for the function only.
     #?                    The name list can be delimited with comma `,`.
     #?                    The output order of function is determined by the coding order
     #?                    rather than the list order.
+    #?
+    #?                    NOTE: This option should be put before all other options if used.
     #?
     #?   [-i STRING]      Insert STRING.
     #?                    The string is inserted without newline, use `\n` if needs.
@@ -877,16 +908,25 @@ function xsh () {
             return 255
         fi
 
-        while getopts f:tcds:S:i: opt; do
+        while getopts f:tTcds:S:i: opt; do
             case ${opt} in
                 f)
                     funcname=${OPTARG}
                     ;;
-                t)
+                t|T)
+                    declare title
                     if [[ -n ${funcname} ]]; then
-                        __xsh_get_funcname_from_file "${path}" "${funcname}"
+                        title=$(__xsh_get_funcname_from_file "${path}" "${funcname}")
                     else
-                        __xsh_get_title_by_path "${path}"
+                        title=$(__xsh_get_title_by_path "${path}")
+                    fi
+
+                    if [[ ${opt} == t ]]; then
+                        printf "%s\n" "${title}"
+                    else
+                        declare hr
+                        hr=$(__xsh_repeat '=' ${#title})
+                        printf "%s\n%s\n%s\n" "${hr}" "${title}" "${hr}"
                     fi
                     ;;
                 d)
@@ -995,7 +1035,7 @@ function xsh () {
     #?   <FILE>           File path.
     #?
     #?   [NAME]           Show info for the function only.
-    #?                    The name list can be delimited with comma `,` without.
+    #?                    The name list can be delimited with comma `,`.
     #?                    The output order of function is determined by the coding order
     #?                    rather than the list order.
     #?
