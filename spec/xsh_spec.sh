@@ -58,6 +58,18 @@ Describe 'xsh.sh'
       The output should include 'function __xsh_help'
     End
 
+    It 'show help of xsh update with suffix help'
+      When call xsh update help
+      The status should be success
+      The output should include 'Usage'
+    End
+
+    It 'show code of xsh update with suffix help'
+      When call xsh update help -c
+      The status should be success
+      The output should include 'function __xsh_update'
+    End
+
     It 'call log info'
       When call xsh log info 'something normal'
       The status should be success
