@@ -2372,6 +2372,9 @@ function xsh () {
     if [[ -z $1 ]]; then
         __xsh_help >&2
         return 255
+    elif [[ $2 == help ]]; then
+        # move the help target to the end of the options
+        set -- "${@:2}" "$1"
     fi
 
     if [[ $(type -t "__xsh_${1//-/_}" || :) == function ]]; then
