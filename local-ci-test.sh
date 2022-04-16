@@ -24,7 +24,7 @@ function usage () {
 
 function ci-addons () {
 
-    function insall-kcov-dependency () {
+    function install-kcov-dependency () {
         if type -t brew >/dev/null; then
             return
         elif type -t apt-get >/dev/null; then
@@ -36,7 +36,7 @@ function ci-addons () {
         fi
     }
 
-    insall-kcov-dependency
+    install-kcov-dependency
 }
 
 function ci-add-user () {
@@ -62,14 +62,14 @@ function ci-get-code () {
 
 function ci-before-install () {
 
-    function insall-shellspec () {
+    function install-shellspec () {
         if type -t ~/.local/bin/shellspec >/dev/null; then
             return
         fi
         curl -fsSL https://git.io/shellspec | sh -s -- -y
     }
 
-    function insall-kcov () {
+    function install-kcov () {
         if type -t kcov >/dev/null; then
             return
         fi
@@ -84,8 +84,8 @@ function ci-before-install () {
         fi
     }
 
-    insall-shellspec
-    insall-kcov
+    install-shellspec
+    install-kcov
 }
 
 function ci-install () {
