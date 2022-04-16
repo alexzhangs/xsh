@@ -26,7 +26,8 @@ xsh aimed to provide a uniform and easy way to reuse bash code, like what a libr
 xsh - this repository, in a narrow sense, is not a library itself. It's just a framework, in a broad sense xsh along with other repositories, such as `xsh-lib/core` as a whole, is a bash library with a framework.
 
 Why started this?
-It is the only way I can write nice shellcode for many different purposes so quickly, in the meanwhile, keep them well-organized as they grow, and be able to reuse them at the time they are needed again.
+
+It is the only way I can write comfortable shellcode quickly for different purpose, and keep them well-organized as they grow, and be able to be reused at the time they are needed again.
 
 ![xsh usage](/assets/images/xsh-usage.png)
 
@@ -70,7 +71,7 @@ This project is still at version `0.x`, and should be considered immature.
 
 * Easy to make your existing code a library.
 
-  An xsh library is just a Git repo following some simple rules. The rules will be talked about later in the development section. Any repos following that rules can be able to load as xsh libraries.
+  A xsh library is just a Git repo following some simple rules. The rules will be talked about later in the development section. Any repos following that rules can be able to load as xsh libraries.
 
 
 
@@ -428,9 +429,9 @@ It's pretty the same with script files, except that you don't have to define fun
 
 #### 5.1.3. Commit the code and test it
 
-Push the code to a Git repo, for example, Github, on branch `master`, then the library is ready for the test.
+Push the code to a Git repo, for example, GitHub, on branch `master`, then the library is ready for the test.
 
-Load the sample library `xsh-lib-sample` on Github:
+Load the sample library `xsh-lib-sample` on GitHub:
 
 Note: Option `-b master` is necessary to tell that you are loading the latest untagged version for testing purposes.
 
@@ -438,10 +439,10 @@ Note: Option `-b master` is necessary to tell that you are loading the latest un
 $ xsh load -b master <yourusername>/xsh-lib-sample
 ```
 
-Or if the Git repo isn't on Github, issue:
+Or if the Git repo isn't on GitHub, issue:
 
 ```
-$ xsh load -s http://yourgitserver.com -b master <yourusername>/xsh-lib-sample
+$ xsh load -s https://yourgitserver.com -b master <yourusername>/xsh-lib-sample
 ```
 
 Then can be called as:
@@ -468,7 +469,7 @@ $ git tag -a -m 'v1.0.0' 1.0.0
 
 Then the library is ready.
 
-Load the published sample library `xsh-lib-sample` on Github:
+Load the published sample library `xsh-lib-sample` on GitHub:
 
 ```bash
 $ xsh load <yourusername>/xsh-lib-sample
@@ -478,7 +479,7 @@ $ xsh load <yourusername>/xsh-lib-sample
 
 #### 5.1.5. Create library with template
 
-Using the Github template repository [xsh-lib/template](https://github.com/xsh-lib/template) is the simplest way to create a new empty xsh library.
+Using the GitHub template repository [xsh-lib/template](https://github.com/xsh-lib/template) is the simplest way to create a new empty xsh library.
 
 
 
@@ -567,7 +568,7 @@ The dev mode applies to the following commands and internal functions:
 * Code testing framework: [ShellSpec](https://shellspec.info)
 * Code coverage: [Kcov](https://github.com/SimonKagstrom/kcov)
 * Code coverage analysis: [CodeCov](https://codecov.io)
-* Code hosting: Github
+* Code hosting: GitHub
 * CI hosting: [Travis](https://travis-ci.com)
 
 Most of them are free, or free to OSS projects. Many thanks to whoever contributes to them.
@@ -578,7 +579,7 @@ Most of them are free, or free to OSS projects. Many thanks to whoever contribut
 
 1. Check out the repositories under [official xsh library site](https://github.com/xsh-lib).
 
-1. Search Github repositories with the keyword `xsh-lib-`.
+1. Search GitHub repositories with the keyword `xsh-lib-`.
 
 
 
