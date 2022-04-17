@@ -669,6 +669,7 @@ function xsh () {
     #?   [LPUR]           LPUR.
     #?                    Show help for matched utilities.
     #?
+    #?   If none option presents for BUILTIN or LPUR, then `-T` and `-d` are being used.
     #?   If both BUILTIN and LPUR unset, then show help for xsh itself.
     #?   The options order matters to the output.
     #?   All options can be used multi times.
@@ -685,7 +686,7 @@ function xsh () {
 
         if [[ $# -eq 0 ]]; then
             # add -d to $@
-            set -- -d
+            set -- -T -d
         fi
 
         {
@@ -799,7 +800,7 @@ function xsh () {
     #?   Show help for xsh builtin functions.
     #?
     #? Usage:
-    #?   __xsh_help_builtin [-t] [-c] [-d] [-sS SECTION,...] <BUILTIN>
+    #?   __xsh_help_builtin [-t] [-T] [-c] [-d] [-sS SECTION,...] <BUILTIN>
     #?
     #? Option:
     #?   <BUILTIN>        xsh builtin function name.
@@ -834,7 +835,7 @@ function xsh () {
             # get the last argument
             declare lpur=${!#}
             # remove the last argument from argument list
-            declare -a options=( -T "${@:1:$#-1}" )
+            declare -a options=( "${@:1:$#-1}" )
 
             declare path
             path=$(__xsh_get_path_by_lpur "${lpur}")
