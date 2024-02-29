@@ -793,8 +793,12 @@ function xsh () {
 
         # show sections of Description and Option of xsh builtin functions
         for name in "${names[@]}"; do
-            __xsh_help_builtin -i "${name}\n" -S Description,Option "__xsh_${name}" \
+            __xsh_help_builtin -i "${name}\n" -S Description "__xsh_${name}" \
                 | sed '/^$/! s/^/  /'
+            __xsh_help_builtin -S Usage "__xsh_${name}" \
+                | sed -e '/^$/! s/^/  /' -e 's/__xsh_/xsh /g'
+            __xsh_help_builtin -s Commands,Option "__xsh_${name}" \
+                | sed '/^$/! s/^/    /'
         done
 
         # show rest sections of xsh itself
