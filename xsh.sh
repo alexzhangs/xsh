@@ -4,7 +4,7 @@
 #? Usage:
 #?   xsh <LPUE> [UTIL_OPTIONS]
 #?
-#? Option:
+#? Options:
 #?   <LPUE>           Call an individual utility.
 #?   [UTIL_OPTIONS]   Will be passed to utility.
 #?
@@ -101,23 +101,25 @@ function xsh () {
 
     #? Special Variables:
     #?
-    #？ +----------------+--------+------------+------------------------+---------------------+-------------+
-    #？ | Variables      | Scope  | Predefined | Predefined Where       | Predefined Value    | Overridable |
-    #？ +================+========+============+========================+=====================+=============+
-    #？ | XSH_DEBUG      | Global | N          | -                      | -                   | Y           |
-    #？ +----------------+--------+------------+------------------------+---------------------+-------------+
-    #？ | XSH_DEV        | Global | N          | -                      | -                   | Y           |
-    #？ +----------------+--------+------------+------------------------+---------------------+-------------+
-    #？ | XSH_HOME       | Global | Y          | ~/.xshrc               | ~/.xsh              | Y           |
-    #？ +----------------+--------+------------+------------------------+---------------------+-------------+
-    #？ | XSH_DEV_HOME   | Global | Y          | ~/.xshrc               | ${XSH_HOME}/lib-dev | Y           |
-    #？ +----------------+--------+------------+------------------------+---------------------+-------------+
-    #？ | XSH_LIB_HOME   | xsh    | Y          | ${XSH_HOME}/xsh/xsh.sh | ${XSH_HOME}/lib     | Y           |
-    #？ +----------------+--------+------------+------------------------+---------------------+-------------+
-    #？ | XSH_REPO_HOME  | xsh    | Y          | ${XSH_HOME}/xsh/xsh.sh | ${XSH_HOME}/repo    | Y           |
-    #？ +----------------+--------+------------+------------------------+---------------------+-------------+
-    #？ | XSH_GIT_SERVER | xsh    | Y          | ${XSH_HOME}/xsh/xsh.sh | https://github.com  | Y           |
-    #？ +----------------+--------+------------+------------------------+---------------------+-------------+
+    #? +----------------+--------+------------+------------------------+---------------------+-------------+
+    #? | Variables      | Scope  | Predefined | Predefined Where       | Predefined Value    | Overridable |
+    #? +================+========+============+========================+=====================+=============+
+    #? | XSH_DEBUG      | Global | N          | -                      | -                   | Y           |
+    #? +----------------+--------+------------+------------------------+---------------------+-------------+
+    #? | XSH_DEV        | Global | N          | -                      | -                   | Y           |
+    #? +----------------+--------+------------+------------------------+---------------------+-------------+
+    #? | XSH_HOME       | Global | Y          | ~/.xshrc               | ~/.xsh              | Y           |
+    #? +----------------+--------+------------+------------------------+---------------------+-------------+
+    #? | XSH_DEV_HOME   | Global | Y          | ~/.xshrc               | ${XSH_HOME}/lib-dev | Y           |
+    #? +----------------+--------+------------+------------------------+---------------------+-------------+
+    #? | XSH_LIB_HOME   | xsh    | Y          | ${XSH_HOME}/xsh/xsh.sh | ${XSH_HOME}/lib     | Y           |
+    #? +----------------+--------+------------+------------------------+---------------------+-------------+
+    #? | XSH_REPO_HOME  | xsh    | Y          | ${XSH_HOME}/xsh/xsh.sh | ${XSH_HOME}/repo    | Y           |
+    #? +----------------+--------+------------+------------------------+---------------------+-------------+
+    #? | XSH_GIT_SERVER | xsh    | Y          | ${XSH_HOME}/xsh/xsh.sh | https://github.com  | Y           |
+    #? +----------------+--------+------------+------------------------+---------------------+-------------+
+    #?
+    #? The text table is powered by: https://www.tablesgenerator.com/text_tables
     #?
 
     #? Description:
@@ -130,7 +132,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_mime_type <FILE> [...]
     #?
-    #? Option:
+    #? Options:
     #?   <FILE>          Path to the file.
     #?
     #? Example:
@@ -163,7 +165,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_shell_option [OPTION][ ][...]
     #?
-    #? Option:
+    #? Options:
     #?   [OPTION]         The syntax is `[+-]NAME`.
     #?                    See the allowed names in `help set`.
     #?
@@ -199,7 +201,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_call_with_shell_option [-1 OPTION] [-0 OPTION] [...] <FUNCTION | SCRIPT>
     #?
-    #? Option:
+    #? Options:
     #?   [-1 OPTION]      Turn on followed options.
     #?   [-0 OPTION]      Turn off followed options.
     #?
@@ -261,7 +263,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_debug [-1 OPTION] [-0 OPTION] [...] <FUNCTION | SCRIPT>
     #?
-    #? Option:
+    #? Options:
     #?   [-1 OPTION]      Turn on the followed options.
     #?   [-0 OPTION]      Turn off the followed options.
     #?
@@ -500,7 +502,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_git_clone [-s GIT_SERVER] [-b BRANCH | -t TAG] REPO
     #?
-    #? Option:
+    #? Options:
     #?   [-s GIT_SERVER]  Git server URL.
     #?                    E.g. `https://github.com`
     #?   [-b BRANCH]      Clone the BRANCH's latest state.
@@ -576,7 +578,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_git_force_update [-b BRANCH | -t TAG]
     #?
-    #? Option:
+    #? Options:
     #?   [-b BRANCH]      Update to the BRANCH's latest state.
     #?                    This option is for developers.
     #?   [-t TAG]         Update to a specific TAG version.
@@ -645,7 +647,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_help [-t] [-T] [-c] [-d] [-sS SECTION,...] [BUILTIN | LPUR]
     #?
-    #? Option:
+    #? Options:
     #?   [-t]             Show title.
     #?
     #?   [-T]             Show highlighted title surrounded with lines.
@@ -802,7 +804,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_help_builtin [-t] [-T] [-c] [-d] [-sS SECTION,...] <BUILTIN>
     #?
-    #? Option:
+    #? Options:
     #?   <BUILTIN>        xsh builtin function name.
     #?
     #?   See `xsh help help` for the rest options.
@@ -826,7 +828,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_help_lib [-t] [-T] [-c] [-d] [-sS SECTION,...] <LPUR>
     #?
-    #? Option:
+    #? Options:
     #?   See `xsh help help`.
     #?
     function __xsh_help_lib () {
@@ -878,7 +880,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_info [-f NAME,...] [-t] [-T] [-c] [-d] [-sS SECTION,...] [-i STRING] [...] <PATH>
     #?
-    #? Option:
+    #? Options:
     #?   [-f NAME]        Show info for the function only.
     #?                    The name list can be delimited with comma `,`.
     #?                    The output order of function is determined by the coding order
@@ -996,7 +998,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_get_funcname_from_file <FILE> [NAME,...]
     #?
-    #? Option:
+    #? Options:
     #?   <FILE>           File path.
     #?
     #?   [NAME]           Show info for the function only.
@@ -1019,7 +1021,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_get_funccode_from_file <FILE> [NAME,...]
     #?
-    #? Option:
+    #? Options:
     #?   <FILE>           File path.
     #?
     #?   [NAME]           Show info for the function only.
@@ -1053,7 +1055,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_get_doc_from_file <FILE> [NAME,...]
     #?
-    #? Option:
+    #? Options:
     #?   <FILE>           File path.
     #?
     #?   [NAME]           Show info for the function only.
@@ -1110,7 +1112,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_list [LPUR]
     #?
-    #? Option:
+    #? Options:
     #?   [LPUR]           List matched libraries, packages and utilities.
     #?
     function __xsh_list () {
@@ -1201,7 +1203,7 @@ function xsh () {
     #?   unlink           Unlink the linked library of the REPO.
     #?   delete           Delete the whole REPO linked to the library.
     #?
-    #? Option:
+    #? Options:
     #?   <REPO>           Git repo in syntax: `USERNAME/REPO`.
     #?                    E.g. `username/xsh-lib-foo`
     #?
@@ -1272,7 +1274,7 @@ function xsh () {
     #?   unlink           Unlink the linked development library of the REPO.
     #?   delete           Delete the whole REPO linked to the development REPO.
     #?
-    #? Option:
+    #? Options:
     #?   <REPO>           Git repo in syntax: `USERNAME/REPO`.
     #?                    E.g. `username/xsh-lib-foo`
     #?
@@ -1293,7 +1295,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_load [-s GIT_SERVER] [-b BRANCH | -t TAG] REPO
     #?
-    #? Option:
+    #? Options:
     #?   [-s GIT_SERVER]  Git server URL.
     #?                    E.g. `https://github.com`
     #?   [-b BRANCH]      Load the BRANCH's latest state.
@@ -1327,7 +1329,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_unload REPO
     #?
-    #? Option:
+    #? Options:
     #?   REPO             Git repo in syntax: `USERNAME/REPO`.
     #?                    E.g. `username/xsh-lib-foo`
     #?
@@ -1352,7 +1354,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_update [-b BRANCH | -t TAG] REPO
     #?
-    #? Option:
+    #? Options:
     #?   [-b BRANCH]      Update to the BRANCH's latest state.
     #?                    This option is for developers.
     #?   [-t TAG]         Update to a specific TAG version.
@@ -1387,7 +1389,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_upgrade [-b BRANCH | -t TAG]
     #?
-    #? Option:
+    #? Options:
     #?   [-b BRANCH]      Update to the BRANCH's latest state.
     #?                    This option is for developers.
     #?   [-t TAG]         Update to a specific TAG version.
@@ -1461,7 +1463,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_make_init <FILE>
     #?
-    #? Option:
+    #? Options:
     #?   <FILE>           Path to the function utility.
     #?
     function __xsh_make_init () {
@@ -1517,7 +1519,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_imports <LPUR> [...]
     #?
-    #? Option:
+    #? Options:
     #?   <LPUR> [...]     See the section of Convention.
     #?
     function __xsh_imports () {
@@ -1586,7 +1588,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_import_function <FILE>
     #?
-    #? Option:
+    #? Options:
     #?   <FILE>           Path to the function utility.
     #?
     function __xsh_import_function () {
@@ -1605,7 +1607,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_make_function <FILE>
     #?
-    #? Option:
+    #? Options:
     #?   <FILE>           Path to the function utility.
     #?
     #? Output:
@@ -1649,7 +1651,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_get_init_decorators <FILE>
     #?
-    #? Option:
+    #? Options:
     #?   <FILE>           Path to the init file.
     #?
     function __xsh_get_init_decorators () {
@@ -1668,7 +1670,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_get_decorators <FILE>
     #?
-    #? Option:
+    #? Options:
     #?   <FILE>           File path.
     #?
     function __xsh_get_decorators () {
@@ -1684,7 +1686,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_apply_func_decorator <NAME> <FUNC> [OPTIONS ...]
     #?
-    #? Option:
+    #? Options:
     #?   <NAME>           Decorator name.
     #?
     #?   <FUNC>           Function code.
@@ -1712,7 +1714,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_func_decorator_xsh <FUNC> <OPTIONS ...>
     #?
-    #? Option:
+    #? Options:
     #?   <FUNC>           Function code.
     #?
     #?   <OPTIONS>        xsh command/builtin and its options.
@@ -1739,7 +1741,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_func_decorator_subshell <FUNC>
     #?
-    #? Option:
+    #? Options:
     #?   <FUNC>           Function code.
     #?
     #? Output:
@@ -1761,7 +1763,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_func_decorator_init_static <FUNC> <INIT_FILE>
     #?
-    #? Option:
+    #? Options:
     #?   <FUNC>           Function code.
     #?
     #?   <INIT_FILE>      Path to the init file.
@@ -1787,7 +1789,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_func_decorator_init_runtime <FUNC> <INIT_FILE>
     #?
-    #? Option:
+    #? Options:
     #?   <FUNC>           Function code.
     #?
     #?   <INIT_FILE>      Path to the init file.
@@ -1828,7 +1830,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_unimports <LPUR> [...]
     #?
-    #? Option:
+    #? Options:
     #?   <LPUR> [...]     See the section of Convention.
     #?
     function __xsh_unimports () {
@@ -1929,7 +1931,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_is_debug <LPUE>
     #?
-    #? Option:
+    #? Options:
     #?   <LPUE>          The debug mode is tested against the LPUE.
     #?
     #? Return:
@@ -1970,7 +1972,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_is_dev [INPUT]
     #?
-    #? Option:
+    #? Options:
     #?   [INPUT]          The dev mode is tested against the INPUT.
     #?                    If the INPUT is not present, and XSH_DEV=1, it returns 0.
     #? Return:
@@ -2023,7 +2025,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_calls <LPUE> [...]
     #?
-    #? Option:
+    #? Options:
     #?   <LPUE> [...]     LPUE. See the section of Convention.
     #?
     function __xsh_calls () {
@@ -2073,7 +2075,7 @@ function xsh () {
     #? Usage:
     #?   __xsh_exec [-i] [-u] <LPUE>
     #?
-    #? Option:
+    #? Options:
     #?   [-i]             Import the util before the execution no matter if it's available.
     #?   [-u]             Unimport the util after the execution.
     #?

@@ -8,7 +8,7 @@
 #?   install.sh [-u]
 #?   install.sh [-h]
 #?
-#? Option:
+#? Options:
 #?   [-f]
 #?   Force to uninstall xsh before to install it.
 #?
