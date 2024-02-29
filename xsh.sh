@@ -1,3 +1,6 @@
+# shellcheck disable=SC2148
+# shellcheck disable=SC2317
+
 #? Description:
 #?   xsh is an extension of Bash. It works as a Bash library framework.
 #?
@@ -1423,7 +1426,7 @@ function xsh () {
         declare dir=${1:?} scope
 
         # remove XSH_LIB_HOME path from beginning
-        scope=${dir#${XSH_LIB_HOME}}
+        scope=${dir#"${XSH_LIB_HOME}"}
         # remove the leading `/`
         scope=${scope#/}
         # remove the tailing `/`
@@ -1595,6 +1598,7 @@ function xsh () {
         declare path=${1:?}
 
         # source the function
+        # shellcheck source=/dev/null
         source /dev/stdin <<< "$(__xsh_make_function "${path}")"
     }
 
@@ -1904,6 +1908,7 @@ function xsh () {
 
         util=$(__xsh_get_util_by_path "${path}")
         lpuc=$(__xsh_get_lpuc_by_path "${path}")
+        # shellcheck source=/dev/null
         source /dev/stdin <<< "$(sed -n "s/^function ${util} ().*/unset -f ${lpuc}/p" "${path}")"
     }
 
@@ -2308,7 +2313,7 @@ function xsh () {
             return 255
         fi
 
-        type=${path#${XSH_LIB_HOME}/*/}  # strip path from beginning
+        type=${path#"${XSH_LIB_HOME}"/*/}  # strip path from beginning
         echo "${type%%/*}"  # strip path from end
     }
 
@@ -2347,9 +2352,9 @@ function xsh () {
     function __xsh_get_lpue_by_path () {
         declare path=${1:?} lib pue
 
-        lib=${path#${XSH_LIB_HOME}/}  # strip path from beginning
+        lib=${path#"${XSH_LIB_HOME}"/}  # strip path from beginning
         lib=${lib%%/*}  # remove anything after first / (include the /)
-        pue=${path#${XSH_LIB_HOME}/*/*/}  # strip path from beginning
+        pue=${path#"${XSH_LIB_HOME}"/*/*/}  # strip path from beginning
         pue=${pue%.sh}  # remove file extension
         echo "${lib}/${pue}"
     }
