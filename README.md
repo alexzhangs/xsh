@@ -483,6 +483,109 @@ Using the GitHub template repository [xsh-lib/template](https://github.com/xsh-l
 
 
 
+#### 5.1.6. xsh library INIT files
+
+xsh library INIT files are used to initialize the library environment.
+
+The INIT file is a script file named `__init__.sh` and placed at any level under the library `functions` directory.
+
+The INIT file is sourced while importing any function utility, right before the function utility was sourced.
+
+The source of the INIT file won't happen again on the subsequence calls of the function utility until it is imported again, except a `runtime` decorator is used on the INIT file.
+
+
+
+#### 5.1.7. xsh library decorators
+
+Decorators are used to add metadata to the functions, and init files in xsh libraries.
+It should start with `@` and be placed at the comment block of the function, or INIT file, right before the function, or INIT file definition.
+
+
+
+##### 5.1.7.1. Decorators for functions
+
+The decorators are used to add metadata to the functions in xsh libraries.
+
+
+
+###### 5.1.7.1.1. Decorator `xsh`
+
+The `xsh` decorator is used to call the xsh framework functions.
+
+
+
+###### 5.1.7.1.2. Decorator `subshell`
+
+The `subshell` decorator is used to create a subshell to isolate the environment of the function from the caller's environment.
+
+
+
+##### 5.1.7.2. Decorators for INIT files
+
+The decorators are used to add metadata to the INIT files in xsh libraries.
+
+
+###### 5.1.7.2.1. Decorator `static`
+
+The `static` decorator is used to make the INIT file to be sourced only once on the first call of the function utility, and won't be sourced again on the subsequence calls of the function utility.
+
+This is default behavior if no decorator is used on the INIT file.
+
+
+
+###### 5.1.7.2.2. Decorator `runtime`
+
+The `runtime` decorator is used to make the INIT file to be sourced on every call of the function utility, even it is already sourced before.
+
+
+
+##### 5.1.7.3. Examples of using decorators in xsh libraries
+
+1. Clean up on function return
+
+```bash
+#? @xsh imports /trap/return
+#? @subshell
+#?
+function foo () {
+    x-trap-return -f "${FUNCNAME[0]}" "echo 'clean up on this function returns'"
+    echo "foo"
+}
+```
+
+The equvalent code:
+```bash
+function foo () {
+    (
+    function __foo__ () {
+        xsh imports /trap/return
+        x-trap-return -f "${FUNCNAME[0]}" "echo 'clean up on this function returns'"
+        echo "foo"
+    }
+    __foo__ "$@"
+    )
+}
+```
+
+see details by `xsh help /trap/return`.
+
+2. Clean up on function return or any error occurs
+
+```bash
+#? @xsh imports /trap/return
+#? @xsh /trap/err -rE
+#? @subshell
+#?
+function foo () {
+    x-trap-return -f "${FUNCNAME[0]}" "echo 'clean up on this function returns or any error occurs'"
+    echo "foo"
+}
+```
+
+see details by `xsh help /trap/err`.
+
+
+
 ### 5.2. Debugging (Debug Mode)
 
 With the debug mode enabled, the shell options: `-vx` is set for the debugging utilities. The debug mode is available only for the commands started with `xsh`.
@@ -511,7 +614,7 @@ It provides a consistent way to debug functions and scripts without having to ma
 
 
 
-### 5.3 Development at Local (Dev Mode)
+### 5.3. Development at Local (Dev Mode)
 
 The dev mode is for developers to develop xsh libraries.
 With the dev mode enabled, the utilities from the development library will be used rather than those from the normal library.
@@ -560,7 +663,7 @@ The dev mode applies to the following commands and internal functions:
 
 
 
-### 5.3. Development of xsh
+### 5.4. Development of xsh
 
 * IDE: [PyCharm](https://www.jetbrains.com/pycharm/) & [Aquamacs](http://aquamacs.org)
 * Code static analysis: [ShellCheck](https://www.shellcheck.net)
