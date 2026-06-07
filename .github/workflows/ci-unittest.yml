@@ -74,7 +74,7 @@ jobs:
         # start test with coverage
         # run all specfiles at once otherwise the later coverage will override the former
         # the order of the specfiles matters
-        shellspec --kcov -s /bin/bash spec/xsh_spec.sh spec/installer_spec.sh spec/xsh_coverage_spec.sh
+        shellspec --kcov -s /bin/bash spec/xsh_unit_spec.sh spec/xsh_func_spec.sh spec/install_spec.sh
 
     - name: Upload coverage report
       uses: codecov/codecov-action@v5

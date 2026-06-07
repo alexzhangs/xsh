@@ -16,10 +16,6 @@ jobs:
           - os: macos-latest
             bash_path: brew
             label: bash-5.x-macos
-          - os: ubuntu-latest
-            bash_path: /bin/bash
-            label: bash-5.x-linux
-
     steps:
     - uses: actions/checkout@v5
       with:
@@ -51,4 +47,4 @@ jobs:
     - name: Run tests
       run: |
         source ~/.xshrc
-        shellspec -s "$BASH_PATH" spec/xsh_spec.sh spec/installer_spec.sh spec/xsh_coverage_spec.sh
+        shellspec -s "$BASH_PATH" spec/xsh_unit_spec.sh spec/xsh_func_spec.sh spec/install_spec.sh
