@@ -13,5 +13,5 @@ Describe how you tested this change.
 
 ## Checklist
 - [ ] `shellcheck` passes on modified `.sh` files
-- [ ] `shellspec` tests pass: `shellspec -s /bin/bash spec/xsh_spec.sh`
+- [ ] `shellspec` tests pass: `shellspec -s /bin/bash spec/xsh_unit_spec.sh spec/xsh_func_spec.sh spec/install_spec.sh`
 - [ ] Documentation updated if behavior changed

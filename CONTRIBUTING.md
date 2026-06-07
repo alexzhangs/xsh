@@ -4,7 +4,7 @@ Thank you for your interest in contributing to xsh!
 
 ## Prerequisites
 
-- **bash 4+** — xsh requires associative arrays and other bash 4 features
+- **bash 3.2+** — xsh targets the bash 3.2 shipped with macOS; no bash 4+ features are used
 - **git** — for cloning and version management
 - **[shellspec](https://github.com/shellspec/shellspec)** — test framework used for all specs
 - **[shellcheck](https://github.com/koalaman/shellcheck)** — static analysis; all code must pass
@@ -12,7 +12,7 @@ Thank you for your interest in contributing to xsh!
 Install shellspec:
 
 ```bash
-curl -fsSL https://git.io/shellspec | sh
+curl -fsSL https://raw.githubusercontent.com/shellspec/shellspec/master/install.sh | sh -s -- -y
 ```
 
 Install shellcheck (macOS):
@@ -48,20 +48,20 @@ brew install shellcheck
 ## Running tests
 
 ```bash
-shellspec spec/xsh_spec.sh spec/installer_spec.sh
+shellspec -s /bin/bash spec/xsh_unit_spec.sh spec/xsh_func_spec.sh spec/install_spec.sh
 ```
 
 Run with coverage (requires [kcov](https://github.com/SimonKagstrom/kcov)):
 
 ```bash
-shellspec --kcov spec/xsh_spec.sh spec/installer_spec.sh
+shellspec --kcov -s /bin/bash spec/xsh_unit_spec.sh spec/xsh_func_spec.sh spec/install_spec.sh
 ```
 
 All existing tests must pass before a PR can be merged.
 
 ## Code style
 
-- **ShellCheck compliant** — run `shellcheck xsh.sh install.sh` and fix all warnings before submitting.
+- **ShellCheck compliant** — run `shellcheck xsh.sh install.sh boot` and fix all warnings before submitting.
 - **Function documentation** uses the `#?` doc format consistent with the existing functions in `xsh.sh`:
 
   ```bash
@@ -117,8 +117,8 @@ refactor: reduce debug output in __xsh_lib_load
 
 1. Fork the repository and create a branch from `develop`.
 2. Make your changes, following the code style and commit conventions above.
-3. Ensure all tests pass: `shellspec spec/xsh_spec.sh spec/installer_spec.sh`
-4. Ensure shellcheck is clean: `shellcheck xsh.sh install.sh`
+3. Ensure all tests pass: `shellspec -s /bin/bash spec/xsh_unit_spec.sh spec/xsh_func_spec.sh spec/install_spec.sh`
+4. Ensure shellcheck is clean: `shellcheck xsh.sh install.sh boot`
 5. Open a pull request against the `develop` branch (not `main`).
 6. Fill out the pull request template completely.
 7. A maintainer will review and merge or request changes.
