@@ -5,92 +5,192 @@
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
 
-                <!-- Title -->
-                <mxCell id="title" value="xsh — Environment Variable Reference" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;" vertex="1" parent="1">
-                    <mxGeometry x="235" y="22" width="500" height="36" as="geometry"/>
+                <!-- ═══════════ TITLE ═══════════ -->
+                <mxCell id="title" value="Bash Variable Taxonomy"
+                  style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=20;fontStyle=1;"
+                  vertex="1" parent="1">
+                  <mxGeometry x="235" y="12" width="700" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="subtitle" value="Three orthogonal dimensions:  declaration type  ·  export attribute  ·  variable type"
+                  style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=2;"
+                  vertex="1" parent="1">
+                  <mxGeometry x="235" y="42" width="700" height="18" as="geometry"/>
                 </mxCell>
 
-                <!-- ═══════════════════════════════════════════════════════
-                     LEFT PANEL: Shell Session Environment
-                ════════════════════════════════════════════════════════ -->
-                <mxCell id="shell_env" value="Shell Session Environment" style="swimlane;fontStyle=1;align=center;startSize=36;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;arcSize=3;fontSize=14;fontColor=#23445D;" vertex="1" parent="1">
-                    <mxGeometry x="50" y="76" width="440" height="474" as="geometry"/>
+                <!-- ═══════════ OUTER BACKGROUND ═══════════ -->
+                <mxCell id="bg" value=""
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f8f8;strokeColor=#bbbbbb;strokeWidth=2;arcSize=2;"
+                  vertex="1" parent="1">
+                  <mxGeometry x="28" y="66" width="1113" height="572" as="geometry"/>
                 </mxCell>
 
-                <!-- Section: .xshrc defines -->
-                <mxCell id="hdr_xshrc" value="Defined in ~/.xshrc  (sourced at login)" style="text;html=1;strokeColor=none;fillColor=#c9dff5;align=left;verticalAlign=middle;spacingLeft=8;rounded=1;fontSize=11;fontStyle=2;fontColor=#23445D;" vertex="1" parent="shell_env">
-                    <mxGeometry x="14" y="44" width="412" height="26" as="geometry"/>
+                <!-- ═══════════ COLUMN HEADERS ═══════════ -->
+                <mxCell id="ch_decl" value="&lt;b&gt;Declared&lt;/b&gt;   &lt;font style=&apos;font-size:10px;&apos;&gt;( declare / typeset / local )&lt;/font&gt;"
+                  style="text;html=1;strokeColor=#82b366;fillColor=#d5e8d4;align=center;verticalAlign=middle;rounded=1;fontSize=12;fontColor=#1A3D1A;"
+                  vertex="1" parent="1">
+                  <mxGeometry x="148" y="72" width="484" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="ch_undecl" value="&lt;b&gt;Undeclared&lt;/b&gt;   &lt;font style=&apos;font-size:10px;&apos;&gt;( simple assignment, no declare )&lt;/font&gt;"
+                  style="text;html=1;strokeColor=#82b366;fillColor=#d5e8d4;align=center;verticalAlign=middle;rounded=1;fontSize=12;fontColor=#1A3D1A;"
+                  vertex="1" parent="1">
+                  <mxGeometry x="640" y="72" width="484" height="26" as="geometry"/>
                 </mxCell>
 
-                <!-- XSH_HOME -->
-                <mxCell id="xsh_home" value="&lt;b&gt;XSH_HOME&lt;/b&gt;&lt;br&gt;Default: &lt;tt&gt;~/.xsh&lt;/tt&gt;&lt;br&gt;&lt;font color=&apos;#006600&apos;&gt;&lt;tt&gt;export XSH_HOME=${XSH_HOME:-~/.xsh}&lt;/tt&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="shell_env">
-                    <mxGeometry x="14" y="80" width="412" height="60" as="geometry"/>
+                <!-- ═══════════ ROW HEADERS ═══════════ -->
+                <mxCell id="rh_local" value="Shell-local&lt;br&gt;&lt;font style=&apos;font-size:9px&apos;&gt;(not exported)&lt;/font&gt;"
+                  style="text;html=1;strokeColor=#aaaaaa;fillColor=#f0f0f0;align=center;verticalAlign=middle;rounded=1;fontSize=11;fontStyle=1;fontColor=#333333;"
+                  vertex="1" parent="1">
+                  <mxGeometry x="30" y="102" width="113" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="rh_env" value="Environment&lt;br&gt;Variables&lt;br&gt;&lt;font style=&apos;font-size:9px&apos;&gt;(exported)&lt;/font&gt;"
+                  style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=center;verticalAlign=middle;rounded=1;fontSize=11;fontStyle=1;fontColor=#23445D;"
+                  vertex="1" parent="1">
+                  <mxGeometry x="30" y="374" width="113" height="240" as="geometry"/>
                 </mxCell>
 
-                <!-- XSH_DEV_HOME -->
-                <mxCell id="xsh_dev_home" value="&lt;b&gt;XSH_DEV_HOME&lt;/b&gt;&lt;br&gt;Default: &lt;tt&gt;$XSH_HOME/lib-dev&lt;/tt&gt;&lt;br&gt;&lt;font color=&apos;#006600&apos;&gt;&lt;tt&gt;export XSH_DEV_HOME=${XSH_DEV_HOME:-...}&lt;/tt&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="shell_env">
-                    <mxGeometry x="14" y="152" width="412" height="60" as="geometry"/>
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- CELL 1: Declared + Shell-local                    -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <mxCell id="c1" value="Type attributes available — shell-local scope"
+                  style="swimlane;fontStyle=2;align=center;startSize=22;fillColor=#f0f8ea;strokeColor=#82b366;rounded=1;arcSize=2;fontSize=10;fontColor=#1A3D1A;"
+                  vertex="1" parent="1">
+                  <mxGeometry x="148" y="102" width="484" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1i1" value="&lt;tt&gt;declare foo=bar&lt;/tt&gt;     string scalar (default, no flag)"
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;"
+                  vertex="1" parent="c1">
+                  <mxGeometry x="8" y="27" width="468" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1i2" value="&lt;tt&gt;declare -a arr=(1 2 3)&lt;/tt&gt;     indexed array"
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;"
+                  vertex="1" parent="c1">
+                  <mxGeometry x="8" y="63" width="468" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1i3" value="&lt;tt&gt;declare -A map=([key]=val)&lt;/tt&gt;     associative array   &lt;font color=&apos;#888888&apos;&gt;(bash 4+)&lt;/font&gt;"
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;"
+                  vertex="1" parent="c1">
+                  <mxGeometry x="8" y="99" width="468" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1i4" value="&lt;tt&gt;declare -i n=42&lt;/tt&gt;     integer  &lt;font color=&apos;#555555&apos;&gt;(arithmetic auto-applied on assignment)&lt;/font&gt;"
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;"
+                  vertex="1" parent="c1">
+                  <mxGeometry x="8" y="135" width="468" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1i5" value="&lt;tt&gt;declare -r CONST=x&lt;/tt&gt;     read-only  &lt;font color=&apos;#555555&apos;&gt;(cannot be reassigned or unset)&lt;/font&gt;"
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;"
+                  vertex="1" parent="c1">
+                  <mxGeometry x="8" y="171" width="468" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1note" value="Flags combine:  &lt;tt&gt;declare -air&lt;/tt&gt;  =  integer + indexed array + read-only"
+                  style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;fontStyle=2;fontColor=#666666;spacingLeft=8;"
+                  vertex="1" parent="c1">
+                  <mxGeometry x="8" y="208" width="468" height="18" as="geometry"/>
                 </mxCell>
 
-                <!-- Section: user-controlled -->
-                <mxCell id="hdr_user" value="User-controlled  (optional, set before sourcing ~/.xshrc)" style="text;html=1;strokeColor=none;fillColor=#ffddc0;align=left;verticalAlign=middle;spacingLeft=8;rounded=1;fontSize=11;fontStyle=2;fontColor=#7A3600;" vertex="1" parent="shell_env">
-                    <mxGeometry x="14" y="230" width="412" height="26" as="geometry"/>
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- CELL 2: Undeclared + Shell-local                  -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <mxCell id="c2" value="No attributes — bash infers type from usage"
+                  style="swimlane;fontStyle=2;align=center;startSize=22;fillColor=#f0f8ea;strokeColor=#82b366;rounded=1;arcSize=2;fontSize=10;fontColor=#1A3D1A;"
+                  vertex="1" parent="1">
+                  <mxGeometry x="640" y="102" width="484" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2i1" value="&lt;tt&gt;foo=bar&lt;/tt&gt;     string scalar  &lt;font color=&apos;#555555&apos;&gt;(always treated as a string)&lt;/font&gt;"
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;"
+                  vertex="1" parent="c2">
+                  <mxGeometry x="8" y="27" width="468" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2i2" value="&lt;tt&gt;arr=(a b c)&lt;/tt&gt;     bash auto-creates an indexed array"
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;"
+                  vertex="1" parent="c2">
+                  <mxGeometry x="8" y="63" width="468" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2i3" value="&lt;tt&gt;n=42&lt;/tt&gt;     still a string  &lt;font color=&apos;#888888&apos;&gt;(use &lt;tt&gt;declare -i&lt;/tt&gt; for integer attribute)&lt;/font&gt;"
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;"
+                  vertex="1" parent="c2">
+                  <mxGeometry x="8" y="99" width="468" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2note" value="No type-checking, no scope control, no read-only protection. Fine for simple scripts; use declare for reliability."
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffde7;strokeColor=#d6b656;fontSize=9;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;fontStyle=2;"
+                  vertex="1" parent="c2">
+                  <mxGeometry x="8" y="144" width="468" height="42" as="geometry"/>
                 </mxCell>
 
-                <!-- XSH_DEBUG -->
-                <mxCell id="xsh_debug" value="&lt;b&gt;XSH_DEBUG&lt;/b&gt;&lt;br&gt;Any non-empty value enables verbose debug output" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="shell_env">
-                    <mxGeometry x="14" y="266" width="412" height="52" as="geometry"/>
+                <!-- ═══════════ EXPORT BOUNDARY LABEL ═══════════ -->
+                <mxCell id="export_band" value="export  /  declare -x  —  marks the variable for inheritance by child processes"
+                  style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#23445D;"
+                  vertex="1" parent="1">
+                  <mxGeometry x="148" y="347" width="976" height="22" as="geometry"/>
                 </mxCell>
 
-                <!-- XSH_DEV -->
-                <mxCell id="xsh_dev" value="&lt;b&gt;XSH_DEV&lt;/b&gt;&lt;br&gt;Any non-empty value loads libraries from &lt;tt&gt;XSH_DEV_HOME&lt;/tt&gt; instead of &lt;tt&gt;XSH_LIB_HOME&lt;/tt&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="shell_env">
-                    <mxGeometry x="14" y="328" width="412" height="52" as="geometry"/>
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- CELL 3: Declared + Exported (Environment Variable) -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <mxCell id="c3" value="Declare with export attribute"
+                  style="swimlane;fontStyle=2;align=center;startSize=22;fillColor=#e6f0fc;strokeColor=#6c8ebf;rounded=1;arcSize=2;fontSize=10;fontColor=#23445D;"
+                  vertex="1" parent="1">
+                  <mxGeometry x="148" y="374" width="484" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3i1" value="&lt;tt&gt;declare -x foo=bar&lt;/tt&gt;     declare and export in one step"
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;"
+                  vertex="1" parent="c3">
+                  <mxGeometry x="8" y="27" width="468" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3i2" value="&lt;tt&gt;declare foo=bar; export foo&lt;/tt&gt;     declare first, add export flag after"
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;"
+                  vertex="1" parent="c3">
+                  <mxGeometry x="8" y="63" width="468" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3i3" value="&lt;tt&gt;declare -ix n=42&lt;/tt&gt;     exported integer  &lt;font color=&apos;#555555&apos;&gt;(flags compose)&lt;/font&gt;"
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;"
+                  vertex="1" parent="c3">
+                  <mxGeometry x="8" y="99" width="468" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3warn" value="⚠  &lt;tt&gt;declare -ax arr&lt;/tt&gt;  —  export flag is set, but &lt;b&gt;arrays cannot cross exec()&lt;/b&gt;. Child processes do not receive them."
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3cd;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;"
+                  vertex="1" parent="c3">
+                  <mxGeometry x="8" y="144" width="468" height="42" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3note" value="Prefer this form when you need both type attributes AND export."
+                  style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;fontStyle=2;fontColor=#666666;spacingLeft=8;"
+                  vertex="1" parent="c3">
+                  <mxGeometry x="8" y="194" width="468" height="18" as="geometry"/>
                 </mxCell>
 
-                <!-- Scope note (bottom of left panel) -->
-                <mxCell id="note_global" value="All four variables are exported — visible to subshells and child processes." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=2;fontColor=#6c8ebf;" vertex="1" parent="shell_env">
-                    <mxGeometry x="0" y="410" width="440" height="24" as="geometry"/>
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- CELL 4: Undeclared + Exported (Environment Variable) -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <mxCell id="c4" value="Export without declare  (most common pattern in shell scripts)"
+                  style="swimlane;fontStyle=2;align=center;startSize=22;fillColor=#e6f0fc;strokeColor=#6c8ebf;rounded=1;arcSize=2;fontSize=10;fontColor=#23445D;"
+                  vertex="1" parent="1">
+                  <mxGeometry x="640" y="374" width="484" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="c4i1" value="&lt;tt&gt;export foo=bar&lt;/tt&gt;     create and export as string scalar"
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;"
+                  vertex="1" parent="c4">
+                  <mxGeometry x="8" y="27" width="468" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c4i2" value="&lt;tt&gt;FOO=bar; export FOO&lt;/tt&gt;     assign first, then mark for export"
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;"
+                  vertex="1" parent="c4">
+                  <mxGeometry x="8" y="63" width="468" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c4i3" value="&lt;tt&gt;env&lt;/tt&gt;  /  &lt;tt&gt;printenv&lt;/tt&gt;  /  &lt;tt&gt;export -p&lt;/tt&gt;     list all environment variables"
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;"
+                  vertex="1" parent="c4">
+                  <mxGeometry x="8" y="99" width="468" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c4note" value="Passed to every child process via execve(2) in the process environ[]. This is the POSIX definition of 'environment variable' — the export attribute, not the declare keyword, is what qualifies it."
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;fontStyle=2;verticalAlign=top;spacingTop=5;"
+                  vertex="1" parent="c4">
+                  <mxGeometry x="8" y="144" width="468" height="54" as="geometry"/>
                 </mxCell>
 
-                <!-- ═══════════════════════════════════════════════════════
-                     ARROW
-                ════════════════════════════════════════════════════════ -->
-                <mxCell id="arrow_call" value="xsh() called" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=11;fontStyle=2;fontColor=#23445D;strokeColor=#23445D;strokeWidth=2;" edge="1" source="shell_env" target="xsh_scope" parent="1">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-
-                <!-- ═══════════════════════════════════════════════════════
-                     RIGHT PANEL: xsh() Function Scope
-                ════════════════════════════════════════════════════════ -->
-                <mxCell id="xsh_scope" value="xsh() Function Scope" style="swimlane;fontStyle=1;align=center;startSize=36;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;arcSize=3;fontSize=14;fontColor=#1A3D1A;" vertex="1" parent="1">
-                    <mxGeometry x="590" y="156" width="440" height="314" as="geometry"/>
-                </mxCell>
-
-                <!-- Note: declare inside xsh() -->
-                <mxCell id="note_local" value="Declared inside xsh() — not exported, not visible outside the function" style="text;html=1;strokeColor=none;fillColor=#c7e6c4;align=left;verticalAlign=middle;spacingLeft=8;rounded=1;fontSize=11;fontStyle=2;fontColor=#1A3D1A;" vertex="1" parent="xsh_scope">
-                    <mxGeometry x="14" y="44" width="412" height="26" as="geometry"/>
-                </mxCell>
-
-                <!-- XSH_LIB_HOME -->
-                <mxCell id="xsh_lib_home" value="&lt;b&gt;XSH_LIB_HOME&lt;/b&gt;&lt;br&gt;Default: &lt;tt&gt;$XSH_HOME/lib&lt;/tt&gt;&lt;br&gt;&lt;font color=&apos;#005500&apos;&gt;&lt;tt&gt;declare XSH_LIB_HOME=${XSH_LIB_HOME:-...}&lt;/tt&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f5e4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="xsh_scope">
-                    <mxGeometry x="14" y="80" width="412" height="60" as="geometry"/>
-                </mxCell>
-
-                <!-- XSH_REPO_HOME -->
-                <mxCell id="xsh_repo_home" value="&lt;b&gt;XSH_REPO_HOME&lt;/b&gt;&lt;br&gt;Default: &lt;tt&gt;$XSH_HOME/repo&lt;/tt&gt;&lt;br&gt;&lt;font color=&apos;#005500&apos;&gt;&lt;tt&gt;declare XSH_REPO_HOME=${XSH_REPO_HOME:-...}&lt;/tt&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f5e4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="xsh_scope">
-                    <mxGeometry x="14" y="152" width="412" height="60" as="geometry"/>
-                </mxCell>
-
-                <!-- XSH_GIT_SERVER -->
-                <mxCell id="xsh_git_server" value="&lt;b&gt;XSH_GIT_SERVER&lt;/b&gt;&lt;br&gt;Default: &lt;tt&gt;https://github.com&lt;/tt&gt;&lt;br&gt;&lt;font color=&apos;#005500&apos;&gt;&lt;tt&gt;declare XSH_GIT_SERVER=${XSH_GIT_SERVER:-...}&lt;/tt&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f5e4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="xsh_scope">
-                    <mxGeometry x="14" y="224" width="412" height="60" as="geometry"/>
-                </mxCell>
-
-                <!-- ═══════════════════════════════════════════════════════
-                     LEGEND
-                ════════════════════════════════════════════════════════ -->
-                <mxCell id="legend" value="All variables accept user override via &lt;tt&gt;${VAR:-default}&lt;/tt&gt; — pre-set the variable in the shell before calling xsh to override the default." style="text;html=1;strokeColor=#cccccc;fillColor=#f9f9f9;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=10;fontStyle=2;" vertex="1" parent="1">
-                    <mxGeometry x="235" y="550" width="700" height="28" as="geometry"/>
+                <!-- ═══════════ FOOTER DEFINITION ═══════════ -->
+                <mxCell id="footer" value="★  Environment Variable: any shell variable with the export attribute — it is passed to child processes via execve(2).   The declare keyword is orthogonal: it adds type attributes (array, integer, readonly…) within the current shell but does not set or clear the export attribute."
+                  style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#bbbbbb;fontSize=10;align=left;spacingLeft=12;verticalAlign=middle;fontStyle=2;"
+                  vertex="1" parent="1">
+                  <mxGeometry x="28" y="648" width="1113" height="48" as="geometry"/>
                 </mxCell>
 
             </root>
