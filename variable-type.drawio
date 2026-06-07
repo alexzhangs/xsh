@@ -1,0 +1,99 @@
+<mxfile host="65bd71144e">
+    <diagram id="XEUa2ijk08846JVHwthV" name="Page-1">
+        <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+
+                <!-- Title -->
+                <mxCell id="title" value="xsh — Environment Variable Reference" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+                    <mxGeometry x="235" y="22" width="500" height="36" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════
+                     LEFT PANEL: Shell Session Environment
+                ════════════════════════════════════════════════════════ -->
+                <mxCell id="shell_env" value="Shell Session Environment" style="swimlane;fontStyle=1;align=center;startSize=36;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;arcSize=3;fontSize=14;fontColor=#23445D;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="76" width="440" height="474" as="geometry"/>
+                </mxCell>
+
+                <!-- Section: .xshrc defines -->
+                <mxCell id="hdr_xshrc" value="Defined in ~/.xshrc  (sourced at login)" style="text;html=1;strokeColor=none;fillColor=#c9dff5;align=left;verticalAlign=middle;spacingLeft=8;rounded=1;fontSize=11;fontStyle=2;fontColor=#23445D;" vertex="1" parent="shell_env">
+                    <mxGeometry x="14" y="44" width="412" height="26" as="geometry"/>
+                </mxCell>
+
+                <!-- XSH_HOME -->
+                <mxCell id="xsh_home" value="&lt;b&gt;XSH_HOME&lt;/b&gt;&lt;br&gt;Default: &lt;tt&gt;~/.xsh&lt;/tt&gt;&lt;br&gt;&lt;font color=&apos;#006600&apos;&gt;&lt;tt&gt;export XSH_HOME=${XSH_HOME:-~/.xsh}&lt;/tt&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="shell_env">
+                    <mxGeometry x="14" y="80" width="412" height="60" as="geometry"/>
+                </mxCell>
+
+                <!-- XSH_DEV_HOME -->
+                <mxCell id="xsh_dev_home" value="&lt;b&gt;XSH_DEV_HOME&lt;/b&gt;&lt;br&gt;Default: &lt;tt&gt;$XSH_HOME/lib-dev&lt;/tt&gt;&lt;br&gt;&lt;font color=&apos;#006600&apos;&gt;&lt;tt&gt;export XSH_DEV_HOME=${XSH_DEV_HOME:-...}&lt;/tt&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="shell_env">
+                    <mxGeometry x="14" y="152" width="412" height="60" as="geometry"/>
+                </mxCell>
+
+                <!-- Section: user-controlled -->
+                <mxCell id="hdr_user" value="User-controlled  (optional, set before sourcing ~/.xshrc)" style="text;html=1;strokeColor=none;fillColor=#ffddc0;align=left;verticalAlign=middle;spacingLeft=8;rounded=1;fontSize=11;fontStyle=2;fontColor=#7A3600;" vertex="1" parent="shell_env">
+                    <mxGeometry x="14" y="230" width="412" height="26" as="geometry"/>
+                </mxCell>
+
+                <!-- XSH_DEBUG -->
+                <mxCell id="xsh_debug" value="&lt;b&gt;XSH_DEBUG&lt;/b&gt;&lt;br&gt;Any non-empty value enables verbose debug output" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="shell_env">
+                    <mxGeometry x="14" y="266" width="412" height="52" as="geometry"/>
+                </mxCell>
+
+                <!-- XSH_DEV -->
+                <mxCell id="xsh_dev" value="&lt;b&gt;XSH_DEV&lt;/b&gt;&lt;br&gt;Any non-empty value loads libraries from &lt;tt&gt;XSH_DEV_HOME&lt;/tt&gt; instead of &lt;tt&gt;XSH_LIB_HOME&lt;/tt&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="shell_env">
+                    <mxGeometry x="14" y="328" width="412" height="52" as="geometry"/>
+                </mxCell>
+
+                <!-- Scope note (bottom of left panel) -->
+                <mxCell id="note_global" value="All four variables are exported — visible to subshells and child processes." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=2;fontColor=#6c8ebf;" vertex="1" parent="shell_env">
+                    <mxGeometry x="0" y="410" width="440" height="24" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════
+                     ARROW
+                ════════════════════════════════════════════════════════ -->
+                <mxCell id="arrow_call" value="xsh() called" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=11;fontStyle=2;fontColor=#23445D;strokeColor=#23445D;strokeWidth=2;" edge="1" source="shell_env" target="xsh_scope" parent="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════
+                     RIGHT PANEL: xsh() Function Scope
+                ════════════════════════════════════════════════════════ -->
+                <mxCell id="xsh_scope" value="xsh() Function Scope" style="swimlane;fontStyle=1;align=center;startSize=36;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;arcSize=3;fontSize=14;fontColor=#1A3D1A;" vertex="1" parent="1">
+                    <mxGeometry x="590" y="156" width="440" height="314" as="geometry"/>
+                </mxCell>
+
+                <!-- Note: declare inside xsh() -->
+                <mxCell id="note_local" value="Declared inside xsh() — not exported, not visible outside the function" style="text;html=1;strokeColor=none;fillColor=#c7e6c4;align=left;verticalAlign=middle;spacingLeft=8;rounded=1;fontSize=11;fontStyle=2;fontColor=#1A3D1A;" vertex="1" parent="xsh_scope">
+                    <mxGeometry x="14" y="44" width="412" height="26" as="geometry"/>
+                </mxCell>
+
+                <!-- XSH_LIB_HOME -->
+                <mxCell id="xsh_lib_home" value="&lt;b&gt;XSH_LIB_HOME&lt;/b&gt;&lt;br&gt;Default: &lt;tt&gt;$XSH_HOME/lib&lt;/tt&gt;&lt;br&gt;&lt;font color=&apos;#005500&apos;&gt;&lt;tt&gt;declare XSH_LIB_HOME=${XSH_LIB_HOME:-...}&lt;/tt&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f5e4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="xsh_scope">
+                    <mxGeometry x="14" y="80" width="412" height="60" as="geometry"/>
+                </mxCell>
+
+                <!-- XSH_REPO_HOME -->
+                <mxCell id="xsh_repo_home" value="&lt;b&gt;XSH_REPO_HOME&lt;/b&gt;&lt;br&gt;Default: &lt;tt&gt;$XSH_HOME/repo&lt;/tt&gt;&lt;br&gt;&lt;font color=&apos;#005500&apos;&gt;&lt;tt&gt;declare XSH_REPO_HOME=${XSH_REPO_HOME:-...}&lt;/tt&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f5e4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="xsh_scope">
+                    <mxGeometry x="14" y="152" width="412" height="60" as="geometry"/>
+                </mxCell>
+
+                <!-- XSH_GIT_SERVER -->
+                <mxCell id="xsh_git_server" value="&lt;b&gt;XSH_GIT_SERVER&lt;/b&gt;&lt;br&gt;Default: &lt;tt&gt;https://github.com&lt;/tt&gt;&lt;br&gt;&lt;font color=&apos;#005500&apos;&gt;&lt;tt&gt;declare XSH_GIT_SERVER=${XSH_GIT_SERVER:-...}&lt;/tt&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f5e4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="xsh_scope">
+                    <mxGeometry x="14" y="224" width="412" height="60" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════
+                     LEGEND
+                ════════════════════════════════════════════════════════ -->
+                <mxCell id="legend" value="All variables accept user override via &lt;tt&gt;${VAR:-default}&lt;/tt&gt; — pre-set the variable in the shell before calling xsh to override the default." style="text;html=1;strokeColor=#cccccc;fillColor=#f9f9f9;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+                    <mxGeometry x="235" y="550" width="700" height="28" as="geometry"/>
+                </mxCell>
+
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
