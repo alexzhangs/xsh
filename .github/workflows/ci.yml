@@ -1,0 +1,171 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
+    continue-on-error: ${{ matrix.allow_failure == true }}
+    name: ${{ matrix.label }}
+    # GHA defaults to `sh -e` inside containers and `bash` on hosted runners.
+    # Force bash everywhere so process substitution (< <(...)) in xsh.sh works
+    # uniformly — otherwise the rocky container fails on `source ~/.xshrc`.
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Primary: quality gate — ShellCheck + full test suite + kcov coverage
+          - os: ubuntu-latest
+            container: ''
+            bash_path: /bin/bash
+            label: bash-5.x-linux
+            coverage: true
+
+          # Compatibility: macOS default shell (bash 3.2) — the strictest target
+          - os: macos-latest
+            container: ''
+            bash_path: /bin/bash
+            label: bash-3.2-macos
+            coverage: false
+
+          # Compatibility: macOS Homebrew bash (modern 5.x on macOS)
+          - os: macos-latest
+            container: ''
+            bash_path: brew
+            label: bash-5.x-macos
+            coverage: false
+
+          # Compatibility: bash 4.4 via rockylinux:8 container (no native bash-4 runner exists)
+          - os: ubuntu-latest
+            container: rockylinux:8
+            bash_path: /bin/bash
+            label: bash-4.4-linux
+            coverage: false
+
+    steps:
+    # Install git BEFORE checkout: rocky:8 base image has no git, so
+    # actions/checkout@v5 falls back to a REST-API tarball download with NO
+    # .git directory — which breaks xsh version/versions/upgrade (they all
+    # `cd $XSH_HOME/xsh && git ...`).
+    - name: Pre-install git (rockylinux container)
+      if: matrix.container != ''
+      run: |
+        dnf install -y git
+
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0  # full history needed for `xsh versions` to list all tags
+
+    - name: Set up PATH
+      run: |
+        echo "PATH=${HOME}/.local/bin:${HOME}/kcov/bin:${PATH}" >> $GITHUB_ENV
+
+    # ── Linux-only dependencies ──────────────────────────────────────────────
+    - name: Install dependencies (rockylinux container)
+      if: matrix.container != ''
+      run: |
+        # rocky 8 base image is minimal — install the tools xsh + tests need:
+        #   coreutils (full, --allowerasing): the base image ships
+        #     coreutils-single, which makes /bin/ls a 49-byte shebang wrapper
+        #     (#!/usr/bin/coreutils ...). file --mime-type then reports
+        #     text/plain, breaking `xsh mime-type /bin/ls`. Full coreutils
+        #     restores a real ELF /bin/ls.
+        #   file: required by `xsh mime-type` (production code calls /usr/bin/file)
+        #   findutils/diffutils: shellspec internals + matcher diffs
+        #   procps-ng: ps/pgrep used by shellspec
+        #   gawk: install.sh's docstring extraction (rocky may ship mawk symlink only)
+        dnf install -y --allowerasing coreutils
+        dnf install -y wget curl tar gzip which findutils diffutils procps-ng file gawk sed
+        # Container runs as root; whitelist directory ownership so git proceeds
+        # even if workspace UID differs (CVE-2022-24765 hardening).
+        git config --global --add safe.directory '*'
+
+    - name: Install dependencies (Linux)
+      if: runner.os == 'Linux' && matrix.container == ''
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake binutils-dev libcurl4-openssl-dev libdw-dev libiberty-dev shellcheck
+
+    - name: Install kcov (Linux)
+      if: matrix.coverage && runner.os == 'Linux'
+      run: |
+        wget https://github.com/SimonKagstrom/kcov/archive/refs/tags/v43.tar.gz
+        tar xzf v43.tar.gz
+        (cd kcov-43 && (mkdir -p build && cd build && (cmake -DCMAKE_INSTALL_PREFIX=${HOME}/kcov .. && make && make install)))
+        rm -rf kcov-43
+
+    # ── macOS: resolve BASH_PATH from matrix ────────────────────────────────
+    - name: Install Homebrew bash
+      if: matrix.bash_path == 'brew'
+      run: |
+        brew install bash
+        echo "BASH_PATH=$(brew --prefix)/bin/bash" >> $GITHUB_ENV
+
+    - name: Set bash path
+      if: matrix.bash_path != 'brew'
+      run: |
+        echo "BASH_PATH=${{ matrix.bash_path }}" >> $GITHUB_ENV
+
+    # ── ShellCheck (once, on Linux — skipped in the rockylinux container) ───
+    - name: Run ShellCheck
+      if: runner.os == 'Linux' && matrix.container == ''
+      run: |
+        shellcheck xsh.sh install.sh boot
+
+    # ── ShellSpec ────────────────────────────────────────────────────────────
+    - name: Install shellspec
+      run: |
+        # git.io was shut down (2022); use shellspec's canonical installer URL.
+        curl -fsSL https://raw.githubusercontent.com/shellspec/shellspec/master/install.sh | sh -s -- -y
+
+    - name: Install xsh
+      run: |
+        bash install.sh -s
+
+    - name: Run tests with coverage
+      if: matrix.coverage
+      run: |
+        source ~/.xshrc
+        # Pass all specfiles in ONE shellspec invocation so kcov produces a single
+        # merged coverage report. Splitting into multiple `shellspec --kcov` calls
+        # would overwrite the report on each call (kcov_preprocess clears prior data).
+        shellspec --kcov -s "$BASH_PATH" spec/xsh_func_spec.sh spec/install_spec.sh
+
+    - name: Run tests
+      if: matrix.coverage != true
+      run: |
+        source ~/.xshrc
+        shellspec -s "$BASH_PATH" spec/xsh_func_spec.sh spec/install_spec.sh
+
+    # ── Coverage upload (once, on Linux) ────────────────────────────────────
+    - name: Verify CODECOV_TOKEN is set
+      if: matrix.coverage
+      env:
+        CC_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      run: |
+        if [ -z "$CC_TOKEN" ]; then
+          echo "ERROR: CODECOV_TOKEN secret is not set."
+          echo "Add it at https://github.com/alexzhangs/xsh/settings/secrets/actions"
+          echo "Get the value from https://app.codecov.io/gh/alexzhangs/xsh/settings"
+          exit 1
+        fi
+        echo "CODECOV_TOKEN is set (length: ${#CC_TOKEN})"
+
+    - name: Upload coverage report
+      if: matrix.coverage
+      uses: codecov/codecov-action@v5
+      env:
+        # Bypass codecov CLI's GPG signature check on its own download —
+        # the keyserver lookup fails intermittently and exits 1 even on
+        # successful uploads. Token check above guards against the real
+        # rot risk (missing secret).
+        CC_SKIP_VALIDATION: 'true'
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        # Best-effort upload — token presence is verified in the prior step.
+        # Transient codecov-side issues (GPG, network) shouldn't block CI.
+        fail_ci_if_error: false

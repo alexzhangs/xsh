@@ -2,7 +2,7 @@
 [![GitHub](https://img.shields.io/github/license/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
 [![GitHub last commit](https://img.shields.io/github/last-commit/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/commits/master)
 
-[![ci-unittest](https://github.com/alexzhangs/xsh/actions/workflows/ci-unittest.yml/badge.svg)](https://github.com/alexzhangs/xsh/actions/workflows/ci-unittest.yml)
+[![ci](https://github.com/alexzhangs/xsh/actions/workflows/ci.yml/badge.svg)](https://github.com/alexzhangs/xsh/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/alexzhangs/xsh/branch/master/graph/badge.svg?token=HVTO788DLV)](https://codecov.io/gh/alexzhangs/xsh)
 [![CodeFactor](https://www.codefactor.io/repository/github/alexzhangs/xsh/badge)](https://www.codefactor.io/repository/github/alexzhangs/xsh)
 [![GitHub issues](https://img.shields.io/github/issues/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/issues)
@@ -23,6 +23,38 @@ It is the only way I can write comfortable shellcode quickly for different purpo
 ![xsh usage](/assets/images/xsh-usage.png)
 
 This project is still at version `0.x`, and should be considered immature.
+
+
+
+## Table of Contents
+
+- [1. Overview](#1-overview)
+- [2. Design Philosophy](#2-design-philosophy)
+  - [2.1. What does xsh Framework Do?](#21-what-does-xsh-framework-do)
+  - [2.2. What do xsh Libraries Do?](#22-what-do-xsh-libraries-do)
+  - [2.3. What do xsh Utilities Do?](#23-what-do-xsh-utilities-do)
+- [3. xsh Bootstrap/Installation](#3-xsh-bootstrapinstallation)
+  - [3.1. Requirements](#31-requirements)
+- [4. xsh Usage](#4-xsh-usage)
+  - [4.1. Load xsh Libraries](#41-load-xsh-libraries)
+  - [4.2. Invoke xsh Utilities](#42-invoke-xsh-utilities)
+  - [4.3. Update xsh itself](#43-update-xsh-itself)
+  - [4.4. Get Help](#44-get-help)
+- [5. Development](#5-development)
+  - [5.1. How to Make Your Own xsh Libraries?](#51-how-to-make-your-own-xsh-libraries)
+  - [5.2. Debugging (Debug Mode)](#52-debugging-debug-mode)
+  - [5.3. Development at Local (Dev Mode)](#53-development-at-local-dev-mode)
+  - [5.4. Development of xsh](#54-development-of-xsh)
+- [6. Where to find xsh Libraries](#6-where-to-find-xsh-libraries)
+- [7. Roadmap](#7-roadmap)
+
+
+
+## 1. Overview
+
+xsh is a bash library framework that provides a uniform, structured way to write, organize, and reuse shell code across projects and machines. It loads versioned library repositories from GitHub (or any Git host), namespaces utilities under a `lib/package/util` path convention, and exposes them through a single `xsh` command.
+
+In a narrow sense, xsh (this repo) is just the framework — a single sourced function (`xsh()`). In a broad sense, xsh together with companion library repos such as [`xsh-lib/core`](https://github.com/xsh-lib/core) forms a full bash library ecosystem.
 
 
 
@@ -85,7 +117,7 @@ The xsh framework supports both public and private libraries.
 
 
 
-### 2.3 What do xsh Utilities Do?
+### 2.3. What do xsh Utilities Do?
 
 * Provide the fundamental function
 * Provide help and usage information
@@ -112,6 +144,16 @@ Or bootstrap xsh with a single line:
 ```
 $ curl -s https://raw.githubusercontent.com/alexzhangs/xsh/master/boot | bash && . ~/.xshrc
 ```
+
+> ⚠️ Review the [boot](boot) script before running curl-pipe-bash installs. For a more auditable install, use the `git clone` method above.
+
+
+
+### 3.1. Requirements
+
+* **bash 3.2+** — xsh uses `declare -a` (indexed arrays) and `[[ =~ ]]` (regex matching), both introduced in bash 3.2. macOS ships with bash 3.2 at `/bin/bash` and is fully compatible.
+* **git 2.x+** — used to clone and manage xsh libraries.
+* **curl** — used by the one-liner bootstrap only; not required for the `git clone` install path.
 
 
 
@@ -264,7 +306,7 @@ See the current xsh version:
 ```bash
 $ xsh version
 
-0.1.4
+0.5.3
 ```
 
 List all available xsh versions(tags):
@@ -380,7 +422,7 @@ Supported configurations:
 
 
 
-#### 5.1.2 Sample code
+#### 5.1.2. Sample code
 
 cat `xsh-lib-sample/xsh.lib`:
 
@@ -677,10 +719,12 @@ Most of them are free, or free to OSS projects. Many thanks to whoever contribut
 
 
 
-## 7. TODO
+## 7. Roadmap
 
-* Dependency
+* **Dependency management** — Allow libraries to declare dependencies on other xsh libraries in `xsh.lib`; auto-loaded on `xsh load`.
 
-* Library registration
+* **Library registry** — Central/distributed registry for discovering and searching published xsh libraries, similar to npm or pip.
 
-* Document generation
+* **Document generation** — Parse `#?` inline comments and auto-generate Markdown/HTML documentation for library utilities.
+
+* **Multi-shell support** — Native zsh compatibility; zsh is the default shell on macOS since 10.15 Catalina.

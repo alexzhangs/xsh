@@ -86,7 +86,7 @@ function sed-regex () {
     elif is-compatible-sed-E; then
         sed -E "$@"
     else
-        return 255
+        return 1
     fi
 }
 
@@ -96,7 +96,7 @@ function sed-inplace () {
     elif is-compatible-sed-i-gnu; then
         sed -i "$@"
     else
-        return 255
+        return 1
     fi
 }
 
@@ -110,7 +110,7 @@ function sed-regex-inplace () {
     elif is-compatible-sed-E && is-compatible-sed-i-gnu; then
         sed -E -i "$@"
     else
-        return 255
+        return 1
     fi
 }
 
@@ -128,10 +128,10 @@ function replace-or-append () {
         sed-regex-inplace "s|${old}|${new}|" "${file}"
     elif [[ ${cnt} -gt 1 ]]; then
         printf "ERROR: more than one line matching the old '%s'\n" "${old}" >&2
-        return 255
+        return 1
     else
         printf "ERROR: unknown error" >&2
-        return 255
+        return 1
     fi
 }
 
@@ -181,6 +181,11 @@ function install-xsh () {
 
     printf "updating: %s\n" ~/.bashrc
     update-profile ~/.bashrc
+
+    # install bash completion if available
+    if [[ -d /etc/bash_completion.d ]]; then
+        cp "${SCRIPT_DIR}/completions/xsh.bash" /etc/bash_completion.d/xsh 2>/dev/null || true
+    fi
 }
 
 function main () {
@@ -202,9 +207,13 @@ function main () {
             u)
                 uninstall=1
                 ;;
+            h)
+                usage
+                exit 0
+                ;;
             *)
                 usage
-                exit 255
+                exit 1
                 ;;
         esac
     done
@@ -223,7 +232,7 @@ function main () {
 
     if [[ -e ${XSH_HOME} ]]; then
         printf "ERROR: xsh home directory already exists: %s\n" "${XSH_HOME}" >&2
-        exit 255
+        exit 1
     fi
 
     install-xsh

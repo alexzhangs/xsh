@@ -66,7 +66,7 @@ function ci-before-install () {
         if type -t ~/.local/bin/shellspec >/dev/null; then
             return
         fi
-        curl -fsSL https://git.io/shellspec | sh -s -- -y
+        curl -fsSL https://raw.githubusercontent.com/shellspec/shellspec/master/install.sh | sh -s -- -y
     }
 
     function install-kcov () {
@@ -77,10 +77,10 @@ function ci-before-install () {
         if type -t brew >/dev/null; then
             brew install kcov
         else
-            wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
-            tar xzf master.tar.gz
-            (cd kcov-master && (mkdir -p build && cd build && (cmake -DCMAKE_INSTALL_PREFIX="${HOME}"/kcov .. && make && make install)))
-            rm -rf kcov-master
+            wget https://github.com/SimonKagstrom/kcov/archive/refs/tags/v43.tar.gz
+            tar xzf v43.tar.gz
+            (cd kcov-43 && (mkdir -p build && cd build && (cmake -DCMAKE_INSTALL_PREFIX="${HOME}"/kcov .. && make && make install)))
+            rm -rf kcov-43
         fi
     }
 
@@ -102,7 +102,7 @@ function ci-after-install () {
 function ci-script () {
     # shellcheck source=/dev/null
     . ~/.xshrc
-    ~/.local/bin/shellspec --kcov -s /bin/bash spec/xsh_spec.sh spec/installer_spec.sh
+    ~/.local/bin/shellspec --kcov -s /bin/bash spec/xsh_func_spec.sh spec/install_spec.sh
 }
 
 function call () {

@@ -1,0 +1,33 @@
+#compdef xsh
+
+_xsh() {
+    local state
+
+    _arguments \
+        '1: :->command' \
+        '*: :->args'
+
+    case $state in
+        command)
+            local builtins
+            builtins=(load unload update list imports unimports help debug version versions upgrade calls call exec log lib-manager lib-dev-manager)
+            local lpues
+            lpues=(${(f)"$(xsh list '*' 2>/dev/null | awk '{print $2}')"})
+            _describe 'command' builtins
+            _describe 'utility' lpues
+            ;;
+        args)
+            case $words[2] in
+                help|list)
+                    local lpues
+                    lpues=(${(f)"$(xsh list '*' 2>/dev/null | awk '{print $2}')"})
+                    _describe 'utility' lpues
+                    ;;
+                load)
+                    _message 'repo (e.g. xsh-lib/core)'
+                    ;;
+            esac
+            ;;
+    esac
+}
+_xsh

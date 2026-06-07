@@ -39,13 +39,13 @@ set -e -o pipefail
 
 declare repo='https://github.com/alexzhangs/xsh'
 declare cmds=(bash install.sh -f "$@")
-declare clonedir=/tmp/xsh-${RANDOM}
+declare clonedir
+clonedir=$(mktemp -d)
+trap 'rm -rf "${clonedir}"' EXIT
 
 # never use a shallow clone here
 git clone "${repo}" "${clonedir}"
 cd "${clonedir}"
 "${cmds[@]}"
-
-rm -rf "${clonedir}"
 
 exit
