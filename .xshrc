@@ -1,3 +1,6 @@
+# xsh requires bash; zsh support is planned — skip gracefully for now
+[ -z "${BASH_VERSION:-}" ] && return 2>/dev/null; :
+
 #? Description:
 #?   This file is used by xsh - https://github.com/alexzhangs/xsh
 #?
