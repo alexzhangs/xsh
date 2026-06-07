@@ -51,4 +51,4 @@ jobs:
     - name: Run tests
       run: |
         source ~/.xshrc
-        shellspec -s "$BASH_PATH" spec/xsh_spec.sh spec/installer_spec.sh
+        shellspec -s "$BASH_PATH" spec/xsh_spec.sh spec/installer_spec.sh spec/xsh_coverage_spec.sh
