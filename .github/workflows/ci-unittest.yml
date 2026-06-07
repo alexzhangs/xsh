@@ -28,10 +28,10 @@ jobs:
     - name: Install kcov (Linux)
       if: runner.os == 'Linux'
       run: |
-        wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
-        tar xzf master.tar.gz
-        (cd kcov-master && (mkdir -p build && cd build && (cmake -DCMAKE_INSTALL_PREFIX=${HOME}/kcov .. && make && make install)))
-        rm -rf kcov-master
+        wget https://github.com/SimonKagstrom/kcov/archive/refs/tags/v43.tar.gz
+        tar xzf v43.tar.gz
+        (cd kcov-43 && (mkdir -p build && cd build && (cmake -DCMAKE_INSTALL_PREFIX=${HOME}/kcov .. && make && make install)))
+        rm -rf kcov-43
 
     - name: Install kcov (macOS)
       if: runner.os == 'macOS'
@@ -42,6 +42,20 @@ jobs:
       run: |
         # git.io was shut down (2022); use shellspec's canonical installer URL.
         curl -fsSL https://raw.githubusercontent.com/shellspec/shellspec/master/install.sh | sh -s -- -y
+
+    - name: Install ShellCheck (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get install -y shellcheck
+
+    - name: Install ShellCheck (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install shellcheck
+
+    - name: Run ShellCheck
+      run: |
+        shellcheck xsh.sh install.sh boot
 
     - name: Install xsh
       run: |
