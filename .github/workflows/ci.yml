@@ -40,18 +40,22 @@ jobs:
             coverage: false
 
           # Compatibility: bash 4.4 via rockylinux:8 container (no native bash-4 runner exists)
-          # continue-on-error: container env quirks (missing .git after install.sh cp -a,
-          # absent /usr/bin/file in base image) cause spurious test failures that aren't
-          # bash-4-specific. The entry still surfaces real bash-4 incompatibilities; treat
-          # as informational until the container env is fully sorted.
           - os: ubuntu-latest
             container: rockylinux:8
             bash_path: /bin/bash
             label: bash-4.4-linux
             coverage: false
-            allow_failure: true
 
     steps:
+    # Install git BEFORE checkout: rocky:8 base image has no git, so
+    # actions/checkout@v5 falls back to a REST-API tarball download with NO
+    # .git directory — which breaks xsh version/versions/upgrade (they all
+    # `cd $XSH_HOME/xsh && git ...`).
+    - name: Pre-install git (rockylinux container)
+      if: matrix.container != ''
+      run: |
+        dnf install -y git
+
     - uses: actions/checkout@v5
       with:
         fetch-depth: 0  # full history needed for `xsh versions` to list all tags
@@ -65,12 +69,17 @@ jobs:
       if: matrix.container != ''
       run: |
         # rocky 8 base image is minimal — install the tools xsh + tests need:
+        #   coreutils (full, --allowerasing): the base image ships
+        #     coreutils-single, which makes /bin/ls a 49-byte shebang wrapper
+        #     (#!/usr/bin/coreutils ...). file --mime-type then reports
+        #     text/plain, breaking `xsh mime-type /bin/ls`. Full coreutils
+        #     restores a real ELF /bin/ls.
         #   file: required by `xsh mime-type` (production code calls /usr/bin/file)
         #   findutils/diffutils: shellspec internals + matcher diffs
-        #   git: xsh version/versions/upgrade subcommands
         #   procps-ng: ps/pgrep used by shellspec
         #   gawk: install.sh's docstring extraction (rocky may ship mawk symlink only)
-        dnf install -y wget curl tar gzip which findutils diffutils procps-ng git file gawk sed
+        dnf install -y --allowerasing coreutils
+        dnf install -y wget curl tar gzip which findutils diffutils procps-ng file gawk sed
         # Container runs as root; whitelist directory ownership so git proceeds
         # even if workspace UID differs (CVE-2022-24765 hardening).
         git config --global --add safe.directory '*'
