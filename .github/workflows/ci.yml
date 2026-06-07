@@ -147,4 +147,8 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        fail_ci_if_error: false
+        # Fail loud if the upload is broken (missing/expired token, codecov-side
+        # config change, etc.) — silent failures rotted the badge from working
+        # to "unknown" for a long time. Set CODECOV_TOKEN in repo secrets:
+        # https://github.com/alexzhangs/xsh/settings/secrets/actions
+        fail_ci_if_error: true
