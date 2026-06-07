@@ -1,0 +1,101 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.label }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Primary: quality gate — ShellCheck + full test suite + kcov coverage
+          - os: ubuntu-latest
+            bash_path: /bin/bash
+            label: bash-5.x-linux
+            coverage: true
+
+          # Compatibility: macOS default shell (bash 3.2) — the strictest target
+          - os: macos-latest
+            bash_path: /bin/bash
+            label: bash-3.2-macos
+            coverage: false
+
+          # Compatibility: macOS Homebrew bash (modern 5.x on macOS)
+          - os: macos-latest
+            bash_path: brew
+            label: bash-5.x-macos
+            coverage: false
+
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Set up PATH
+      run: |
+        echo "PATH=${HOME}/.local/bin:${HOME}/kcov/bin:${PATH}" >> $GITHUB_ENV
+
+    # ── Linux-only dependencies ──────────────────────────────────────────────
+    - name: Install dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake binutils-dev libcurl4-openssl-dev libdw-dev libiberty-dev shellcheck
+
+    - name: Install kcov (Linux)
+      if: matrix.coverage
+      run: |
+        wget https://github.com/SimonKagstrom/kcov/archive/refs/tags/v43.tar.gz
+        tar xzf v43.tar.gz
+        (cd kcov-43 && (mkdir -p build && cd build && (cmake -DCMAKE_INSTALL_PREFIX=${HOME}/kcov .. && make && make install)))
+        rm -rf kcov-43
+
+    # ── macOS: resolve BASH_PATH from matrix ────────────────────────────────
+    - name: Install Homebrew bash
+      if: matrix.bash_path == 'brew'
+      run: |
+        brew install bash
+        echo "BASH_PATH=$(brew --prefix)/bin/bash" >> $GITHUB_ENV
+
+    - name: Set bash path
+      if: matrix.bash_path != 'brew'
+      run: |
+        echo "BASH_PATH=${{ matrix.bash_path }}" >> $GITHUB_ENV
+
+    # ── ShellCheck (once, on Linux) ──────────────────────────────────────────
+    - name: Run ShellCheck
+      if: runner.os == 'Linux'
+      run: |
+        shellcheck xsh.sh install.sh boot
+
+    # ── ShellSpec ────────────────────────────────────────────────────────────
+    - name: Install shellspec
+      run: |
+        # git.io was shut down (2022); use shellspec's canonical installer URL.
+        curl -fsSL https://raw.githubusercontent.com/shellspec/shellspec/master/install.sh | sh -s -- -y
+
+    - name: Install xsh
+      run: |
+        bash install.sh -s
+
+    - name: Run tests with coverage
+      if: matrix.coverage
+      run: |
+        source ~/.xshrc
+        shellspec --kcov -s "$BASH_PATH" spec/xsh_unit_spec.sh spec/xsh_func_spec.sh spec/install_spec.sh
+
+    - name: Run tests
+      if: matrix.coverage == false
+      run: |
+        source ~/.xshrc
+        shellspec -s "$BASH_PATH" spec/xsh_unit_spec.sh spec/xsh_func_spec.sh spec/install_spec.sh
+
+    # ── Coverage upload (once, on Linux) ────────────────────────────────────
+    - name: Upload coverage report
+      if: matrix.coverage
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false
