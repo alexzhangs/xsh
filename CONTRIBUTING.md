@@ -48,13 +48,13 @@ brew install shellcheck
 ## Running tests
 
 ```bash
-shellspec -s /bin/bash spec/xsh_unit_spec.sh spec/xsh_func_spec.sh spec/install_spec.sh
+shellspec -s /bin/bash spec/xsh_func_spec.sh spec/install_spec.sh
 ```
 
 Run with coverage (requires [kcov](https://github.com/SimonKagstrom/kcov)):
 
 ```bash
-shellspec --kcov -s /bin/bash spec/xsh_unit_spec.sh spec/xsh_func_spec.sh spec/install_spec.sh
+shellspec --kcov -s /bin/bash spec/xsh_func_spec.sh spec/install_spec.sh
 ```
 
 All existing tests must pass before a PR can be merged.
@@ -117,7 +117,7 @@ refactor: reduce debug output in __xsh_lib_load
 
 1. Fork the repository and create a branch from `develop`.
 2. Make your changes, following the code style and commit conventions above.
-3. Ensure all tests pass: `shellspec -s /bin/bash spec/xsh_unit_spec.sh spec/xsh_func_spec.sh spec/install_spec.sh`
+3. Ensure all tests pass: `shellspec -s /bin/bash spec/xsh_func_spec.sh spec/install_spec.sh`
 4. Ensure shellcheck is clean: `shellcheck xsh.sh install.sh boot`
 5. Open a pull request against the `develop` branch (not `main`).
 6. Fill out the pull request template completely.

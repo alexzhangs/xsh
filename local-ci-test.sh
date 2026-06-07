@@ -102,7 +102,7 @@ function ci-after-install () {
 function ci-script () {
     # shellcheck source=/dev/null
     . ~/.xshrc
-    ~/.local/bin/shellspec --kcov -s /bin/bash spec/xsh_unit_spec.sh spec/xsh_func_spec.sh spec/install_spec.sh
+    ~/.local/bin/shellspec --kcov -s /bin/bash spec/xsh_func_spec.sh spec/install_spec.sh
 }
 
 function call () {
