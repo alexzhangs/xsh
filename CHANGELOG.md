@@ -15,8 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`completions/xsh.bash`, `completions/_xsh`). The bash completion is
   auto-installed to `/etc/bash_completion.d/xsh` when writable.
 - **Multi-bash-version CI matrix** covering bash 3.2 (macOS native), bash 4.4
-  (rockylinux:8 container, informational), bash 5.x (macOS Homebrew + Linux).
-  Catches version-specific bugs the previous Travis pipeline missed.
+  (rockylinux:8 container — required gate, with explicit `dnf install git`
+  before checkout so actions/checkout@v5 uses git instead of the REST tarball
+  fallback, and `coreutils` swap from rocky's `coreutils-single`), bash 5.x
+  (macOS Homebrew + Linux). Catches version-specific bugs the previous Travis
+  pipeline missed — already paid for itself by catching a GHA shell-default
+  inconsistency (containers default to `sh -e`, hosted runners to `bash`).
 - **Release workflow** (`.github/workflows/release.yml`) — version-tag pushes
   now auto-create GitHub releases via gh CLI.
 - **OSS community health files** — `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1),
