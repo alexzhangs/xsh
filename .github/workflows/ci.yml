@@ -7,6 +7,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
     name: ${{ matrix.label }}
+    # GHA defaults to `sh -e` inside containers and `bash` on hosted runners.
+    # Force bash everywhere so process substitution (< <(...)) in xsh.sh works
+    # uniformly — otherwise the rocky container fails on `source ~/.xshrc`.
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
