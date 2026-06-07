@@ -59,6 +59,11 @@ jobs:
       if: matrix.container != ''
       run: |
         dnf install -y wget curl tar gzip which findutils diffutils procps-ng git
+        # Container runs as root but the checked-out repo is owned by the
+        # runner UID; git's safe.directory protection (CVE-2022-24765) then
+        # refuses to read .git, which breaks `xsh version`, `xsh versions`,
+        # and any subcommand that shells out to git in $XSH_HOME/xsh.
+        git config --global --add safe.directory '*'
 
     - name: Install dependencies (Linux)
       if: runner.os == 'Linux' && matrix.container == ''
