@@ -189,11 +189,6 @@ function install-xsh () {
 }
 
 function main () {
-    if [[ ${BASH_VERSINFO[0]} -lt 4 ]]; then
-        printf "ERROR: xsh requires bash 4.0 or later. Found: %s\n" "${BASH_VERSION}" >&2
-        exit 1
-    fi
-
     declare force=0 upgrade=1 uninstall=0 \
             OPTIND OPTARG opt
     declare -a branch_opts
