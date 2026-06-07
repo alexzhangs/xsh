@@ -8,15 +8,6 @@
 [![GitHub issues](https://img.shields.io/github/issues/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/pulls)
 
-| Linux Ubuntu Bionic 18.04 - bash 4.4.20 | macOS 10.15.7 - bash 3.2.57 |
-|-----------------------------------------|-----------------------------|
-| [![Build1][1]][0]                       | [![Build2][2]][0]           |
-
-[0]: https://travis-ci.com/alexzhangs/xsh
-[1]: https://travis-matrix-badges.herokuapp.com/repos/alexzhangs/xsh/branches/master/1?use_travis_com=true
-[2]: https://travis-matrix-badges.herokuapp.com/repos/alexzhangs/xsh/branches/master/2?use_travis_com=true
-
-
 # e<span style="color:red">X</span>tension of ba<span style="color:red">SH</span>
 
 xsh is an e<span style="color:red">__x__</span>tension of ba<span style="color:red">__sh__</span>. It works as a bash library framework.
@@ -672,7 +663,7 @@ The dev mode applies to the following commands and internal functions:
 * Code coverage: [Kcov](https://github.com/SimonKagstrom/kcov)
 * Code coverage analysis: [CodeCov](https://codecov.io)
 * Code hosting: GitHub
-* CI hosting: [Travis](https://travis-ci.com)
+* CI hosting: [GitHub Actions](https://github.com/features/actions)
 
 Most of them are free, or free to OSS projects. Many thanks to whoever contributes to them.
 
