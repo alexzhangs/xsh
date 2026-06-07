@@ -2,7 +2,7 @@
 #?   This is the main test case for the project.
 #?
 #? Usage:
-#?   shellspec --kcov -s /bin/bash spec/xsh_spec.sh
+#?   shellspec --kcov -s /bin/bash spec/xsh_func_spec.sh
 #?
 Describe 'xsh.sh'
   Include xsh.sh

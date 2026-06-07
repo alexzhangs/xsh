@@ -2,7 +2,7 @@
 #?   This is the test case for the installer scripts.
 #?
 #? Usage:
-#?   shellspec --kcov -s /bin/bash spec/installer_spec.sh
+#?   shellspec --kcov -s /bin/bash spec/install_spec.sh
 #?
 Describe 'installer'
   exported_functions () { declare -Fx | awk '{print $3}'; }

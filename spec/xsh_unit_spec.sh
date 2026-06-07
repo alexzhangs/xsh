@@ -2,7 +2,7 @@
 #?   Additional coverage tests for uncovered __xsh_* functions.
 #?
 #? Usage:
-#?   shellspec --kcov -s /bin/bash spec/xsh_coverage_spec.sh
+#?   shellspec --kcov -s /bin/bash spec/xsh_unit_spec.sh
 #?
 Describe 'xsh.sh additional coverage'
   Include xsh.sh
