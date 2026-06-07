@@ -2190,7 +2190,9 @@ function xsh () {
     }
 
     #? Description:
-    #?   TODO
+    #?   Return the file system paths of all utilities matching the given LPUR.
+    #?   Searches both the `functions` and `scripts` trees under XSH_LIB_HOME,
+    #?   excluding `__init__.sh` files.
     #?
     #? Usage:
     #?   __xsh_get_path_by_lpur <LPUR>
@@ -2221,7 +2223,8 @@ function xsh () {
     }
 
     #? Description:
-    #?   TODO
+    #?   Return the LPUE expressions of all utilities matching the given LPUR.
+    #?   Converts each matching file path to its LPUE via `__xsh_get_lpue_by_path`.
     #?
     #? Usage:
     #?   __xsh_get_lpue_by_lpur <LPUR>
@@ -2243,7 +2246,8 @@ function xsh () {
     }
 
     #? Description:
-    #?   TODO
+    #?   Return the LPUC callable names of all utilities matching the given LPUR.
+    #?   Converts each matching LPUE to its LPUC form via `__xsh_get_lpuc_by_lpue`.
     #?
     #? Usage:
     #?   __xsh_get_lpuc_by_lpur <LPUR>
@@ -2265,7 +2269,8 @@ function xsh () {
     }
 
     #? Description:
-    #?   TODO
+    #?   Convert a single LPUE expression to its LPUC callable name by replacing
+    #?   each `/` separator with `-` (e.g. `x/string/upper` → `x-string-upper`).
     #?
     #? Usage:
     #?   __xsh_get_lpuc_by_lpue <LPUE>
@@ -2283,7 +2288,8 @@ function xsh () {
     }
 
     #? Description:
-    #?   TODO
+    #?   Return a human-readable title for a utility file in the form `[type] lpue`,
+    #?   combining the utility type (functions/scripts) and its LPUE expression.
     #?
     #? Usage:
     #?   __xsh_get_title_by_path <PATH>
@@ -2304,7 +2310,8 @@ function xsh () {
     }
 
     #? Description:
-    #?   TODO
+    #?   Determine whether a utility file is a `functions` or `scripts` utility
+    #?   by extracting the second path component after XSH_LIB_HOME/<lib>/.
     #?
     #? Usage:
     #?   __xsh_get_type_by_path <PATH>
@@ -2322,7 +2329,8 @@ function xsh () {
     }
 
     #? Description:
-    #?   TODO
+    #?   Resolve the library name for a given repository identifier by reading the
+    #?   `name` property from the repo's `xsh.lib` configuration file.
     #?
     #? Usage:
     #?   __xsh_get_lib_by_repo <REPO>
@@ -2334,7 +2342,8 @@ function xsh () {
     }
 
     #? Description:
-    #?   TODO
+    #?   Extract the utility name from a file path by stripping the directory prefix,
+    #?   the `.sh` extension, and any numeric selector suffix.
     #?
     #? Usage:
     #?   __xsh_get_util_by_path <PATH>
@@ -2348,7 +2357,8 @@ function xsh () {
     }
 
     #? Description:
-    #?   TODO
+    #?   Convert a utility file path to its LPUE expression (e.g.
+    #?   `~/.xsh/lib/x/functions/string/upper.sh` → `x/string/upper`).
     #?
     #? Usage:
     #?   __xsh_get_lpue_by_path <PATH>
@@ -2364,7 +2374,8 @@ function xsh () {
     }
 
     #? Description:
-    #?   TODO
+    #?   Convert a utility file path to its LPUC callable name by deriving the
+    #?   LPUE from the path and then replacing each `/` with `-`.
     #?
     #? Usage:
     #?   __xsh_get_lpuc_by_path <PATH>
