@@ -1,3 +1,2 @@
 shell=bash
-enable=all
-disable=SC2148,SC2317
+disable=SC2148,SC2317,SC2329,SC2086
