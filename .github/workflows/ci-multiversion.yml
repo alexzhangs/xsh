@@ -1,0 +1,54 @@
+name: ci-multiversion
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.label }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            bash_path: /bin/bash
+            label: bash-3.2-macos
+          - os: macos-latest
+            bash_path: brew
+            label: bash-5.x-macos
+          - os: ubuntu-latest
+            bash_path: /bin/bash
+            label: bash-5.x-linux
+
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Set up PATH
+      run: |
+        echo "PATH=${HOME}/.local/bin:${PATH}" >> $GITHUB_ENV
+
+    - name: Install Homebrew bash
+      if: matrix.bash_path == 'brew'
+      run: |
+        brew install bash
+        echo "BASH_PATH=$(brew --prefix)/bin/bash" >> $GITHUB_ENV
+
+    - name: Set bash path
+      if: matrix.bash_path != 'brew'
+      run: |
+        echo "BASH_PATH=${{ matrix.bash_path }}" >> $GITHUB_ENV
+
+    - name: Install shellspec
+      run: |
+        curl -fsSL https://raw.githubusercontent.com/shellspec/shellspec/master/install.sh | sh -s -- -y
+
+    - name: Install xsh
+      run: |
+        bash install.sh -s
+
+    - name: Run tests
+      run: |
+        source ~/.xshrc
+        shellspec -s "$BASH_PATH" spec/xsh_spec.sh spec/installer_spec.sh
