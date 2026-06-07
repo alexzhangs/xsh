@@ -2,7 +2,7 @@
 [![GitHub](https://img.shields.io/github/license/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
 [![GitHub last commit](https://img.shields.io/github/last-commit/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/commits/master)
 
-[![Travis (.com)](https://img.shields.io/travis/com/alexzhangs/xsh/master.svg?style=flat-square)](https://travis-ci.com/alexzhangs/xsh/)
+[![ci-unittest](https://github.com/alexzhangs/xsh/actions/workflows/ci-unittest.yml/badge.svg)](https://github.com/alexzhangs/xsh/actions/workflows/ci-unittest.yml)
 [![codecov](https://codecov.io/gh/alexzhangs/xsh/branch/master/graph/badge.svg?token=HVTO788DLV)](https://codecov.io/gh/alexzhangs/xsh)
 [![CodeFactor](https://www.codefactor.io/repository/github/alexzhangs/xsh/badge)](https://www.codefactor.io/repository/github/alexzhangs/xsh)
 [![GitHub issues](https://img.shields.io/github/issues/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/issues)
