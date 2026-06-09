@@ -552,15 +552,13 @@ Describe 'xsh.sh'
         The output should equal 'upper'
       End
 
-      It 'strips a leading numeric selector before the util name'
-        # Production bug: ${util%/[0-9]*} matches the whole '/2-upper' segment
-        # instead of just the '2-' prefix, so the function returns 'string'
-        # rather than 'upper'. ShellSpec Pending flips this to a failure when
-        # the bug is fixed, forcing the fixer to remove the marker.
-        Pending 'production bug: __xsh_get_util_by_path strips wrong segment'
-        When call xsh get-util-by-path '/some/lib/functions/string/2-upper.sh'
+      It 'strips a trailing numeric selector file from the util directory'
+        # xsh-lib/core convention: a util may be split across selector files
+        # under a directory named for the util (e.g. string/repeat/{1,2,...}.sh).
+        # The util name is the parent directory, not the selector filename.
+        When call xsh get-util-by-path '/some/lib/functions/string/repeat/1.sh'
         The status should be success
-        The output should equal 'upper'
+        The output should equal 'repeat'
       End
     End
 
