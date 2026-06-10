@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-06-08
+
+### Fixed
+
+- **Bash tab-completion now works on stock macOS bash 3.2** without requiring
+  the `bash-completion` package. The 0.6.0 completion script called
+  `_init_completion` from bash-completion, which on macOS native `/bin/bash`
+  (3.2.57) was silently absent because `bash-completion@2` requires bash 4+
+  and bails. The completion script now ships an `_init_completion` fallback
+  shim guarded by `declare -F` — a real bash-completion load (now or later)
+  still wins, so behavior on Linux and bash-completion-enabled setups is
+  unchanged.
+- `.xshrc` now auto-sources the completion file, so users don't need to
+  edit `~/.bash_profile` or rely on `/etc/bash_completion.d/` discovery
+  (which doesn't exist on stock macOS).
+
+### Removed
+
+- `install.sh` no longer copies `xsh.bash` into `/etc/bash_completion.d/` —
+  redundant on Linux (now sourced via `.xshrc`) and a no-op on macOS.
+
+### Changed
+
+- **Test correction** — the `__xsh_get_util_by_path` Pending test added in
+  0.6.0 assumed selectors are encoded as a leading `<N>-` basename prefix
+  (e.g. `2-upper.sh`). Every selector in xsh-lib/core actually uses the
+  opposite convention: the util is a directory, selectors are plain-numeric
+  filenames inside it (e.g. `string/repeat/{1..8}.sh`). The existing
+  implementation already strips that form correctly. Test replaced with a
+  passing assertion of the real convention; no production code change.
+
 ## [0.6.0] - 2026-06-08
 
 ### Added
@@ -163,7 +194,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial working implementation: load scripts, functions, and the bash library framework.
 
-[Unreleased]: https://github.com/alexzhangs/xsh/compare/0.6.0...HEAD
+[Unreleased]: https://github.com/alexzhangs/xsh/compare/0.6.1...HEAD
+[0.6.1]: https://github.com/alexzhangs/xsh/compare/0.6.0...0.6.1
 [0.6.0]: https://github.com/alexzhangs/xsh/compare/0.5.3...0.6.0
 [0.5.3]: https://github.com/alexzhangs/xsh/compare/0.5.2...0.5.3
 [0.5.2]: https://github.com/alexzhangs/xsh/compare/0.5.1...0.5.2
