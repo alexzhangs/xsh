@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-06-11
+
+### Fixed
+
+- **No more ANSI escape garbage in completions** (e.g. `x/dotfile/diff^[[0m`)
+  on stock macOS bash 3.2. `xsh help` (`__xsh_help`) unconditionally piped its
+  output through an awk formatter that wrapped every line in bold escapes, even
+  when stdout was not a TTY — so pipe consumers such as the tab-completer
+  received the raw escapes. The formatter is now gated on `[ -t 1 ]` (plain
+  `cat` otherwise), per the standard Unix convention; terminal output is still
+  bolded. (Low-impact behavior change: tooling that grepped ANSI bold sequences
+  from piped `xsh help` now sees plain text.)
+- **~500ms delay on every TAB press** eliminated. The completer ran
+  `xsh list '*'` — walking every loaded library — on each TAB. The LPUE list is
+  now cached in a shell-global (`_XSH_COMPLETE_LPUE_CACHE`), populated lazily
+  (cold ~581 ms → warm ~1 ms). Refresh after `xsh load`/`unload`/`update` with
+  `unset _XSH_COMPLETE_LPUE_CACHE`.
+
 ### Added
 
 - Substantially expanded the `xsh.sh` test suite (`spec/xsh_func_spec.sh`):
