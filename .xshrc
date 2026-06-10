@@ -1,17 +1,42 @@
-# xsh requires bash; zsh support is planned — skip gracefully for now
-[ -z "${BASH_VERSION:-}" ] && return 2>/dev/null; :
+# xsh supports bash and zsh; skip gracefully for any other shell
+if [ -z "${BASH_VERSION:-}" ] && [ -z "${ZSH_VERSION:-}" ]; then
+    return 2>/dev/null
+fi
 
 #? Description:
 #?   This file is used by xsh - https://github.com/alexzhangs/xsh
 #?
 #? Usage:
-#?   . ~/.xshrc  # add this line to your ~/.bash_profile and ~/.bashrc
+#?   . ~/.xshrc  # add this line to your ~/.bash_profile, ~/.bashrc and ~/.zshrc
 #?
 
 export XSH_HOME=~/.xsh
 export XSH_DEV_HOME=${XSH_HOME}/lib-dev
-. ${XSH_HOME}/xsh/xsh.sh
+. "${XSH_HOME}/xsh/xsh.sh"
 
-# Bash tab-completion for `xsh`. Self-sufficient on stock macOS bash 3.2 via
-# its own _init_completion fallback; no bash-completion package required.
-[ -r "${XSH_HOME}/xsh/completions/xsh.bash" ] && . "${XSH_HOME}/xsh/completions/xsh.bash"
+# Make the executable shim `bin/xsh` available to sub-processes.
+# It is required under zsh - zsh cannot export functions to the environment;
+# it is harmless under bash - the exported xsh function takes precedence.
+case ":${PATH}:" in
+    *":${XSH_HOME}/xsh/bin:"*)
+        ;;
+    *)
+        export PATH=${XSH_HOME}/xsh/bin:${PATH}
+        ;;
+esac
+
+if [ -n "${BASH_VERSION:-}" ]; then
+    # Bash tab-completion for `xsh`. Self-sufficient on stock macOS bash 3.2 via
+    # its own _init_completion fallback; no bash-completion package required.
+    [ -r "${XSH_HOME}/xsh/completions/xsh.bash" ] && . "${XSH_HOME}/xsh/completions/xsh.bash"
+elif [ -n "${ZSH_VERSION:-}" ]; then
+    # Zsh tab-completion for `xsh` (completions/_xsh).
+    # If compinit has not run yet (this file is sourced before it in ~/.zshrc),
+    # registering the directory in fpath is enough - compinit will pick it up.
+    # If compinit has already run, bind the completer explicitly.
+    fpath=("${XSH_HOME}/xsh/completions" $fpath)
+    if (( $+functions[compdef] )); then
+        autoload -Uz _xsh
+        compdef _xsh xsh
+    fi
+fi

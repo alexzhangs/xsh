@@ -5,8 +5,16 @@
 #?   shellspec --kcov -s /bin/bash spec/xsh_func_spec.sh
 #?
 Describe 'xsh.sh'
-  Include xsh.sh
-  exported_functions () { declare -Fx | awk '{print $3}'; }
+  # `./`-prefixed: zsh's `.` builtin searches only PATH (not CWD) for
+  # unprefixed names, while bash falls back to CWD
+  Include ./xsh.sh
+  # zsh cannot export functions to the environment, so the equivalent check
+  # under zsh is "is the function defined" (`typeset +f` lists the names).
+  if [ -n "${ZSH_VERSION:-}" ]; then
+    exported_functions () { typeset +f; }
+  else
+    exported_functions () { declare -Fx | awk '{print $3}'; }
+  fi
 
   Describe 'environments'
     It 'show XSH environment variables'
@@ -205,6 +213,9 @@ Describe 'xsh.sh'
     End
 
     It 'call /file/inject'
+      # x/file/inject depends on xsh-lib/core's x/trap/return, which uses the
+      # bash-only RETURN trap; needs an xsh-lib/core update to work under zsh
+      Skip if "x/file/inject depends on the bash-only RETURN trap" [ -n "${ZSH_VERSION:-}" ]
       BeforeCall 'touch /tmp/.xsh-file-inject'
       AfterCall 'rm -f /tmp/.xsh-file-inject'
       When call xsh /file/inject -c bar -p end /tmp/.xsh-file-inject
@@ -240,16 +251,18 @@ Describe 'xsh.sh'
       The output should equal ''
     End
 
+    # `h` (bash hashall) is on by default in bash scripts and shows in `$-`;
+    # zsh has no `h` in its `$-`, so it is correctly reported as off there
     It 'call shell-option h +v -x'
       When call xsh shell-option h +v -x
       The status should be success
-      The output should equal '-h +vx'
+      The output should equal "$([ -n "${ZSH_VERSION:-}" ] && echo '+hvx' || echo '-h +vx')"
     End
 
     It 'call shell-option h'
       When call xsh shell-option h
       The status should be success
-      The output should equal '-h'
+      The output should equal "$([ -n "${ZSH_VERSION:-}" ] && echo '+h' || echo '-h')"
     End
 
     It 'call shell-option +v -x'
@@ -1150,6 +1163,10 @@ Describe 'xsh.sh'
     End
 
     It 'upgrade xsh to latest stable version'
+      # `xsh upgrade` checks out the latest released tag and re-sources its
+      # xsh.sh - released versions predating zsh support cannot be sourced
+      # under zsh. Remove this skip after the first zsh-supporting release.
+      Skip if "released xsh versions predate zsh support" [ -n "${ZSH_VERSION:-}" ]
       When call xsh upgrade
       The status should be success
       The output should not equal ''
@@ -1157,6 +1174,9 @@ Describe 'xsh.sh'
     End
 
     It 'upgrade xsh to latest version'
+      # see the skip note above - applies to the master branch tip as well,
+      # until the zsh support is merged into master
+      Skip if "released xsh versions predate zsh support" [ -n "${ZSH_VERSION:-}" ]
       When call xsh upgrade -b master
       The status should be success
       The output should not equal ''
