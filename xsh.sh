@@ -702,7 +702,11 @@ function xsh () {
             else
                 __xsh_help_lib "$@" "${topic}"
             fi
-        } | awk '{gsub(/^[^ ]+.*/, "\033[1m&\033[0m"); print}'
+        } | { if [ -t 1 ]; then
+                  awk '{gsub(/^[^ ]+.*/, "\033[1m&\033[0m"); print}'
+              else
+                  cat
+              fi; }
     }
 
     #? Description:

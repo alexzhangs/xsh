@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-06-11
+
+### Fixed
+
+- **No more ANSI escape garbage in completions** (e.g. `x/dotfile/diff^[[0m`)
+  on stock macOS bash 3.2. `xsh help` (`__xsh_help`) unconditionally piped its
+  output through an awk formatter that wrapped every line in bold escapes, even
+  when stdout was not a TTY — so pipe consumers such as the tab-completer
+  received the raw escapes. The formatter is now gated on `[ -t 1 ]` (plain
+  `cat` otherwise), per the standard Unix convention; terminal output is still
+  bolded. (Low-impact behavior change: tooling that grepped ANSI bold sequences
+  from piped `xsh help` now sees plain text.)
+- **~500ms delay on every TAB press** eliminated. The completer ran
+  `xsh list '*'` — walking every loaded library — on each TAB. The LPUE list is
+  now cached in a shell-global (`_XSH_COMPLETE_LPUE_CACHE`), populated lazily
+  (cold ~581 ms → warm ~1 ms). Refresh after `xsh load`/`unload`/`update` with
+  `unset _XSH_COMPLETE_LPUE_CACHE`.
+
+### Added
+
+- Substantially expanded the `xsh.sh` test suite (`spec/xsh_func_spec.sh`):
+  error/guard branches (null-argument paths, `git-clone`/`git-force-update`
+  option and failure handling, `lib-manager`/`lib-get-cfg-property` errors,
+  `__xsh_help_self` cache rebuild, scripts-type util import/exec/unimport,
+  the `init runtime` decorator, environment guards, and more). Library line
+  coverage rose from ~76% to ~90%.
+
+### Changed
+
+- Coverage is now scoped to the library (`xsh.sh`) in `.shellspec`. `install.sh`
+  and `boot` run as child `bash` processes, which kcov's bash tracer cannot
+  instrument, so they always reported 0% despite `spec/install_spec.sh`
+  exercising them end-to-end; counting them understated real coverage. They
+  remain integration-tested rather than line-counted.
+
 ## [0.6.1] - 2026-06-08
 
 ### Fixed
