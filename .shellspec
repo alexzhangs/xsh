@@ -3,5 +3,10 @@
 
 # kcov options
 --kcov-options "--exclude-pattern=/.shellspec,/spec/,/coverage/,/report/"
---kcov-options "--include-path=./xsh.sh,./install.sh,./boot"
+# Coverage is scoped to the library (xsh.sh). install.sh and boot run as child
+# `bash` processes (see spec/install_spec.sh), which kcov's bash tracer does not
+# instrument, so they only ever report 0% even though install_spec.sh exercises
+# them end-to-end. Measuring them here would understate real coverage; they stay
+# integration-tested rather than line-counted.
+--kcov-options "--include-path=./xsh.sh"
 --kcov-options "--include-pattern="

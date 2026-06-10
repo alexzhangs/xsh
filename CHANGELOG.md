@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Substantially expanded the `xsh.sh` test suite (`spec/xsh_func_spec.sh`):
+  error/guard branches (null-argument paths, `git-clone`/`git-force-update`
+  option and failure handling, `lib-manager`/`lib-get-cfg-property` errors,
+  `__xsh_help_self` cache rebuild, scripts-type util import/exec/unimport,
+  the `init runtime` decorator, environment guards, and more). Library line
+  coverage rose from ~76% to ~90%.
+
+### Changed
+
+- Coverage is now scoped to the library (`xsh.sh`) in `.shellspec`. `install.sh`
+  and `boot` run as child `bash` processes, which kcov's bash tracer cannot
+  instrument, so they always reported 0% despite `spec/install_spec.sh`
+  exercising them end-to-end; counting them understated real coverage. They
+  remain integration-tested rather than line-counted.
+
 ## [0.6.1] - 2026-06-08
 
 ### Fixed

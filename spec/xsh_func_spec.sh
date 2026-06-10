@@ -700,6 +700,439 @@ Describe 'xsh.sh'
     End
   End
 
+  Describe 'error and edge-case coverage'
+    # xsh-lib/core (lib `x`) is loaded at this point in the suite.
+
+    Describe '__xsh_call_with_shell_option'
+      It 'fails on an unrecognized option'
+        When call xsh call-with-shell-option -z echo foo
+        The status should be failure
+        The stderr should include ''
+      End
+
+      It 'runs a text script with the requested shell options'
+        setup () { printf '#!/bin/bash\necho scripted\n' > /tmp/xsh-cwso.sh; chmod +x /tmp/xsh-cwso.sh; }
+        clean () { rm -f /tmp/xsh-cwso.sh; }
+        BeforeCall 'setup'
+        AfterCall 'clean'
+        When call xsh call-with-shell-option -1 x /tmp/xsh-cwso.sh
+        The status should be success
+        The output should equal 'scripted'
+        The error should include '+'
+      End
+    End
+
+    Describe '__xsh_chmod_x_by_dir'
+      It 'chmods .sh files under a directory'
+        setup () { rm -rf /tmp/xsh-cxd && mkdir -p /tmp/xsh-cxd/sub && touch /tmp/xsh-cxd/sub/a.sh; }
+        clean () { rm -rf /tmp/xsh-cxd; }
+        BeforeCall 'setup'
+        AfterCall 'clean'
+        When call xsh chmod-x-by-dir /tmp/xsh-cxd
+        The status should be success
+      End
+    End
+
+    Describe '__xsh_git_chmod_x'
+      It 'chmods the ./scripts dir when present'
+        setup () { rm -rf /tmp/xsh-gcx && mkdir -p /tmp/xsh-gcx/scripts && touch /tmp/xsh-gcx/scripts/a.sh; }
+        clean () { rm -rf /tmp/xsh-gcx; }
+        BeforeCall 'setup'
+        AfterCall 'clean'
+        BeforeCall 'cd /tmp/xsh-gcx'
+        When call xsh git-chmod-x
+        The status should be success
+      End
+    End
+
+    Describe '__xsh_git_clone'
+      It 'fails when no repo is given'
+        When call xsh git-clone
+        The status should be failure
+        The stderr should include 'Repo name is null'
+      End
+
+      It 'fails on an unrecognized option'
+        When call xsh git-clone -z
+        The status should be failure
+        The stderr should not equal ''
+      End
+
+      It 'fails when the git server is empty'
+        When call xsh git-clone -s '' some/repo
+        The status should be failure
+        The stderr should include 'Git server is null'
+      End
+
+      It 'fails when the repo already exists'
+        When call xsh git-clone xsh-lib/core
+        The status should be failure
+        The stderr should include 'already exists'
+      End
+
+      It 'rejects -b and -t together'
+        When call xsh git-clone -b master -t 1.0.0 nonexist/repo
+        The status should be failure
+        The stderr should include "can't be used together"
+      End
+
+      It 'cleans up after a failed clone'
+        When call xsh git-clone -s https://github.com xsh-nonexistent-zzz/xsh-nonexistent-zzz
+        The status should be failure
+        The stderr should include ''
+      End
+    End
+
+    Describe '__xsh_git_force_update'
+      It 'fails on an unrecognized option'
+        When call xsh git-force-update -z
+        The status should be failure
+        The stderr should not equal ''
+      End
+
+      It 'fails when no tagged version exists'
+        setup () {
+          rm -rf /tmp/xsh-gnt && mkdir -p /tmp/xsh-gnt && cd /tmp/xsh-gnt \
+            && git init -q \
+            && git -c user.email=a@b.c -c user.name=t commit -q --allow-empty -m init \
+            && git remote add origin /tmp/xsh-gnt
+        }
+        clean () { rm -rf /tmp/xsh-gnt; }
+        BeforeCall 'setup'
+        AfterCall 'clean'
+        BeforeCall 'cd /tmp/xsh-gnt'
+        When call xsh git-force-update
+        The status should be failure
+        The stderr should include 'No any available tagged version'
+      End
+
+      It 'fails to checkout a nonexistent target'
+        setup () {
+          rm -rf /tmp/xsh-gfu && mkdir -p /tmp/xsh-gfu && cd /tmp/xsh-gfu \
+            && git init -q \
+            && git -c user.email=a@b.c -c user.name=t commit -q --allow-empty -m init \
+            && git tag 0.1.0 \
+            && git remote add origin /tmp/xsh-gfu
+        }
+        clean () { rm -rf /tmp/xsh-gfu; }
+        BeforeCall 'setup'
+        AfterCall 'clean'
+        BeforeCall 'cd /tmp/xsh-gfu'
+        When call xsh git-force-update -t 9.9.9
+        The status should be failure
+        The output should include 'Updating repo'
+        The stderr should include 'Failed to checkout'
+      End
+    End
+
+    Describe '__xsh_info'
+      It 'fails when the path is empty'
+        When call xsh info -d ''
+        The status should be failure
+        The stderr should include 'LPU path is null'
+      End
+
+      It 'fails on an unrecognized option'
+        When call xsh info -z "${XSH_HOME}/xsh/xsh.sh"
+        The status should be failure
+        The stderr should not equal ''
+      End
+
+      It 'inserts a string per function name with -i'
+        When call xsh info -f __xsh_log -i 'INSERTED' "${XSH_HOME}/xsh/xsh.sh"
+        The status should be success
+        The output should include 'INSERTED'
+      End
+    End
+
+    Describe '__xsh_lib_get_cfg_property'
+      It 'fails when the name is missing'
+        When call xsh lib-get-cfg-property
+        The status should be failure
+        The stderr should include 'Lib or repo name is null'
+      End
+
+      It 'fails when the property is missing'
+        When call xsh lib-get-cfg-property x
+        The status should be failure
+        The stderr should include 'Property name is null'
+      End
+
+      It 'fails when xsh.lib is not found'
+        When call xsh lib-get-cfg-property nonexist/repo name
+        The status should be failure
+        The stderr should include 'Not found xsh.lib'
+      End
+
+      It 'reads a property from a loaded lib'
+        When call xsh lib-get-cfg-property x name
+        The status should be success
+        The output should equal 'x'
+      End
+    End
+
+    Describe '__xsh_lib_manager'
+      It 'fails when the command is missing'
+        When call xsh lib-manager
+        The status should be failure
+        The stderr should include 'Command is null'
+      End
+
+      It 'fails when the repo is missing'
+        When call xsh lib-manager link
+        The status should be failure
+        The stderr should include 'Repo name is null'
+      End
+
+      It 'fails when the repo does not exist'
+        When call xsh lib-manager link nonexist/repo
+        The status should be failure
+        The stderr should include "doesn't exist"
+      End
+
+      It 'fails on an unsupported command'
+        When call xsh lib-manager bogus xsh-lib/core
+        The status should be failure
+        The stderr should include 'unsupported command'
+      End
+    End
+
+    Describe '__xsh_apply_func_decorator'
+      It 'fails for an unknown decorator'
+        When call xsh apply-func-decorator nosuchdeco 'function f () { :; }'
+        The status should be failure
+        The stderr should include 'not found the function decorator'
+      End
+    End
+
+    Describe 'null-argument guards'
+      It 'load fails on an empty repo'
+        When call xsh load ''
+        The status should be failure
+        The stderr should include 'Repo name is null'
+      End
+
+      It 'unload fails on an empty repo'
+        When call xsh unload ''
+        The status should be failure
+        The stderr should include 'Repo name is null'
+      End
+
+      It 'update fails on an empty repo'
+        When call xsh update ''
+        The status should be failure
+        The stderr should include 'Repo name is null'
+      End
+
+      It 'import fails on an empty lpur'
+        When call xsh import ''
+        The status should be failure
+        The stderr should include 'LPUR is null'
+      End
+
+      It 'unimport fails on an empty lpur'
+        When call xsh unimport ''
+        The status should be failure
+        The stderr should include 'LPUR is null'
+      End
+
+      It 'import-script fails on an empty path'
+        When call xsh import-script ''
+        The status should be failure
+        The stderr should include 'LPU path is null'
+      End
+
+      It 'call fails on an empty lpue'
+        When call xsh call ''
+        The status should be failure
+        The stderr should include 'LPUE is null'
+      End
+
+      It 'exec fails on an unrecognized option'
+        When call xsh exec -z foo
+        The status should be failure
+        The stderr should not equal ''
+      End
+
+      It 'unimport silently skips a non-matching lpur'
+        When call xsh unimport /string/nomatchzzz
+        The status should be success
+        The output should equal ''
+      End
+    End
+
+    Describe '__xsh_load cleanup on link failure'
+      # A local "git server" holding a repo that clones cleanly (it has a tag)
+      # but whose xsh.lib has no `name=`, so `lib_manager link` fails and
+      # __xsh_load deletes the half-installed repo.
+      setup () {
+        rm -rf /tmp/xsh-srv
+        mkdir -p /tmp/xsh-srv/fakeuser/fakerepo
+        ( cd /tmp/xsh-srv/fakeuser/fakerepo \
+            && git init -q \
+            && printf 'foo=bar\n' > xsh.lib \
+            && git -c user.email=a@b.c -c user.name=t add -A \
+            && git -c user.email=a@b.c -c user.name=t commit -q -m init \
+            && git tag 1.0.0 )
+      }
+      clean () { rm -rf /tmp/xsh-srv "${XSH_HOME}/repo/fakeuser"; }
+      BeforeCall 'setup'
+      AfterCall 'clean'
+
+      It 'deletes the repo when linking fails'
+        When call xsh load -s /tmp/xsh-srv fakeuser/fakerepo
+        The status should be failure
+        The output should include 'Already at the latest'
+        The stderr should include 'Deleting repo'
+      End
+
+      It 'get-lpue-by-lpur fails on empty input'
+        When call xsh get-lpue-by-lpur ''
+        The status should be failure
+        The stderr should include 'LPUR is null'
+      End
+
+      It 'get-lpuc-by-lpur fails on empty input'
+        When call xsh get-lpuc-by-lpur ''
+        The status should be failure
+        The stderr should include 'LPUR is null'
+      End
+
+      It 'get-title-by-path fails on an empty path'
+        When call xsh get-title-by-path ''
+        The status should be failure
+        The stderr should include 'LPU path is null'
+      End
+    End
+
+    Describe 'lpur resolution of loaded utils'
+      It 'get-lpue-by-lpur resolves a loaded util'
+        When call xsh get-lpue-by-lpur '/string/upper'
+        The status should be success
+        The output should include 'x/string/upper'
+      End
+
+      It 'get-lpuc-by-lpur resolves a loaded util'
+        When call xsh get-lpuc-by-lpur '/string/upper'
+        The status should be success
+        The output should include 'x-string-upper'
+      End
+    End
+
+    Describe 'environment guards'
+      It 'fails when XSH_HOME is unset'
+        BeforeCall 'unset XSH_HOME'
+        When call xsh version
+        The status should be failure
+        The stderr should include 'XSH_HOME is not set'
+      End
+
+      It 'fails when XSH_DEV_HOME is unset'
+        BeforeCall 'unset XSH_DEV_HOME'
+        When call xsh version
+        The status should be failure
+        The stderr should include 'XSH_DEV_HOME is not set'
+      End
+    End
+
+    Describe '__xsh_help_self'
+      It 'renders self help, rebuilding the cache from scratch'
+        setup () { rm -f /tmp/.__xsh_help_self_cache_*; }
+        BeforeCall 'setup'
+        When call xsh help
+        The status should be success
+        The output should include 'Commands:'
+      End
+    End
+
+    Describe '__xsh_info -i without a function filter'
+      It 'inserts a string verbatim'
+        When call xsh info -i 'INSERTEDX' "${XSH_HOME}/xsh/xsh.sh"
+        The status should be success
+        The output should include 'INSERTEDX'
+      End
+    End
+
+    Describe '__xsh_is_debug'
+      It 'returns non-zero when XSH_DEBUG is unset'
+        BeforeCall 'unset XSH_DEBUG'
+        When call xsh is-debug /string/upper
+        The status should be failure
+      End
+    End
+
+    Describe '__xsh_lib_manager null lib name'
+      setup () {
+        mkdir -p "${XSH_HOME}/repo/fakeuser/fakerepo"
+        printf 'foo=bar\n' > "${XSH_HOME}/repo/fakeuser/fakerepo/xsh.lib"
+      }
+      clean () { rm -rf "${XSH_HOME}/repo/fakeuser"; }
+      BeforeCall 'setup'
+      AfterCall 'clean'
+
+      It 'fails when the lib name is empty in xsh.lib'
+        When call xsh lib-manager link fakeuser/fakerepo
+        The status should be failure
+        The stderr should include 'library name is null'
+      End
+    End
+
+    Describe '__xsh_func_decorator_init_runtime'
+      setup () {
+        mkdir -p "${XSH_HOME}/repo/xsh-lib/core/functions/spec"
+        printf '#? @runtime\n:\n' \
+          > "${XSH_HOME}/repo/xsh-lib/core/functions/spec/__init__.sh"
+        printf '#? Usage:\n#?   @rtsample\n#?\nfunction rtsample () {\n    echo rt-sample-out\n}\n' \
+          > "${XSH_HOME}/repo/xsh-lib/core/functions/spec/rtsample.sh"
+      }
+      clean () {
+        rm -rf "${XSH_HOME}/repo/xsh-lib/core/functions/spec"
+        unset -f x-spec-rtsample 2>/dev/null ||:
+      }
+      BeforeAll 'setup'
+      AfterAll 'clean'
+
+      It 'applies the runtime init decorator on import'
+        When call xsh imports /spec/rtsample
+        The status should be success
+        The result of function exported_functions should include 'x-spec-rtsample'
+      End
+    End
+
+    Describe 'scripts-type utility'
+      setup () {
+        mkdir -p "${XSH_HOME}/repo/xsh-lib/core/scripts/spec"
+        printf '#? Usage:\n#?   @sample\n#?\necho script-sample-out\n' \
+          > "${XSH_HOME}/repo/xsh-lib/core/scripts/spec/sample.sh"
+        chmod +x "${XSH_HOME}/repo/xsh-lib/core/scripts/spec/sample.sh"
+      }
+      clean () {
+        rm -rf "${XSH_HOME}/repo/xsh-lib/core/scripts/spec"
+        rm -f /usr/local/bin/x-spec-sample
+      }
+      BeforeAll 'setup'
+      AfterAll 'clean'
+
+      It 'imports a script util as a bin symlink'
+        When call xsh imports /spec/sample
+        The status should be success
+        The path /usr/local/bin/x-spec-sample should be symlink
+      End
+
+      It 'executes a script util'
+        When call xsh /spec/sample
+        The status should be success
+        The output should include 'script-sample-out'
+      End
+
+      It 'unimports a script util'
+        When call xsh unimports /spec/sample
+        The status should be success
+        The path /usr/local/bin/x-spec-sample should not be exist
+      End
+    End
+  End
+
   Describe 'last thing to do'
     It 'unload library xsh-lib/core'
       When call xsh unload xsh-lib/core
