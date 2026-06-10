@@ -11,3 +11,7 @@
 export XSH_HOME=~/.xsh
 export XSH_DEV_HOME=${XSH_HOME}/lib-dev
 . ${XSH_HOME}/xsh/xsh.sh
+
+# Bash tab-completion for `xsh`. Self-sufficient on stock macOS bash 3.2 via
+# its own _init_completion fallback; no bash-completion package required.
+[ -r "${XSH_HOME}/xsh/completions/xsh.bash" ] && . "${XSH_HOME}/xsh/completions/xsh.bash"
