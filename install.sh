@@ -182,10 +182,9 @@ function install-xsh () {
     printf "updating: %s\n" ~/.bashrc
     update-profile ~/.bashrc
 
-    # install bash completion if available
-    if [[ -d /etc/bash_completion.d ]]; then
-        cp "${SCRIPT_DIR}/completions/xsh.bash" /etc/bash_completion.d/xsh 2>/dev/null || true
-    fi
+    # Bash completion is now auto-sourced by ~/.xshrc (see .xshrc); the previous
+    # /etc/bash_completion.d/ copy was redundant on Linux and a no-op on macOS
+    # (no such dir on stock macOS; Homebrew uses $(brew --prefix)/etc/...).
 }
 
 function main () {
