@@ -213,9 +213,8 @@ Describe 'xsh.sh'
     End
 
     It 'call /file/inject'
-      # x/file/inject depends on xsh-lib/core's x/trap/return, which uses the
-      # bash-only RETURN trap; needs an xsh-lib/core update to work under zsh
-      Skip if "x/file/inject depends on the bash-only RETURN trap" [ -n "${ZSH_VERSION:-}" ]
+      # NOTE: under zsh this needs xsh-lib/core > 0.5.0 (x/trap/return ported
+      # to zsh with a cascade of function-scoped EXIT traps)
       BeforeCall 'touch /tmp/.xsh-file-inject'
       AfterCall 'rm -f /tmp/.xsh-file-inject'
       When call xsh /file/inject -c bar -p end /tmp/.xsh-file-inject
