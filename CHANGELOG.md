@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-14
+
 ### Added
 
 - **zsh support** — xsh now runs under zsh (the default login shell on macOS
