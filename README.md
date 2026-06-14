@@ -8,6 +8,19 @@
 [![GitHub issues](https://img.shields.io/github/issues/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/pulls)
 
+**Tested in CI** on every push and pull request:
+
+| Shell | Version | OS                    | Tested |
+|-------|---------|-----------------------|:------:|
+| bash  | 3.2     | macOS                 | ✅     |
+| bash  | 4.4     | Linux (rockylinux:8)  | ✅     |
+| bash  | 5.x     | Linux (ubuntu-latest) | ✅     |
+| bash  | 5.x     | macOS (Homebrew)      | ✅     |
+| zsh   | 5.x     | Linux (ubuntu-latest) | ✅     |
+| zsh   | 5.x     | macOS                 | ✅     |
+
+The official `xsh-lib/*` libraries are tested on the same matrix; see each library's own README for its status.
+
 # e<span style="color:red">X</span>tension of ba<span style="color:red">SH</span>
 
 xsh is an e<span style="color:red">__x__</span>tension of ba<span style="color:red">__sh__</span>. It works as a bash library framework.
@@ -37,7 +50,6 @@ This project is still at version `0.x`, and should be considered immature.
   - [2.3. What do xsh Utilities Do?](#23-what-do-xsh-utilities-do)
 - [3. xsh Bootstrap/Installation](#3-xsh-bootstrapinstallation)
   - [3.1. Requirements](#31-requirements)
-  - [3.2. Tested Platforms](#32-tested-platforms)
 - [4. xsh Usage](#4-xsh-usage)
   - [4.1. Load xsh Libraries](#41-load-xsh-libraries)
   - [4.2. Invoke xsh Utilities](#42-invoke-xsh-utilities)
@@ -162,23 +174,6 @@ $ curl -s https://raw.githubusercontent.com/alexzhangs/xsh/master/boot | bash &&
   * The installer (`install.sh`) registers `~/.xshrc` in `~/.bash_profile`, `~/.bashrc`, and `~/.zshrc`, so xsh is available no matter which of the two shells you log into.
 * **git 2.x+** — used to clone and manage xsh libraries.
 * **curl** — used by the one-liner bootstrap only; not required for the `git clone` install path.
-
-
-
-### 3.2. Tested Platforms
-
-xsh runs its full test suite on every push and pull request via [GitHub Actions](https://github.com/features/actions), across the following shell/OS combinations:
-
-| Shell | Version | OS                    | Tested |
-|-------|---------|-----------------------|:------:|
-| bash  | 3.2     | macOS                 | ✅     |
-| bash  | 4.4     | Linux (rockylinux:8)  | ✅     |
-| bash  | 5.x     | Linux (ubuntu-latest) | ✅     |
-| bash  | 5.x     | macOS (Homebrew)      | ✅     |
-| zsh   | 5.x     | Linux (ubuntu-latest) | ✅     |
-| zsh   | 5.x     | macOS                 | ✅     |
-
-The official `xsh-lib/*` libraries are tested on the same matrix; see each library's own README for its status.
 
 
 
