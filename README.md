@@ -2,7 +2,7 @@
 [![GitHub](https://img.shields.io/github/license/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
 [![GitHub last commit](https://img.shields.io/github/last-commit/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/commits/master)
 
-[![ci](https://github.com/alexzhangs/xsh/actions/workflows/ci.yml/badge.svg)](https://github.com/alexzhangs/xsh/actions/workflows/ci.yml)
+[![CI](https://github.com/alexzhangs/xsh/actions/workflows/ci.yml/badge.svg)](https://github.com/alexzhangs/xsh/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/alexzhangs/xsh/branch/master/graph/badge.svg?token=HVTO788DLV)](https://codecov.io/gh/alexzhangs/xsh)
 [![CodeFactor](https://www.codefactor.io/repository/github/alexzhangs/xsh/badge)](https://www.codefactor.io/repository/github/alexzhangs/xsh)
 [![GitHub issues](https://img.shields.io/github/issues/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/issues)
@@ -37,6 +37,7 @@ This project is still at version `0.x`, and should be considered immature.
   - [2.3. What do xsh Utilities Do?](#23-what-do-xsh-utilities-do)
 - [3. xsh Bootstrap/Installation](#3-xsh-bootstrapinstallation)
   - [3.1. Requirements](#31-requirements)
+  - [3.2. Tested Platforms](#32-tested-platforms)
 - [4. xsh Usage](#4-xsh-usage)
   - [4.1. Load xsh Libraries](#41-load-xsh-libraries)
   - [4.2. Invoke xsh Utilities](#42-invoke-xsh-utilities)
@@ -161,6 +162,23 @@ $ curl -s https://raw.githubusercontent.com/alexzhangs/xsh/master/boot | bash &&
   * The installer (`install.sh`) registers `~/.xshrc` in `~/.bash_profile`, `~/.bashrc`, and `~/.zshrc`, so xsh is available no matter which of the two shells you log into.
 * **git 2.x+** — used to clone and manage xsh libraries.
 * **curl** — used by the one-liner bootstrap only; not required for the `git clone` install path.
+
+
+
+### 3.2. Tested Platforms
+
+xsh runs its full test suite on every push and pull request via [GitHub Actions](https://github.com/features/actions), across the following shell/OS combinations:
+
+| Shell | Version | OS                    | Tested |
+|-------|---------|-----------------------|:------:|
+| bash  | 3.2     | macOS                 | ✅     |
+| bash  | 4.4     | Linux (rockylinux:8)  | ✅     |
+| bash  | 5.x     | Linux (ubuntu-latest) | ✅     |
+| bash  | 5.x     | macOS (Homebrew)      | ✅     |
+| zsh   | 5.x     | Linux (ubuntu-latest) | ✅     |
+| zsh   | 5.x     | macOS                 | ✅     |
+
+The official `xsh-lib/*` libraries are tested on the same matrix; see each library's own README for its status.
 
 
 
