@@ -14,6 +14,8 @@ xsh is an e<span style="color:red">__x__</span>tension of ba<span style="color:r
 
 xsh aimed to provide a uniform and easy way to reuse bash code, like what a library does.
 
+xsh also runs under zsh — the default shell on modern macOS. See [Requirements](#31-requirements) for the details.
+
 xsh - this repository, in a narrow sense, is not a library itself. It's just a framework, in a broad sense xsh along with other repositories, such as `xsh-lib/core` as a whole, is a bash library with a framework.
 
 Why started this?
@@ -64,7 +66,7 @@ In a narrow sense, xsh (this repo) is just the framework — a single sourced fu
 
 * Easy to bootstrap(install).
 
-  The only thing you need is a bash and Git client.
+  The only thing you need is a bash (or zsh) and Git client. The installer itself runs with bash.
 
   ```bash
   $ git clone https://github.com/alexzhangs/xsh
@@ -131,7 +133,7 @@ Of course, some of the above topics can be built as libraries, packages, or util
 
 ## 3. xsh Bootstrap/Installation
 
-The only thing you need is a bash and Git client.
+The only thing you need is a bash (or zsh) and Git client. The installer itself runs with bash.
 
 ```bash
 $ git clone https://github.com/alexzhangs/xsh
@@ -151,7 +153,12 @@ $ curl -s https://raw.githubusercontent.com/alexzhangs/xsh/master/boot | bash &&
 
 ### 3.1. Requirements
 
-* **bash 3.2+** — xsh uses `declare -a` (indexed arrays) and `[[ =~ ]]` (regex matching), both introduced in bash 3.2. macOS ships with bash 3.2 at `/bin/bash` and is fully compatible.
+* **bash 3.2+ or zsh 5.x** — the shell that sources xsh.
+  * bash: xsh uses `declare -a` (indexed arrays) and `[[ =~ ]]` (regex matching), both introduced in bash 3.2. macOS ships with bash 3.2 at `/bin/bash` and is fully compatible.
+  * zsh: the default login shell on macOS since Catalina. xsh runs the `xsh` function and the imported utilities under zsh's ksh emulation (`emulate -L ksh`), which provides the bash-style 0-indexed arrays and word splitting that xsh libraries rely on. Notes specific to zsh:
+    * zsh cannot export functions to the environment, so sub-processes (e.g. library script utilities) reach xsh through the executable shim `bin/xsh`, which `~/.xshrc` puts on PATH.
+    * Library utilities are bash-flavored code; most run fine under the ksh emulation, but utilities depending on bash-only features (e.g. the `RETURN` trap used by `xsh-lib/core`'s `x/trap/return`) need a library-side update to work under zsh.
+  * The installer (`install.sh`) registers `~/.xshrc` in `~/.bash_profile`, `~/.bashrc`, and `~/.zshrc`, so xsh is available no matter which of the two shells you log into.
 * **git 2.x+** — used to clone and manage xsh libraries.
 * **curl** — used by the one-liner bootstrap only; not required for the `git clone` install path.
 

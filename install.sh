@@ -155,6 +155,9 @@ function uninstall-xsh () {
     printf "cleaning in: %s\n" ~/.bashrc
     clean-in-profile ~/.bashrc
 
+    printf "cleaning in: %s\n" ~/.zshrc
+    clean-in-profile ~/.zshrc
+
     printf "removing: %s\n" ~/.xshrc
     /bin/rm -f ~/.xshrc
 
@@ -182,9 +185,13 @@ function install-xsh () {
     printf "updating: %s\n" ~/.bashrc
     update-profile ~/.bashrc
 
+    printf "updating: %s\n" ~/.zshrc
+    update-profile ~/.zshrc
+
     # Bash completion is now auto-sourced by ~/.xshrc (see .xshrc); the previous
     # /etc/bash_completion.d/ copy was redundant on Linux and a no-op on macOS
     # (no such dir on stock macOS; Homebrew uses $(brew --prefix)/etc/...).
+    # Zsh completion (completions/_xsh) is registered in fpath by ~/.xshrc.
 }
 
 function main () {
