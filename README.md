@@ -167,23 +167,18 @@ $ curl -s https://raw.githubusercontent.com/alexzhangs/xsh/master/boot | bash &&
 
 ### 3.2. Tested Platforms
 
-xsh and the official `xsh-lib/*` libraries run their full test suites on every push and pull request via [GitHub Actions](https://github.com/features/actions). The matrix below shows which shell/OS combinations each repository's CI exercises; for the live pass/fail status, see the CI badge at the top of each repository's own README (linked below).
+xsh runs its full test suite on every push and pull request via [GitHub Actions](https://github.com/features/actions), across the following shell/OS combinations:
 
-| Repository | bash 3.2<br>macOS | bash 4.4<br>Linux | bash 5.x<br>Linux | bash 5.x<br>macOS | zsh 5.x<br>Linux | zsh 5.x<br>macOS |
-|---|:--:|:--:|:--:|:--:|:--:|:--:|
-| [alexzhangs/xsh](https://github.com/alexzhangs/xsh) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| [xsh-lib/core](https://github.com/xsh-lib/core) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| [xsh-lib/aws](https://github.com/xsh-lib/aws) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| [xsh-lib/git](https://github.com/xsh-lib/git) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| [xsh-lib/shadowsocks](https://github.com/xsh-lib/shadowsocks) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| [xsh-lib/xsql](https://github.com/xsh-lib/xsql)&nbsp;† | ✅ | — | ✅ | — | ✅ | ✅ |
+| Shell | Version | OS                    | Tested |
+|-------|---------|-----------------------|:------:|
+| bash  | 3.2     | macOS                 | ✅     |
+| bash  | 4.4     | Linux (rockylinux:8)  | ✅     |
+| bash  | 5.x     | Linux (ubuntu-latest) | ✅     |
+| bash  | 5.x     | macOS (Homebrew)      | ✅     |
+| zsh   | 5.x     | Linux (ubuntu-latest) | ✅     |
+| zsh   | 5.x     | macOS                 | ✅     |
 
-**Legend:** ✅ exercised in CI &nbsp;·&nbsp; — not part of that repository's matrix.
-
-Notes:
-- **bash 4.4** runs inside a `rockylinux:8` container (no GitHub-hosted runner ships bash 4); **bash 5.x on macOS** is installed via Homebrew, while **bash 3.2** is the macOS system shell.
-- **zsh** utilities run under xsh's ksh emulation and require **xsh ≥ 0.7.0**.
-- † `xsh-lib/xsql`'s CI workflow currently lives on the `feature/zsh-support` branch and is not yet on the default branch, so its badge will show *no status* until that change is merged.
+The official `xsh-lib/*` libraries are tested on the same matrix; see each library's own README for its status.
 
 
 
