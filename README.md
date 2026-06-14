@@ -2,7 +2,7 @@
 [![GitHub](https://img.shields.io/github/license/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/)
 [![GitHub last commit](https://img.shields.io/github/last-commit/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/commits/master)
 
-[![ci](https://github.com/alexzhangs/xsh/actions/workflows/ci.yml/badge.svg)](https://github.com/alexzhangs/xsh/actions/workflows/ci.yml)
+[![CI](https://github.com/alexzhangs/xsh/actions/workflows/ci.yml/badge.svg)](https://github.com/alexzhangs/xsh/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/alexzhangs/xsh/branch/master/graph/badge.svg?token=HVTO788DLV)](https://codecov.io/gh/alexzhangs/xsh)
 [![CodeFactor](https://www.codefactor.io/repository/github/alexzhangs/xsh/badge)](https://www.codefactor.io/repository/github/alexzhangs/xsh)
 [![GitHub issues](https://img.shields.io/github/issues/alexzhangs/xsh.svg?style=flat-square)](https://github.com/alexzhangs/xsh/issues)
@@ -37,6 +37,7 @@ This project is still at version `0.x`, and should be considered immature.
   - [2.3. What do xsh Utilities Do?](#23-what-do-xsh-utilities-do)
 - [3. xsh Bootstrap/Installation](#3-xsh-bootstrapinstallation)
   - [3.1. Requirements](#31-requirements)
+  - [3.2. Tested Platforms](#32-tested-platforms)
 - [4. xsh Usage](#4-xsh-usage)
   - [4.1. Load xsh Libraries](#41-load-xsh-libraries)
   - [4.2. Invoke xsh Utilities](#42-invoke-xsh-utilities)
@@ -161,6 +162,28 @@ $ curl -s https://raw.githubusercontent.com/alexzhangs/xsh/master/boot | bash &&
   * The installer (`install.sh`) registers `~/.xshrc` in `~/.bash_profile`, `~/.bashrc`, and `~/.zshrc`, so xsh is available no matter which of the two shells you log into.
 * **git 2.x+** — used to clone and manage xsh libraries.
 * **curl** — used by the one-liner bootstrap only; not required for the `git clone` install path.
+
+
+
+### 3.2. Tested Platforms
+
+xsh and the official `xsh-lib/*` libraries run their full test suites on every push and pull request via [GitHub Actions](https://github.com/features/actions). The matrix below shows which shell/OS combinations each repository's CI exercises; for the live pass/fail status, see the CI badge at the top of each repository's own README (linked below).
+
+| Repository | bash 3.2<br>macOS | bash 4.4<br>Linux | bash 5.x<br>Linux | bash 5.x<br>macOS | zsh 5.x<br>Linux | zsh 5.x<br>macOS |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|
+| [alexzhangs/xsh](https://github.com/alexzhangs/xsh) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| [xsh-lib/core](https://github.com/xsh-lib/core) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| [xsh-lib/aws](https://github.com/xsh-lib/aws) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| [xsh-lib/git](https://github.com/xsh-lib/git) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| [xsh-lib/shadowsocks](https://github.com/xsh-lib/shadowsocks) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| [xsh-lib/xsql](https://github.com/xsh-lib/xsql)&nbsp;† | ✅ | — | ✅ | — | ✅ | ✅ |
+
+**Legend:** ✅ exercised in CI &nbsp;·&nbsp; — not part of that repository's matrix.
+
+Notes:
+- **bash 4.4** runs inside a `rockylinux:8` container (no GitHub-hosted runner ships bash 4); **bash 5.x on macOS** is installed via Homebrew, while **bash 3.2** is the macOS system shell.
+- **zsh** utilities run under xsh's ksh emulation and require **xsh ≥ 0.7.0**.
+- † `xsh-lib/xsql`'s CI workflow currently lives on the `feature/zsh-support` branch and is not yet on the default branch, so its badge will show *no status* until that change is merged.
 
 
 
