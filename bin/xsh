@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#? Description:
+#?   Executable shim for xsh.
+#?   It lets sub-processes call `xsh` when the parent shell could not export
+#?   the xsh function to the environment - e.g. when the parent shell is zsh
+#?   (zsh cannot export functions).
+#?   Under bash parents the exported xsh function takes precedence over this
+#?   shim, so it is harmless to keep it on PATH for both shells.
+#?
+#? Usage:
+#?   xsh <LPUE> [UTIL_OPTIONS]
+#?
+
+export XSH_HOME=${XSH_HOME:-${HOME}/.xsh}
+export XSH_DEV_HOME=${XSH_DEV_HOME:-${XSH_HOME}/lib-dev}
+
+# shellcheck source=/dev/null
+source "${XSH_HOME}/xsh/xsh.sh"
+
+xsh "$@"

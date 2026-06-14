@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-14
+
+### Added
+
+- **zsh support** — xsh now runs under zsh (the default login shell on macOS
+  since Catalina), in addition to bash 3.2+.
+  - `xsh()` and all its internal functions execute under zsh's ksh emulation
+    (`emulate -L ksh`, scoped to the call), providing the bash-style 0-indexed
+    arrays and word splitting the codebase relies on. Imported function
+    utilities get an `emulate -L ksh` line injected at import time, so
+    bash-flavored library code keeps working when called directly from the
+    zsh prompt.
+  - New executable shim `bin/xsh` (put on PATH by `~/.xshrc`): zsh cannot
+    export functions to the environment, so sub-processes (e.g. library
+    script utilities calling `xsh`) go through the shim. Under bash the
+    exported function takes precedence and the shim is inert.
+  - `~/.xshrc` is now bash/zsh-aware and `install.sh` registers it in
+    `~/.zshrc` too (and cleans it on uninstall).
+  - Zsh tab-completion: the existing `completions/_xsh` is now wired up by
+    `~/.xshrc` (fpath registration, or direct `compdef` if compinit already
+    ran), and its builtin list was synced with the bash completer.
+  - Hard bash-isms replaced with portable or shell-aware equivalents:
+    `${!#}` → `${*: -1}`, `type -t` → `__xsh_type_t` (zsh: `whence -w`),
+    `declare -p`-based export check → `__xsh_is_exported`, `FUNCNAME` →
+    built from zsh's `funcstack` where needed, bash `RETURN` trap →
+    function-scoped EXIT trap under zsh (`NO_POSIX_TRAPS`).
+  - All local variables named `path` renamed to `lpu_path`: in zsh, `path`
+    is tied to `PATH`, and assigning a scalar to it clobbers command lookup
+    for the function's lifetime.
+  - CI: new `zsh-5.x-macos` and `zsh-5.x-linux` jobs run the full test suite
+    under zsh (`shellspec -s <zsh>`); matrix key `bash_path` renamed to
+    `shell_path`.
+  - Known limitation: library utilities depending on bash-only features
+    (e.g. the `RETURN` trap used by `xsh-lib/core`'s `x/trap/return`, which
+    `x/file/inject` builds on) need a library-side update to work under zsh.
+  - Spec suite: examples asserting bash-only behavior (`$-` containing `h`,
+    exported functions) are now shell-aware; `xsh upgrade`/installer examples
+    that check out released tags are skipped under zsh until the first
+    zsh-supporting release is tagged.
+
 ## [0.6.2] - 2026-06-11
 
 ### Fixed
